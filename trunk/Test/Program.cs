@@ -1,8 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
+using System.Reflection;
 
-namespace PDFViewer
+namespace Test
 {
     static class Program
     {
@@ -12,10 +14,11 @@ namespace PDFViewer
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new frmPDFViewer());
-            Application.Run(new PDFViewer.Reader.MainForm());
+            NUnit.Gui.AppEntry.Main(new string[]
+            {
+                Assembly.GetExecutingAssembly().Location, 
+                //"/run"
+            });
         }
     }
 }

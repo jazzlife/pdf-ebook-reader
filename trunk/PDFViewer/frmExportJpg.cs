@@ -34,7 +34,7 @@ namespace PDFViewer
         private void Finished()
         {
             if (!_bCancel)
-                MessageBox.Show(Resources.UIStrings.MsgExportFinished, Text,  MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(PDFViewer.Resources.UIStrings.MsgExportFinished, Text,  MessageBoxButtons.OK, MessageBoxIcon.Information);
             else
                 this.Close();
             btnExport.Enabled = true;
@@ -62,7 +62,7 @@ namespace PDFViewer
             {
                 if (_doc.IsJpgBusy)
                 {
-                    if (MessageBox.Show(Resources.UIStrings.InformationCurrentExportCancelled, Text, MessageBoxButtons.YesNo,  MessageBoxIcon.Question) == DialogResult.No)
+                    if (MessageBox.Show(PDFViewer.Resources.UIStrings.InformationCurrentExportCancelled, Text, MessageBoxButtons.YesNo,  MessageBoxIcon.Question) == DialogResult.No)
                         return;
                 }
                 btnExport.Enabled = false;

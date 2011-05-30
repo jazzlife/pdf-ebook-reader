@@ -208,7 +208,7 @@ namespace PDFViewer.Reader
         private System.Windows.Forms.ToolTip ttpLink;
         private System.Windows.Forms.ToolStripButton tsbAntialias;
         private System.Windows.Forms.ToolStripButton tsbVectorAntialias;
-        private PageViewer pageView;
+        private PDFViewer.PageViewer pageView;
         private System.ComponentModel.BackgroundWorker bgLoadPages;
         private System.Windows.Forms.ToolStripButton tsbUseMuPDF;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;

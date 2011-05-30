@@ -1,6 +1,6 @@
-namespace PDFViewer
+﻿namespace Test
 {
-    partial class PDFViewerCtrl
+    partial class Form1
     {
         /// <summary>
         /// Required designer variable.
@@ -28,16 +28,12 @@ namespace PDFViewer
         /// </summary>
         private void InitializeComponent()
         {
-            this.SuspendLayout();
-            // 
-            // PDFViewer
-            // 
-            this.Name = "PDFViewer";
-            this.Size = new System.Drawing.Size(506, 383);
-            this.ResumeLayout(false);
-
+            this.components = new System.ComponentModel.Container();
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Text = "Form1";
         }
 
         #endregion
     }
 }
+

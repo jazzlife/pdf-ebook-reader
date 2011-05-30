@@ -9,11 +9,12 @@ using System.Runtime.InteropServices;
 using System.Configuration;
 using PDFLibNet;
 using System.Management;
+using PDFViewer;
 
 namespace PDFViewer.Reader
 {
 
-    public partial class PDFViewerControl : UserControl, IStatusBusyControl
+    public partial class PDFViewerControl : UserControl, PDFViewer.IStatusBusyControl
     {
         public delegate void RenderNotifyInvoker(int page, bool isCurrent);
      
@@ -284,7 +285,7 @@ namespace PDFViewer.Reader
         }
 
         #region Searching
-        private int SearchCallBack(object sender, SearchArgs e)
+        private int SearchCallBack(object sender, PDFViewer.SearchArgs e)
         {
             int lFound=0;
             if (_pdfDoc != null)

@@ -8,9 +8,8 @@ using System.Windows.Forms;
 using System.IO;
 using System.Linq;
 using PDFViewer.Reader.Utils;
-using PDFViewer.Reader;
 
-namespace PdfViewer.Reader
+namespace PDFViewer.Reader
 {
     public partial class LibraryPanel : UserControl
     {
