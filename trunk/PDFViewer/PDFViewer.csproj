@@ -125,12 +125,6 @@
     <Compile Include="frmPassword.Designer.cs">
       <DependentUpon>frmPassword.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmPDFViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmPDFViewer.Designer.cs">
-      <DependentUpon>frmPDFViewer.cs</DependentUpon>
-    </Compile>
     <Compile Include="frmSearch.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -161,9 +155,6 @@
       <SubType>Designer</SubType>
       <DependentUpon>frmExportJpg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmPDFViewer.en.resx">
-      <DependentUpon>frmPDFViewer.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="PageViewer.resx">
       <SubType>Designer</SubType>
       <DependentUpon>PageViewer.cs</DependentUpon>
@@ -179,10 +170,6 @@
     <EmbeddedResource Include="frmPassword.resx">
       <SubType>Designer</SubType>
       <DependentUpon>frmPassword.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmPDFViewer.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>frmPDFViewer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmSearch.resx">
       <SubType>Designer</SubType>

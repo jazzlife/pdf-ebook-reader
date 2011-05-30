@@ -13,9 +13,9 @@ namespace PDFViewer
     public class PageViewer : UserControl
     {
         public delegate void PaintControlHandler(object sender,Rectangle view, Point location, Graphics g);
-        public delegate bool MovePageHandler(object sender);
-        public event MovePageHandler NextPage;
-        public event MovePageHandler PreviousPage;
+
+        public event EventHandler NextPage;
+        public event EventHandler PreviousPage;
 
         bool _drawShadow;
         bool _drawRect;
@@ -393,24 +393,6 @@ namespace PDFViewer
 
         }
 
-        /*
-        void MessWithColors(Graphics Graphics)
-        {
-            Image image = Bitmap.FromGr
-            if (_tempImage == null) { _tempImage = Graphics.Ge
-            Graphics.DrawImage(mImage, Point.Empty);
-            ImageAttributes ia = new ImageAttributes();
-            ColorMatrix cm = new ColorMatrix();
-            cm.Matrix00 = cm.Matrix11 = cm.Matrix22 = -0.99f;
-            cm.Matrix40 = cm.Matrix41 = cm.Matrix42 = 0.99f;
-            ia.SetColorMatrix(cm);
-            var dest = new Rectangle(50, 50, 100, 100);
-            Graphics.DrawImage(mImage, dest, dest.Left, dest.Top,
-                dest.Width, dest.Height, GraphicsUnit.Pixel, ia);
-
-        }
-        */
-
         #region Bounds
         /// <summary>
         /// Returns the bounds of the current view
@@ -592,10 +574,8 @@ namespace PDFViewer
         }
         #endregion
 
-        private void ZoomChanged()
+        public void ResizeAndInvalidate()
         {
-            //Resize Page
-            //Page.Size= newSize;
             Resized();      //Recalculate
             Invalidate();   //Redraw
         }
@@ -661,6 +641,7 @@ namespace PDFViewer
 
         private void RecalcPageLocation()
         {
+
             if (PageSize.Width < ClientBounds.Width && PageSize.Height > ClientBounds.Height)
                 //Center vertically
                 _pageLocation = new Point((ClientBounds.Width - PageSize.Width) / 2 + Margin.Left, Margin.Top - vsb.Value);
@@ -830,20 +811,19 @@ namespace PDFViewer
                     pointY = ScrollPosition.Y + 120 * PageBounds.Height / ViewBounds.Height / 6;
                 else if (e.Delta > 0)
                     pointY = ScrollPosition.Y - 120 * PageBounds.Height / ViewBounds.Height / 6;
+                
                 ScrollPosition = new Point(ScrollPosition.X, pointY);
+
                 if (vsb.Maximum == 0)
                 {
                     if (e.Delta < 0)
                     {
-                        if (NextPage != null)
-                           NextPage.Invoke(this);
+                        if (NextPage != null) { NextPage(this, EventArgs.Empty); }
                     }
                     else
                     {
-                        if (PreviousPage != null)
-                            PreviousPage.Invoke(this);
+                        if (PreviousPage != null) { PreviousPage.Invoke(this, EventArgs.Empty); }
                     }
-
                 }
                 else
                 {
@@ -854,9 +834,10 @@ namespace PDFViewer
                         if (_deltasCount > 1)
                         {
                             _deltasCount = 0;
-                            if (NextPage != null)
-                                bHasMorePagesD = NextPage.Invoke(this);
-                            bHasMorePagesT = true;
+                            if (NextPage != null) { NextPage(this, EventArgs.Empty); }
+
+                            // TODO: determine bHasMorePagesD
+                            bHasMorePagesT = true;                           
                             if (bHasMorePagesD)
                                 ScrollPosition = new Point(hsb.Value, 0);
                         }
@@ -869,8 +850,9 @@ namespace PDFViewer
                         {
                             _deltasCount = 0;
                             //GoBack
-                            if (PreviousPage != null)
-                                bHasMorePagesT = PreviousPage.Invoke(this);
+                            if (PreviousPage != null) { PreviousPage(this, EventArgs.Empty); }
+
+                            // TODO: determine bHasMorePagesT
                             bHasMorePagesD = true;
                             if (bHasMorePagesT)
                                 ScrollPosition = new Point(hsb.Value, vsb.Maximum);
