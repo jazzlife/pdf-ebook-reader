@@ -190,6 +190,9 @@
   <data name="&gt;&gt;tsbSearch.Name" xml:space="preserve">
     <value>tsbSearch</value>
   </data>
+  <data name="listView1.LabelWrap" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="pageViewControl1.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
@@ -199,7 +202,7 @@
   <data name="tvwOutline.Font" type="System.Drawing.Font, System.Drawing">
     <value>Courier New, 9.75pt</value>
   </data>
-  <data name="&gt;&gt;tsbPrev.Type" xml:space="preserve">
+  <data name="&gt;&gt;tsbUseMuPDF.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
@@ -265,9 +268,6 @@
   <data name="tsImages.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
-  <data name="&gt;&gt;ttpLink.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabView.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
@@ -276,6 +276,9 @@
   </data>
   <data name="&gt;&gt;listView2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pageView.Name" xml:space="preserve">
+    <value>pageView</value>
   </data>
   <data name="&gt;&gt;tsbOpen.Name" xml:space="preserve">
     <value>tsbOpen</value>
@@ -331,8 +334,8 @@
   <data name="&gt;&gt;columnHeader2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="listView1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
+    <value>toolStripSeparator1</value>
   </data>
   <data name="tpWordList.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 25</value>
@@ -348,6 +351,9 @@
   </data>
   <data name="toolStripButton1.Text" xml:space="preserve">
     <value>Acercar</value>
+  </data>
+  <data name="tabPage2.Text" xml:space="preserve">
+    <value>Miniaturas</value>
   </data>
   <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -367,14 +373,17 @@
   <data name="tsbAbout.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
+  <data name="listView1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
   <data name="&gt;&gt;toolStripButton3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="listView2.Alignment" type="System.Windows.Forms.ListViewAlignment, System.Windows.Forms">
     <value>Default</value>
   </data>
-  <data name="tsImages.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="&gt;&gt;txtTextView.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="toolStripButton4.Size" type="System.Drawing.Size, System.Drawing">
     <value>114, 22</value>
@@ -390,6 +399,9 @@
   </data>
   <data name="&gt;&gt;tpvImages.Parent" xml:space="preserve">
     <value>tabView</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripButton2.Name" xml:space="preserve">
     <value>toolStripButton2</value>
@@ -436,8 +448,14 @@
   <data name="tpvImages.Size" type="System.Drawing.Size, System.Drawing">
     <value>519, 427</value>
   </data>
+  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
   <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
     <value>186, 456</value>
+  </data>
+  <data name="&gt;&gt;tsbFitWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="tvwOutline.Size" type="System.Drawing.Size, System.Drawing">
     <value>172, 424</value>
@@ -459,6 +477,9 @@
   </data>
   <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
     <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;pageView.Type" xml:space="preserve">
+    <value>PDFViewer.PageViewer, PDFViewer, Version=1.0.6.6, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="columnHeader6.Text" xml:space="preserve">
     <value>Location</value>
@@ -508,8 +529,8 @@
   <data name="listView2.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
-  <data name="toolStripButton3.Text" xml:space="preserve">
-    <value>Ajustar ancho</value>
+  <data name="&gt;&gt;listView1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;pdfImagesThumbView1.Parent" xml:space="preserve">
     <value>tpvImages</value>
@@ -544,8 +565,8 @@
   <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
     <value>tabPage2</value>
   </data>
-  <data name="&gt;&gt;txtTextView.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;pdfImagesThumbView1.Name" xml:space="preserve">
+    <value>pdfImagesThumbView1</value>
   </data>
   <data name="tsImagesUpdate.Size" type="System.Drawing.Size, System.Drawing">
     <value>103, 22</value>
@@ -565,11 +586,17 @@
         KlSA8/zRh9ABIDUG+1JpAAAAAElFTkSuQmCC
 </value>
   </data>
-  <data name="listView1.LabelWrap" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;tsImages.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;pageView.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="statusStrip1.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;tsbFitWidth.Name" xml:space="preserve">
+    <value>tsbFitWidth</value>
+  </data>
+  <data name="pageView.ToolTip" xml:space="preserve">
+    <value />
   </data>
   <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -588,9 +615,6 @@
   </data>
   <data name="&gt;&gt;tpWordList.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabView.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="pageViewControl1.ToolTip" xml:space="preserve">
     <value />
@@ -681,8 +705,8 @@
   <data name="tpvImages.Text" xml:space="preserve">
     <value>Imagenes</value>
   </data>
-  <data name="&gt;&gt;tsbUseMuPDF.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="pageView.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
   </data>
   <data name="&gt;&gt;listView1.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -692,6 +716,9 @@
   </data>
   <data name="tsImagesUpdate.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
+  </data>
+  <data name="pageView.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 23</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -717,8 +744,8 @@
         KlSA8/zRh9ABIDUG+1JpAAAAAElFTkSuQmCC
 </value>
   </data>
-  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>6, 25</value>
   </data>
   <data name="&gt;&gt;printDialog1.Type" xml:space="preserve">
     <value>System.Windows.Forms.PrintDialog, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -1330,7 +1357,7 @@
     <value>Magenta</value>
   </data>
   <data name="&gt;&gt;pageViewControl1.Parent" xml:space="preserve">
-    <value>tpvPDF</value>
+    <value>$this</value>
   </data>
   <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -1446,9 +1473,6 @@
   <data name="tvwOutline.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
-  <data name="&gt;&gt;columnHeader6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;listView2.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
@@ -1469,9 +1493,6 @@
   </data>
   <data name="tpvPDF.Size" type="System.Drawing.Size, System.Drawing">
     <value>519, 427</value>
-  </data>
-  <data name="&gt;&gt;pdfImagesThumbView1.Name" xml:space="preserve">
-    <value>pdfImagesThumbView1</value>
   </data>
   <data name="&gt;&gt;columnHeader6.Name" xml:space="preserve">
     <value>columnHeader6</value>
@@ -1524,14 +1545,17 @@
   <data name="&gt;&gt;statusStrip1.Name" xml:space="preserve">
     <value>statusStrip1</value>
   </data>
+  <data name="&gt;&gt;tsbPrev.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;pageViewControl1.Name" xml:space="preserve">
     <value>pageViewControl1</value>
   </data>
   <data name="tsbPrev.Text" xml:space="preserve">
     <value>Pagina anterio&amp;r</value>
   </data>
-  <data name="statusStrip1.ToolTip" xml:space="preserve">
-    <value />
+  <data name="toolStripButton3.Text" xml:space="preserve">
+    <value>Ajustar ancho</value>
   </data>
   <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
     <value>178, 430</value>
@@ -1574,6 +1598,9 @@
   </data>
   <data name="&gt;&gt;tpvImages.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="tsImages.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
   <data name="&gt;&gt;tsbVectorAntialias.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -1626,6 +1653,9 @@
   <data name="tsbUseMuPDF.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
+  <data name="&gt;&gt;pageView.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
   <data name="tabPage2.ToolTip" xml:space="preserve">
     <value />
   </data>
@@ -1649,6 +1679,9 @@
   </data>
   <data name="columnHeader2.Width" type="System.Int32, mscorlib">
     <value>132</value>
+  </data>
+  <data name="txtTextView.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
+    <value>Both</value>
   </data>
   <data name="&gt;&gt;tsbPrintAs.Name" xml:space="preserve">
     <value>tsbPrintAs</value>
@@ -1677,14 +1710,17 @@
   <data name="tsbVectorAntialias.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="txtTextView.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
-    <value>Both</value>
+  <data name="&gt;&gt;ttpLink.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabView.Name" xml:space="preserve">
     <value>tabView</value>
   </data>
   <data name="tabControl1.ToolTip" xml:space="preserve">
     <value />
+  </data>
+  <data name="&gt;&gt;tsImages.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="tabPage1.ToolTip" xml:space="preserve">
     <value />
@@ -1695,11 +1731,14 @@
   <data name="tabView.Appearance" type="System.Windows.Forms.TabAppearance, System.Windows.Forms">
     <value>FlatButtons</value>
   </data>
-  <data name="&gt;&gt;listView1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;tabView.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="&gt;&gt;columnHeader5.Name" xml:space="preserve">
     <value>columnHeader5</value>
+  </data>
+  <data name="tsbFitWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
   </data>
   <data name="tabControl1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -1791,11 +1830,11 @@
   <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="tabPage2.Text" xml:space="preserve">
-    <value>Miniaturas</value>
+  <data name="&gt;&gt;columnHeader6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="ttpLink.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>20, 37</value>
   </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

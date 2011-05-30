@@ -125,7 +125,7 @@ namespace PdfViewer.Reader
         public readonly Book Book;
         public OpenBookEventArgs(Book book)
         {
-            if (book == null) { throw new ArgumentNullException(); }
+            if (book == null) { throw new ArgumentNullException("book"); }
             Book = book;
         }
 
