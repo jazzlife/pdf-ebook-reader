@@ -2,25 +2,27 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
+using PDFViewer.Reader;
 namespace PDFViewer
 {
     class StatusBusy: IDisposable
     {
-        private string _oldStatus;
-//        private DevExpress.XtraBars.BarItemVisibility _oldWbStatus;
-        private Cursor _oldCursor;
-
+        string _oldStatus;
+        Cursor _oldCursor;
+        IStatusBusyControl _control;
         
 
-        public StatusBusy(string statusText)
+        public StatusBusy(IStatusBusyControl control, string statusText)
         {
-            _oldStatus = frmPDFViewer.Instance.StatusLabel.Text;
-            //_oldWbStatus = FormMainProvider.WorkingBar.Visibility;
-            _oldCursor = frmPDFViewer.Instance.Cursor;
+            if (control == null) { throw new ArgumentNullException("control"); }
 
-            frmPDFViewer.Instance.StatusLabel.Text = statusText;
-            //FormMainProvider.WorkingBar.Visibility = DevExpress.XtraBars.BarItemVisibility.Always;
-            frmPDFViewer.Instance.Cursor = Cursors.WaitCursor;
+            _control = control;
+
+            _oldStatus = _control.StatusText;
+            _oldCursor = _control.Cursor;
+
+            _control.StatusText = statusText;
+            _control.Cursor = Cursors.WaitCursor;
             Application.DoEvents();
         }
 
@@ -33,9 +35,8 @@ namespace PDFViewer
             if (!_disposedValue)
                 if (disposing)
                 {
-                    frmPDFViewer.Instance.StatusLabel.Text = _oldStatus;
-                    frmPDFViewer.Instance.Cursor = _oldCursor;
-                    //FormMainProvider.WorkingBar.Visibility = _oldWbStatus;
+                    _control.StatusText = _oldStatus;
+                    _control.Cursor = _oldCursor;
                 }
             _disposedValue = true;
         }
@@ -48,4 +49,11 @@ namespace PDFViewer
         }
         #endregion
     }
+
+    interface IStatusBusyControl
+    {
+        Cursor Cursor { get; set; }
+        String StatusText { get; set; }
+    }
+
 }

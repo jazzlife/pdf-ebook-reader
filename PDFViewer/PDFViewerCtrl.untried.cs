@@ -64,16 +64,21 @@ namespace PDFViewer
             
             if (LoadFile(sFile, _pdfDoc))
             {
-                
-                FileLoaded(this,new EventArgs());
-                
+                if (FileLoaded != null)
+                {
+                    FileLoaded(this, new EventArgs());
+                }
+
                 _pdfDoc.CurrentPage = 1;
                 _pdfDoc.FitToWidth(Handle);
                 _pdfDoc.RenderPage(Handle);
 
                 PageSize = new Size(_pdfDoc.PageWidth, _pdfDoc.PageHeight);
 
-                FileRendered(this, new EventArgs());
+                if (FileRendered != null)
+                {
+                    FileRendered(this, new EventArgs());                    
+                }
             }
 
         }
@@ -124,7 +129,7 @@ namespace PDFViewer
             set
             {
                 PDFLibNet.xPDFParams.Antialias = value;
-                _pdfDoc.RenderPage(Handle, true);
+                //_pdfDoc.RenderPage(Handle, true);
                 Invalidate();
             }
         }
@@ -141,7 +146,7 @@ namespace PDFViewer
             set
             {
                 PDFLibNet.xPDFParams.VectorAntialias = value;
-                _pdfDoc.RenderPage(Handle, true);
+                //_pdfDoc.RenderPage(Handle, true);
                 Invalidate();
             }
         }

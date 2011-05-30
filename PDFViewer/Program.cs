@@ -14,7 +14,8 @@ namespace PDFViewer
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmPDFViewer());
+            //Application.Run(new frmPDFViewer());
+            Application.Run(new PdfViewer.Reader.MainForm());
         }
     }
 }
