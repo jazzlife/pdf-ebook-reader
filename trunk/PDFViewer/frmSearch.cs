@@ -77,4 +77,29 @@ namespace PDFViewer
             }
         }
     }
+
+    public delegate int SearchPdfHandler(object sender, SearchArgs e);
+
+    public class SearchArgs : EventArgs
+    {
+        public string Text;
+        public bool FromBegin;
+        public bool Exact;
+        public bool WholeDoc;
+        public bool FindNext;
+        public bool Up;
+        public bool WholeWord;
+
+        internal SearchArgs(string text, bool frombegin, bool exact, bool wholedoc, bool findnext, bool up, bool wholeword)
+        {
+            Text = text;
+            FromBegin = frombegin;
+            Exact = exact;
+            WholeDoc = wholedoc;
+            FindNext = findnext;
+            WholeWord = wholeword;
+            Up = up;
+        }
+    }
+
 }

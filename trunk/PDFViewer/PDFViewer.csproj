@@ -13,7 +13,7 @@
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>
     </AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
@@ -34,7 +34,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -92,6 +92,8 @@
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -143,11 +145,11 @@
     <Compile Include="PDFImagesThumbView.Designer.cs">
       <DependentUpon>PDFImagesThumbView.cs</DependentUpon>
     </Compile>
-    <Compile Include="PDFViewerCtrl.cs">
+    <Compile Include="PDFViewerCtrl.untried.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="PDFViewerCtrl.Designer.cs">
-      <DependentUpon>PDFViewerCtrl.cs</DependentUpon>
+    <Compile Include="PDFViewerCtrl.untried.Designer.cs">
+      <DependentUpon>PDFViewerCtrl.untried.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -190,14 +192,30 @@
       <SubType>Designer</SubType>
       <DependentUpon>PDFImagesThumbView.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PDFViewerCtrl.resx">
+    <EmbeddedResource Include="PDFViewerCtrl.untried.resx">
       <SubType>Designer</SubType>
-      <DependentUpon>PDFViewerCtrl.cs</DependentUpon>
+      <DependentUpon>PDFViewerCtrl.untried.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reader\PDFViewerControl.en.resx">
+      <DependentUpon>PDFViewerControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reader\PDFViewerControl.resx">
+      <DependentUpon>PDFViewerControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reader\LibraryPanel.resx">
+      <DependentUpon>LibraryPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reader\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reader\ReadingPanel.resx">
+      <DependentUpon>ReadingPanel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\UIStrings.resx">
       <SubType>Designer</SubType>
@@ -219,6 +237,36 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="RawPrinterHelper.cs" />
+    <Compile Include="Reader\BookLibrary.cs" />
+    <Compile Include="Reader\BookListViewItem.cs" />
+    <Compile Include="Reader\PDFViewerControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Reader\PDFViewerControl.Designer.cs">
+      <DependentUpon>PDFViewerControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Reader\LibraryPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Reader\LibraryPanel.Designer.cs">
+      <DependentUpon>LibraryPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Reader\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Reader\MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Reader\ReadingPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Reader\ReadingPanel.Designer.cs">
+      <DependentUpon>ReadingPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Reader\Utils\ExtensionMethods.cs" />
+    <Compile Include="Reader\Utils\JsonHelper.cs" />
+    <Compile Include="Reader\Utils\PathX.cs" />
+    <Compile Include="Reader\Utils\XmlHelper.cs" />
     <Compile Include="Resources\UIStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

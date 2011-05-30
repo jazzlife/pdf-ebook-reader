@@ -9,12 +9,11 @@ using System.Runtime.InteropServices;
 using System.Configuration;
 using PDFLibNet;
 using System.Management;
-using PDFViewer.Reader;
 
-namespace PDFViewer
+namespace PDFViewer.Reader
 {
-  
-    public partial class frmPDFViewer : Form, IStatusBusyControl
+
+    public partial class PDFViewerControl : UserControl, IStatusBusyControl
     {
         private class loadPagesParam
         {
@@ -53,7 +52,7 @@ namespace PDFViewer
         #endregion
 
         PDFWrapper _pdfDoc = null;
-        public frmPDFViewer()
+        public PDFViewerControl()
         {
             InitializeComponent();
             //Update path to xpdfrc
@@ -454,53 +453,59 @@ namespace PDFViewer
 
         private void tsbOpen_Click(object sender, EventArgs e)
         {
-            try
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "Portable Document Format (*.pdf)|*.pdf";
+            if (dlg.ShowDialog() == DialogResult.OK)
             {
-                OpenFileDialog dlg = new OpenFileDialog();
-                dlg.Filter = "Portable Document Format (*.pdf)|*.pdf";
-                if (dlg.ShowDialog() == DialogResult.OK)
+                OpenFile(dlg.FileName);
+            }
+        }
+
+        public void OpenFile(String filename)
+        {
+            try 
+            {
+                if (_pdfDoc != null)
                 {
-                    if (_pdfDoc != null)
+                    _pdfDoc.Dispose();
+                    _pdfDoc = null;
+                }
+
+                //if (_pdfDoc == null)
+                //{
+                _pdfDoc = new PDFWrapper();
+                _pdfDoc.RenderNotifyFinished += new RenderNotifyFinishedHandler(_pdfDoc_RenderNotifyFinished);
+                _pdfDoc.PDFLoadCompeted += new PDFLoadCompletedHandler(_pdfDoc_PDFLoadCompeted);
+                _pdfDoc.PDFLoadBegin += new PDFLoadBeginHandler(_pdfDoc_PDFLoadBegin);
+                _pdfDoc.UseMuPDF = tsbUseMuPDF.Checked;
+                //}
+                //xPDFParams.ErrorQuiet =true;
+                //xPDFParams.ErrorFile = "C:\\stderr.log";
+                //}
+                int ts = Environment.TickCount;
+                using (StatusBusy sb = new StatusBusy(this, Resources.UIStrings.StatusLoadingFile))
+                {
+                    if (LoadFile(filename, _pdfDoc))
                     {
-                        _pdfDoc.Dispose();
-                        _pdfDoc = null;
-                    }
-                    //if (_pdfDoc == null)
-                    //{
-                    _pdfDoc = new PDFWrapper();
-                    _pdfDoc.RenderNotifyFinished += new RenderNotifyFinishedHandler(_pdfDoc_RenderNotifyFinished);
-                    _pdfDoc.PDFLoadCompeted += new PDFLoadCompletedHandler(_pdfDoc_PDFLoadCompeted);
-                    _pdfDoc.PDFLoadBegin += new PDFLoadBeginHandler(_pdfDoc_PDFLoadBegin);
-                    _pdfDoc.UseMuPDF = tsbUseMuPDF.Checked;
-                    //}
-                    //xPDFParams.ErrorQuiet =true;
-                    //xPDFParams.ErrorFile = "C:\\stderr.log";
-                    //}
-                    int ts = Environment.TickCount;
-                    using (StatusBusy sb = new StatusBusy(this, Resources.UIStrings.StatusLoadingFile))
-                    {
-                        if (LoadFile(dlg.FileName, _pdfDoc))
-                        {
-                            Text = string.Format(Resources.UIStrings.StatusFormCaption, _pdfDoc.Author, _pdfDoc.Title);
-                            FillTree();
-                            _pdfDoc.CurrentPage = 1;
-                            UpdateText();
+                        Text = string.Format(Resources.UIStrings.StatusFormCaption, _pdfDoc.Author, _pdfDoc.Title);
+                        FillTree();
+                        _pdfDoc.CurrentPage = 1;
+                        UpdateText();
 
-                            _pdfDoc.FitToWidth(pageViewControl1.Handle);
-                            _pdfDoc.RenderPage(pageViewControl1.Handle);
+                        _pdfDoc.FitToWidth(pageViewControl1.Handle);
+                        _pdfDoc.RenderPage(pageViewControl1.Handle);
 
-                            Render();
+                        Render();
 
-                            PDFPage pg = _pdfDoc.Pages[1];
-                            listView2.TileSize = new Size(134, (int)(128 * pg.Height / pg.Width) + 10);
-                            listView2.BeginUpdate();
-                            listView2.Clear();
-                            for (int i = 0; i < _pdfDoc.PageCount; ++i)
-                                listView2.Items.Add((i + 1).ToString());
-                            listView2.EndUpdate();
+                        PDFPage pg = _pdfDoc.Pages[1];
+                        listView2.TileSize = new Size(134, (int)(128 * pg.Height / pg.Width) + 10);
+                        listView2.BeginUpdate();
+                        listView2.Clear();
+                        for (int i = 0; i < _pdfDoc.PageCount; ++i)
+                            listView2.Items.Add((i + 1).ToString());
+                        listView2.EndUpdate();
 
-                            //pg.LoadThumbnail(128, (int)(128 * pg.Height / pg.Width));
-                        }
+                        //pg.LoadThumbnail(128, (int)(128 * pg.Height / pg.Width));
                     }
                 }
             }
@@ -516,6 +521,7 @@ namespace PDFViewer
             {
                 MessageBox.Show(ex.Message, "InvalidDataException");
             }
+
         }
 
         void pg_RenderThumbnailFinishedInvoke(int page, bool bSuccesss)
@@ -660,7 +666,6 @@ namespace PDFViewer
             tvwOutline.BeforeExpand -= new TreeViewCancelEventHandler(tvwOutline_BeforeExpand);
             tvwOutline.NodeMouseClick -= new TreeNodeMouseClickEventHandler(tvwOutline_NodeMouseClick);
             Resize -= new EventHandler(frmPDFViewer_Resize);
-            FormClosing -= new FormClosingEventHandler(frmPDFViewer_FormClosing);
             
             Gma.UserActivityMonitor.HookManager.MouseDown -= new MouseEventHandler(HookManager_MouseDown);
             Gma.UserActivityMonitor.HookManager.MouseUp -= new MouseEventHandler(HookManager_MouseUp);
@@ -673,7 +678,6 @@ namespace PDFViewer
             tvwOutline.BeforeExpand += new TreeViewCancelEventHandler(tvwOutline_BeforeExpand);
             tvwOutline.NodeMouseClick += new TreeNodeMouseClickEventHandler(tvwOutline_NodeMouseClick);
             Resize += new EventHandler(frmPDFViewer_Resize);
-            FormClosing += new FormClosingEventHandler(frmPDFViewer_FormClosing);
             
             Gma.UserActivityMonitor.HookManager.MouseDown += new MouseEventHandler(HookManager_MouseDown);
             Gma.UserActivityMonitor.HookManager.MouseUp += new MouseEventHandler(HookManager_MouseUp);
@@ -753,7 +757,7 @@ namespace PDFViewer
                 if (!PdfOK())
                     return;
                 
-                frmSearch frm = new frmSearch(SearchCallBack);
+                frmSearch frm = new frmSearch(new SearchPdfHandler(SearchCallBack));
                 frm.ShowDialog();
             }
             catch (Exception ex)
@@ -1060,8 +1064,6 @@ namespace PDFViewer
             }
         }
 
-
-
         private bool doubleBufferControl1_NextPage(object sender)
         {
             //try
@@ -1284,7 +1286,6 @@ namespace PDFViewer
                 _pdfDoc.Dispose();
                 _pdfDoc = null;
             }
-            Close();
         }
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
@@ -1295,16 +1296,6 @@ namespace PDFViewer
         private void toolStripButton3_Click_1(object sender, EventArgs e)
         {
             FitWidth();
-        }
-
-        private void frmPDFViewer_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            if (_pdfDoc != null)
-            {
-                _pdfDoc.Dispose();
-                _pdfDoc = null;
-            }
-            GC.Collect();
         }
 
         bool PdfOK()
@@ -1319,13 +1310,12 @@ namespace PDFViewer
 
         }
 
-                public string StatusText
+        public string StatusText
         {
             get { return StatusLabel.Text; }
             set { StatusLabel.Text = value; }
         }
 
-    }
+    }    
 
-   
 }
