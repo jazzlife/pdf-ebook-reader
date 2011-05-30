@@ -1,4 +1,4 @@
-﻿namespace PdfViewer.Reader
+﻿namespace PDFViewer.Reader
 {
     partial class MainForm
     {
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.pLibrary = new PdfViewer.Reader.LibraryPanel();
+            this.pLibrary = new PDFViewer.Reader.LibraryPanel();
             this.pReading = new PDFViewer.Reader.ReadingPanel();
             this.SuspendLayout();
             // 
@@ -40,7 +40,7 @@
             this.pLibrary.Name = "pLibrary";
             this.pLibrary.Size = new System.Drawing.Size(326, 597);
             this.pLibrary.TabIndex = 0;
-            this.pLibrary.OpenBook += new System.EventHandler<PdfViewer.Reader.OpenBookEventArgs>(this.pLibrary_OpenBook);
+            this.pLibrary.OpenBook += new System.EventHandler<PDFViewer.Reader.OpenBookEventArgs>(this.pLibrary_OpenBook);
             // 
             // pReading
             // 

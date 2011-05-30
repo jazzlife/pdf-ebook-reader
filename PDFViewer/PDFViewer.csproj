@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PDFViewer</RootNamespace>
-    <AssemblyName>PDFViewer</AssemblyName>
+    <AssemblyName>PDF-eBook-Reader</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>
     </AssemblyOriginatorKeyFile>
@@ -250,6 +250,7 @@
     <Compile Include="Reader\ReadingPanel.Designer.cs">
       <DependentUpon>ReadingPanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="Reader\PdfEBookRenderer.cs" />
     <Compile Include="Reader\Utils\ExtensionMethods.cs" />
     <Compile Include="Reader\Utils\JsonHelper.cs" />
     <Compile Include="Reader\Utils\PathX.cs" />

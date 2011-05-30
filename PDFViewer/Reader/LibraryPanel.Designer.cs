@@ -1,4 +1,4 @@
-﻿namespace PdfViewer.Reader
+﻿namespace PDFViewer.Reader
 {
     partial class LibraryPanel
     {

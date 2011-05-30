@@ -873,11 +873,11 @@ namespace PDFViewer
         private static int shadowMargin = 2;
 
         // static for good perfomance 
-        static Image shadowDownRight = new Bitmap(Properties.Resources.tshadowdownright);
-        static Image shadowDownLeft = new Bitmap(Properties.Resources.tshadowdownleft);
-        static Image shadowDown = new Bitmap(Properties.Resources.tshadowdown);
-        static Image shadowRight = new Bitmap(Properties.Resources.tshadowright);
-        static Image shadowTopRight = new Bitmap(Properties.Resources.tshadowtopright);
+        static Image shadowDownRight = new Bitmap(PDFViewer.Properties.Resources.tshadowdownright);
+        static Image shadowDownLeft = new Bitmap(PDFViewer.Properties.Resources.tshadowdownleft);
+        static Image shadowDown = new Bitmap(PDFViewer.Properties.Resources.tshadowdown);
+        static Image shadowRight = new Bitmap(PDFViewer.Properties.Resources.tshadowright);
+        static Image shadowTopRight = new Bitmap(PDFViewer.Properties.Resources.tshadowtopright);
 
         public static void DrawShadow(Graphics g,Rectangle r)
         {

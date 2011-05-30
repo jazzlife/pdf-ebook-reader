@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
-using PDFViewer.Reader;
+//using PDFViewer.Reader;
+
 namespace PDFViewer
 {
     class StatusBusy: IDisposable
