@@ -83,7 +83,7 @@ namespace PDFViewer.Reader
 
             using (PictureBox p = new PictureBox())
             {
-                p.Width = pageView.ClientSize.Height;
+                p.Height = pageView.ClientSize.Height;
                 _pdfDoc.FitToHeight(p.Handle);
             }
             //_pdfDoc.RenderPageThread(pageView.Handle, false);

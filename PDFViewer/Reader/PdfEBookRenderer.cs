@@ -127,34 +127,49 @@ namespace PDFViewer.Reader
             if (!PdfDocLoaded) { throw new InvalidOperationException("PdfDoc not loaded."); }
         }
 
+        const double ZoomConst = 72.0;
+
         public Bitmap RenderPdfPageToBitmap(Size maxSize, int pageNum)
         {
             AssertPdfDocLoaded();
 
             if (pageNum < 1 || pageNum > _pdfDoc.PageCount) { return null; }
 
-            // Scale
+            _pdfDoc.CurrentPage = pageNum;
+
+            // Scale            
             Size pageSize = new Size(_pdfDoc.PageWidth, _pdfDoc.PageHeight);
             Size size = pageSize.ScaleToFitBounds(maxSize);
-            Bitmap bitmap = new Bitmap(size.Width, size.Height);            
+            Bitmap bitmap = new Bitmap(size.Width, size.Height);
 
-            using (Graphics g = Graphics.FromImage(bitmap))
+            try
             {
-                _pdfDoc.CurrentPage = pageNum;
+                _pdfDoc.Zoom = ZoomConst * (double)bitmap.Width / _pdfDoc.PageWidth;
 
-                _pdfDoc.ClientBounds = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-                //_pdfDoc.CurrentX = 0;
-                //_pdfDoc.CurrentY = 0;
+                using (Graphics g = Graphics.FromImage(bitmap))
+                {
+                    // TODO: decouple RenderPage and DrawPageHDC
 
-                // TODO: decouple RenderPage and DrawPageHDC
-                //_pdfDoc.FitToWidth(g.GetHdc());
-                //g.ReleaseHdc();
+                    // Note: not certain what the params mean, but they matter - simple RenderPage
+                    // doesn't work as well (sometimes zoom is not reset to ZoomConst, probably a threading issue)
+                    _pdfDoc.RenderPage(g.GetHdc(), true, true);
+                    g.ReleaseHdc();
 
-                _pdfDoc.RenderPage(g.GetHdc());
-                g.ReleaseHdc();
 
-                _pdfDoc.DrawPageHDC(g.GetHdc());
-                g.ReleaseHdc();
+                    Rectangle bounds = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+                    g.FillRectangle(Brushes.Red, bounds);
+
+                    _pdfDoc.ClientBounds = bounds;
+
+                    _pdfDoc.DrawPageHDC(g.GetHdc());
+                    g.ReleaseHdc();
+
+                    g.DrawRectangle(Pens.Red, 0, 0, bitmap.Width - 1, bitmap.Height - 1);
+                }
+            }
+            finally
+            {
+                _pdfDoc.Zoom = ZoomConst;
             }
 
             return bitmap;
