@@ -82,6 +82,14 @@
     <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AForge, Version=2.1.5.0, Culture=neutral, PublicKeyToken=c1db6ff4eaa06aeb, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\AForge.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Imaging, Version=2.1.5.0, Culture=neutral, PublicKeyToken=ba8ddea9676ca48b, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\AForge.Imaging.dll</HintPath>
+    </Reference>
     <Reference Include="PDFLibNet, Version=1.0.6.8, Culture=neutral, PublicKeyToken=26d87f7d66fb2aee, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\PDFLibNet.dll</HintPath>
@@ -226,7 +234,7 @@
     <Compile Include="RawPrinterHelper.cs" />
     <Compile Include="Reader\BookLibrary.cs" />
     <Compile Include="Reader\BookListViewItem.cs" />
-    <Compile Include="Reader\GraphicsUtils\WhitespaceEdgeDetector.cs" />
+    <Compile Include="Reader\GraphicsUtils\ContentBoundsDetector.cs" />
     <Compile Include="Reader\PDFViewerControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -356,6 +364,8 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AForge.dll" />
+    <Content Include="AForge.Imaging.dll" />
     <Content Include="PDFLibNet.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

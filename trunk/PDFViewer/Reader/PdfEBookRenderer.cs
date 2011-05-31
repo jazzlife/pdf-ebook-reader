@@ -136,7 +136,9 @@ namespace PDFViewer.Reader
 
         const double ZoomConst = 72.0;
 
-        public Bitmap RenderPdfPageToBitmap(int pageNum, Size maxSize, RenderQuality quality, CustomRenderDel fnCustomRender)
+        public Bitmap RenderPdfPageToBitmap(int pageNum, Size maxSize, 
+            RenderQuality quality = RenderQuality.HighQualityMuPdf, 
+            CustomRenderDelegate fnCustomRender = null)
         {
             AssertPdfDocLoaded();
 
@@ -186,14 +188,13 @@ namespace PDFViewer.Reader
             return bitmap;
         }
 
-        public delegate void CustomRenderDel(Bitmap bmp, Graphics g);
-
-
         public void Dispose()
         {
             DisposePdfDoc();
         }
     }
+
+    public delegate void CustomRenderDelegate(Bitmap bmp, Graphics g);
 
     public enum RenderQuality
     {
