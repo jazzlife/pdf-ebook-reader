@@ -9,6 +9,7 @@ using PDFViewer.Reader;
 using System.Drawing.Imaging;
 using PDFViewer.Test.TestUtils;
 using System.IO;
+using PDFViewer.Reader.GraphicsUtils;
 
 namespace Test
 {
@@ -78,10 +79,11 @@ namespace Test
                 for (int pageNum = 1; pageNum <= numPages; pageNum++)
                 {
                     Console.Write(".");
-                    using (Bitmap bmp = r.RenderPdfPageToBitmap(pageNum, new Size(1000, 1000), quality))
+                    using (Bitmap bmp = r.RenderPdfPageToBitmap(pageNum, new Size(200, 200), quality, 
+                        WhitespaceEdgeDetector.RenderEdgeDetectFrame))
                     {
                             String imgFile = String.Format(@"C:\temp\page{0:000}_{1}.png", pageNum, quality);
-                            //bmp.Save(imgFile, ImageFormat.Png);
+                            bmp.Save(imgFile, ImageFormat.Png);
                     }
                 }
                 Console.WriteLine();

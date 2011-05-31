@@ -136,7 +136,7 @@ namespace PDFViewer.Reader
 
         const double ZoomConst = 72.0;
 
-        public Bitmap RenderPdfPageToBitmap(int pageNum, Size maxSize, RenderQuality quality)
+        public Bitmap RenderPdfPageToBitmap(int pageNum, Size maxSize, RenderQuality quality, CustomRenderDel fnCustomRender)
         {
             AssertPdfDocLoaded();
 
@@ -177,11 +177,16 @@ namespace PDFViewer.Reader
                 _pdfDoc.DrawPageHDC(g.GetHdc());
                 g.ReleaseHdc();
 
-                g.DrawRectangle(Pens.Red, 0, 0, bitmap.Width - 1, bitmap.Height - 1);
+                if (fnCustomRender != null)
+                {
+                    fnCustomRender(bitmap, g);
+                }
             }
 
             return bitmap;
         }
+
+        public delegate void CustomRenderDel(Bitmap bmp, Graphics g);
 
 
         public void Dispose()
