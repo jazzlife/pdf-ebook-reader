@@ -80,6 +80,52 @@ namespace PDFViewer.Test
 
         }
 
+        [Test]
+        public void aRenderScreenPagesForAll_Fast()
+        {
+            var files = Directory.GetFiles(PdfFilePath, "*.pdf").Select(x => Path.GetFileName(x));
+
+            foreach (String file in files)
+            {
+                RenderScreenPages(file);
+            }
+
+        }
+
+        void RenderScreenPages(String file)
+        {
+            file = Path.Combine(PdfFilePath, file);
+
+            PdfEBookRenderer r = new PdfEBookRenderer();
+            r.LoadPdf(file);
+
+            Size screenPageSize = new Size(800, 600);
+
+            PerfTimer timer = new PerfTimer("Screen Page Load {0}x{1} '{2}'", 
+                screenPageSize.Width, screenPageSize.Height, Path.GetFileName(file));
+
+            int numPages = Math.Min(10, r.PageCount);
+            for (int pageNum = 1; pageNum <= numPages; pageNum++)
+            {
+                using (timer.NewRun)
+                {
+                    using (Bitmap screenPage = r.RenderScreenPageToBitmap(pageNum, 0, screenPageSize))
+                    {
+                        String imgFile = String.Format(@"C:\temp\{0}-{1:000}a.png", Path.GetFileNameWithoutExtension(file), pageNum);
+                        screenPage.Save(imgFile, ImageFormat.Png);
+                    }
+
+                    using (Bitmap screenPage = r.RenderScreenPageToBitmap(pageNum, screenPageSize.Height, screenPageSize))
+                    {
+                        String imgFile = String.Format(@"C:\temp\{0}-{1:000}b.png", Path.GetFileNameWithoutExtension(file), pageNum);
+                        screenPage.Save(imgFile, ImageFormat.Png);
+                    }
+                }
+            }
+
+            Console.WriteLine(timer);
+        }
+
     }
 
 }

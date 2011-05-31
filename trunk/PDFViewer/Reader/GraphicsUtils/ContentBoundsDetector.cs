@@ -11,6 +11,13 @@ namespace PDFViewer.Reader.GraphicsUtils
 {
     public class ContentBoundsInfo
     {
+        readonly public Size PageSize;
+
+        public ContentBoundsInfo(Size pageSize)
+        {
+            PageSize = pageSize;
+        }
+
         public Blob[] Blobs;
         public Rectangle Bounds;
 
@@ -18,25 +25,51 @@ namespace PDFViewer.Reader.GraphicsUtils
 
         public RowBoundsInfo Header;
         public RowBoundsInfo Footer;
+
+        /// <summary>
+        /// Bounds in 0-1 floating point units (scaled by PageSize).
+        /// </summary>
+        public RectangleF BoundsRelative
+        {
+            get
+            {
+                return new RectangleF(
+                    (float)Bounds.X / PageSize.Width,
+                    (float)Bounds.Y / PageSize.Height,
+                    (float)Bounds.Width / PageSize.Width,
+                    (float)Bounds.Height / PageSize.Height);
+            }
+        }
     }
 
     public class RowBoundsInfo
     {
         public List<Blob> Blobs = new List<Blob>();
-
         public Rectangle Bounds;
     }
 
 
     /// <summary>
-    /// Detect real bounds of the content on a physical page
-    /// (main text, header, footer).
+    /// Detects real bounds of main text (without margins), as well as 
+    /// presence of header/footer.
+    /// 
+    /// Works from a physical page image (any image, usually but 
+    /// not necessarily PDF).
     /// </summary>
     public class ContentBoundsDetector
     {
+        public ContentBoundsInfo DetectBounds(Bitmap bmp)
+        {
+            ContentBoundsInfo cbi = DetectBlobs(bmp, null);
+            DetectRowBounds(ref cbi, null);
+            return cbi;
+        }
+
         internal ContentBoundsInfo DetectBlobs(Bitmap bmp, Graphics g)
         {
-            ContentBoundsInfo cbi = new ContentBoundsInfo();
+            if (bmp == null) { throw new ArgumentNullException("bmp"); }
+
+            ContentBoundsInfo cbi = new ContentBoundsInfo(bmp.Size);
 
             Invert filter = new Invert();
             filter.ApplyInPlace(bmp);
@@ -51,22 +84,19 @@ namespace PDFViewer.Reader.GraphicsUtils
 
             cbi.Blobs = bc.GetObjectsInformation();
             
-            // Debug
-            if (bc.ObjectsCount == 0)
+            if (g != null)
             {
-                g.FillEllipse(Brushes.Red, 0, 0, 10, 10);
-            }
-            else
-            {
-                foreach (var blob in cbi.Blobs)
-                {
-                    g.DrawRectangle(Pens.Orange, blob.Rectangle);
-                }
+                if (bc.ObjectsCount == 0) { g.FillEllipse(Brushes.Red, 0, 0, 10, 10); }
+                else { cbi.Blobs.ForEach(b => g.DrawRectangle(Pens.Orange, b.Rectangle)); }
             }
 
             cbi.Bounds = BoundsAroundBlobs(cbi.Blobs);
-            g.DrawRectangle(Pens.Cyan, cbi.Bounds);
-            
+
+            if (g != null)
+            {
+                g.DrawRectangle(Pens.Cyan, cbi.Bounds);
+            }
+
             return cbi;
         }
 
@@ -101,8 +131,11 @@ namespace PDFViewer.Reader.GraphicsUtils
 
                 if (blobsInRow.FirstOrDefault() == null)
                 {
-                    // Debug
-                    g.DrawRectangle(Pens.DarkGray, rowRect);
+                    // Draw space between rows
+                    if (g != null)
+                    {
+                        g.DrawRectangle(Pens.DarkSlateGray, rowRect);
+                    }
 
                     // Empty row detected. Commit current row (if any)
                     TryAddRow(cbi.Rows, ref currentRow);
@@ -126,40 +159,41 @@ namespace PDFViewer.Reader.GraphicsUtils
             // Add row at the end
             TryAddRow(cbi.Rows, ref currentRow);
 
-            // Debug
-            cbi.Rows.ForEach(r => g.DrawRectangle(Pens.HotPink, r.Bounds));
+            // Draw rows 
+            if (g != null) { cbi.Rows.ForEach(r => g.DrawRectangle(Pens.HotPink, r.Bounds)); }
 
-
-
-            DetectHeaderAndFooter(ref cbi);
+            FindHeaderAndFooter(ref cbi);
 
             // TODO: refactor
             if (cbi.Header != null)
             {
-                g.DrawRectangle(Pens.Yellow, cbi.Header.Bounds);
-                g.FillRectangle(Brushes.Yellow, cbi.Header.Bounds.X, cbi.Header.Bounds.Y, 10, cbi.Header.Bounds.Height);
-
+                DebugDrawHeaderOrFooter(cbi.Header, g);
                 cbi.Rows.Remove(cbi.Header);
             }
             if (cbi.Footer != null)
             {
-                g.DrawRectangle(Pens.Yellow, cbi.Footer.Bounds);
-                g.FillRectangle(Brushes.Yellow, cbi.Footer.Bounds.X, cbi.Footer.Bounds.Y, 10, cbi.Footer.Bounds.Height);
-
+                DebugDrawHeaderOrFooter(cbi.Footer, g);
                 cbi.Rows.Remove(cbi.Footer);
             }
 
             cbi.Bounds = BoundsAroundBlobs(cbi.Rows.SelectMany(x => x.Blobs));
 
-            // DEBUG
-            if (cbi.Header != null || cbi.Footer != null)
+            // Draw adjusted bounds
+            if (g != null && (cbi.Header != null || cbi.Footer != null))
             {
                 g.DrawRectangle(Pens.Green, cbi.Bounds);
             }
-            // TODO: recompute main text bounds
         }
 
-        void DetectHeaderAndFooter(ref ContentBoundsInfo cbi)
+        void DebugDrawHeaderOrFooter(RowBoundsInfo row, Graphics g)
+        {
+            if (g == null) { return; }
+
+            g.DrawRectangle(Pens.Yellow, row.Bounds);
+            g.FillRectangle(Brushes.Yellow, row.Bounds.X, row.Bounds.Y, 10, row.Bounds.Height);
+        }
+
+        void FindHeaderAndFooter(ref ContentBoundsInfo cbi)
         {
             // KEY HEURISTIC: do most OTHER pages have headers and footers.
             // Difficult to implement at this level, but ought to be reliable.
