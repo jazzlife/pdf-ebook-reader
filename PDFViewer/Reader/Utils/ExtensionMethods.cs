@@ -41,5 +41,23 @@ namespace PDFViewer.Reader.Utils
             return new Size(width, height);
         }
 
+        // LINQ-like
+        public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T> action)
+        {
+            foreach (T item in enumeration)
+            {
+                action(item);
+            }
+        }
+
+        public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T, int> action)
+        {
+            int index = 0;
+            foreach (T item in enumeration)
+            {
+                action(item, index++);
+            }
+        }
+
     }
 }
