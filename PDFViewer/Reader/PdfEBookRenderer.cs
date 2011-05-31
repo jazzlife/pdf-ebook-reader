@@ -7,6 +7,8 @@ using PDFLibNet;
 using System.Windows.Forms;
 using System.Drawing;
 using PDFViewer.Reader.Utils;
+using PDFViewer.Reader.GraphicsUtils;
+using System.Drawing.Imaging;
 
 namespace PDFViewer.Reader
 {
@@ -133,13 +135,61 @@ namespace PDFViewer.Reader
 
         #endregion
 
+        readonly Size LayoutRenderSize = new Size(1000, 1000);
+
+        public Bitmap RenderScreenPageToBitmap(int pdfPageNum, int topOfPdfPage, Size screenPageSize)
+        {
+            if (pdfPageNum < 1) { throw new ArgumentException("pdfPageNum < 1. Should start at 1"); }
+
+            // 24bpp format for compatibility with AForge
+            Bitmap screenPage = new Bitmap(screenPageSize.Width, screenPageSize.Height, PixelFormat.Format24bppRgb);
+            ContentBoundsDetector detector = new ContentBoundsDetector();
+
+            using (Graphics g = Graphics.FromImage(screenPage))
+            {
+                int screenPageTop = 0;
+                while (screenPageTop < screenPageSize.Height)
+                {
+                    // Figure out layout
+                    ContentBoundsInfo cbi;
+                    using (Bitmap pdfLayoutPage = RenderPdfPageToBitmap(pdfPageNum, LayoutRenderSize))
+                    {
+                        cbi = detector.DetectBounds(pdfLayoutPage);
+                    }
+
+                    // Empty page special case
+                    if (cbi.Bounds == Rectangle.Empty)
+                    {
+                        // TODO: do something more sensible
+                        g.FillEllipse(Brushes.DarkSlateGray, 10, 10, 30, 30);
+                        break;
+                    }
+
+                    // Render actual page. Bounded by width, but not height.
+                    int maxWidth = (int)((float)screenPageSize.Width / cbi.BoundsRelative.Width);
+                    Size displayPageMaxSize = new Size(maxWidth, int.MaxValue);
+
+                    using (Bitmap pdfDisplayPage = RenderPdfPageToBitmap(pdfPageNum, displayPageMaxSize))
+                    {
+                        g.DrawImageUnscaled(pdfDisplayPage,
+                            - (int)(cbi.BoundsRelative.X * pdfDisplayPage.Width),
+                            - topOfPdfPage - (int)(cbi.BoundsRelative.Y * pdfDisplayPage.Height));
+                    }
+
+                    // TODO: add other pages as needed
+                    break;
+                }
+            }
+
+            return screenPage;
+        }
 
         const double ZoomConst = 72.0;
 
         public Bitmap RenderPdfPageToBitmap(int pageNum, Size maxSize, 
-            RenderQuality quality = RenderQuality.HighQualityMuPdf, 
-            CustomRenderDelegate fnCustomRender = null)
+            RenderQuality quality = RenderQuality.HighQualityMuPdf)
         {
+            if (pageNum < 1) { throw new ArgumentException("pageNum < 1. Should start at 1"); }
             AssertPdfDocLoaded();
 
             if (pageNum < 1 || pageNum > _pdfDoc.PageCount) { return null; }
@@ -152,10 +202,13 @@ namespace PDFViewer.Reader
                 _pdfDoc.UseMuPDF = true; 
             }
 
+
             // Scale            
             Size pageSize = new Size(_pdfDoc.PageWidth, _pdfDoc.PageHeight);
             Size size = pageSize.ScaleToFitBounds(maxSize);
-            Bitmap bitmap = new Bitmap(size.Width, size.Height);
+
+            // 24bpp format for compatibility with AForge
+            Bitmap bitmap = new Bitmap(size.Width, size.Height, PixelFormat.Format24bppRgb);
 
             using (Graphics g = Graphics.FromImage(bitmap))
             {
@@ -178,11 +231,6 @@ namespace PDFViewer.Reader
                 _pdfDoc.ClientBounds = bounds;
                 _pdfDoc.DrawPageHDC(g.GetHdc());
                 g.ReleaseHdc();
-
-                if (fnCustomRender != null)
-                {
-                    fnCustomRender(bitmap, g);
-                }
             }
 
             return bitmap;
