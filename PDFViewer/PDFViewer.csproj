@@ -226,7 +226,7 @@
     <Compile Include="RawPrinterHelper.cs" />
     <Compile Include="Reader\BookLibrary.cs" />
     <Compile Include="Reader\BookListViewItem.cs" />
-    <Compile Include="Reader\GraphicsUtils\EdgeDetector.cs" />
+    <Compile Include="Reader\GraphicsUtils\WhitespaceEdgeDetector.cs" />
     <Compile Include="Reader\PDFViewerControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
