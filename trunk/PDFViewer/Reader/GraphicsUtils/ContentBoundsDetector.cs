@@ -14,11 +14,19 @@ namespace PDFViewer.Reader.GraphicsUtils
         public Blob[] Blobs;
         public Rectangle Bounds;
 
-        public List<Rectangle> Rows;
+        public List<RowBoundsInfo> Rows;
 
-        public Rectangle Header;
-        public Rectangle Footer;
+        public RowBoundsInfo Header;
+        public RowBoundsInfo Footer;
     }
+
+    public class RowBoundsInfo
+    {
+        public List<Blob> Blobs = new List<Blob>();
+
+        public Rectangle Bounds;
+    }
+
 
     /// <summary>
     /// Detect real bounds of the content on a physical page
@@ -55,21 +63,24 @@ namespace PDFViewer.Reader.GraphicsUtils
                     g.DrawRectangle(Pens.Orange, blob.Rectangle);
                 }
             }
+
+            cbi.Bounds = BoundsAroundBlobs(cbi.Blobs);
+            g.DrawRectangle(Pens.Cyan, cbi.Bounds);
+            
             return cbi;
         }
 
-        internal void DetectMainContentBounds(ref ContentBoundsInfo cbi, Graphics g)
+        Rectangle BoundsAroundBlobs(IEnumerable<Blob> blobs)
         {
-            if (cbi.Blobs == null) { throw new ArgumentException("cbi.Blobs is null"); }
-            if (cbi.Blobs.Length == 0) { return; }
+            if (blobs == null) { throw new ArgumentNullException("blobs"); }
+            if (blobs.FirstOrDefault() == null) { return Rectangle.Empty; }
 
-            int left = cbi.Blobs.Select(b => b.Rectangle.Left).Min();
-            int right = cbi.Blobs.Select(b => b.Rectangle.Right).Max();
-            int top = cbi.Blobs.Select(b => b.Rectangle.Top).Min();
-            int bottom = cbi.Blobs.Select(b => b.Rectangle.Bottom).Max();
+            int left = blobs.Select(b => b.Rectangle.Left).Min();
+            int right = blobs.Select(b => b.Rectangle.Right).Max();
+            int top = blobs.Select(b => b.Rectangle.Top).Min();
+            int bottom = blobs.Select(b => b.Rectangle.Bottom).Max();
 
-            cbi.Bounds = new Rectangle(left, top, right - left, bottom - top);
-            g.DrawRectangle(Pens.Cyan, cbi.Bounds);
+            return new Rectangle(left, top, right - left, bottom - top);
         }
 
         internal void DetectRowBounds(ref ContentBoundsInfo cbi, Graphics g)
@@ -78,20 +89,160 @@ namespace PDFViewer.Reader.GraphicsUtils
             if (cbi.Blobs.Length == 0) { return; }
             if (cbi.Bounds == Rectangle.Empty) { return; }
 
-            cbi.Rows = new List<Rectangle>();
+            cbi.Rows = new List<RowBoundsInfo>();
 
+            RowBoundsInfo currentRow = null;
             // Attempt drawing lines between the rows.
             for (int y = cbi.Bounds.Top; y < cbi.Bounds.Bottom; y++)
             {
                 Rectangle rowRect = new Rectangle(cbi.Bounds.Left, y, cbi.Bounds.Width, 1);
-                if (cbi.Blobs.FirstOrDefault(b => b.Rectangle.IntersectsWith(rowRect)) == null)
+
+                var blobsInRow = cbi.Blobs.Where(b => b.Rectangle.IntersectsWith(rowRect));
+
+                if (blobsInRow.FirstOrDefault() == null)
                 {
-                    g.FillRectangle(Brushes.LightGreen, rowRect);
+                    // Debug
+                    g.DrawRectangle(Pens.DarkGray, rowRect);
+
+                    // Empty row detected. Commit current row (if any)
+                    TryAddRow(cbi.Rows, ref currentRow);
+                    currentRow = null;
+                }
+                else
+                {
+                    // Start new row if needed
+                    if (currentRow == null)
+                    {
+                        currentRow = new RowBoundsInfo();
+                    }
+                    currentRow.Blobs.AddRange(blobsInRow);
+
+                    // Advance to test the next empty space
+                    // TODO: beware of off-by-1
+                    //y = currentRow.Bounds.Bottom - 1;
                 }
             }
 
-            // TODO: optimize
-            // TODO: add actual rows (not just 1-pixel thin rectangles)
+            // Add row at the end
+            TryAddRow(cbi.Rows, ref currentRow);
+
+            // Debug
+            cbi.Rows.ForEach(r => g.DrawRectangle(Pens.HotPink, r.Bounds));
+
+
+
+            DetectHeaderAndFooter(ref cbi);
+
+            // TODO: refactor
+            if (cbi.Header != null)
+            {
+                g.DrawRectangle(Pens.Yellow, cbi.Header.Bounds);
+                g.FillRectangle(Brushes.Yellow, cbi.Header.Bounds.X, cbi.Header.Bounds.Y, 10, cbi.Header.Bounds.Height);
+
+                cbi.Rows.Remove(cbi.Header);
+            }
+            if (cbi.Footer != null)
+            {
+                g.DrawRectangle(Pens.Yellow, cbi.Footer.Bounds);
+                g.FillRectangle(Brushes.Yellow, cbi.Footer.Bounds.X, cbi.Footer.Bounds.Y, 10, cbi.Footer.Bounds.Height);
+
+                cbi.Rows.Remove(cbi.Footer);
+            }
+
+            cbi.Bounds = BoundsAroundBlobs(cbi.Rows.SelectMany(x => x.Blobs));
+
+            // DEBUG
+            if (cbi.Header != null || cbi.Footer != null)
+            {
+                g.DrawRectangle(Pens.Green, cbi.Bounds);
+            }
+            // TODO: recompute main text bounds
+        }
+
+        void DetectHeaderAndFooter(ref ContentBoundsInfo cbi)
+        {
+            // KEY HEURISTIC: do most OTHER pages have headers and footers.
+            // Difficult to implement at this level, but ought to be reliable.
+
+            // PROBLEM section heading sometimes recognized as header.
+            // Height filtering could fix this in theory, but it's bad in other cases
+
+            // FALSE POSITIVES are terrible (worse than missing a header/footer)
+            // out006 out038 out044 0ut has a false positive footer of the last line. Heuristic? 
+            // Left aligned? By itself, left alignment does not disqualify it
+
+            // Maybe this is a learning problem -- extract features, make probabilistic
+            // analysis. Need training data -- set of page pictures labeled with HasHeader/HasFooter
+
+            // Minimum number of rows on a sensible page
+            if (cbi.Rows.Count < 2) { return; }
+
+            int lastIdx = cbi.Rows.Count - 1;
+
+            // Exception with small numbers (e.g. 2 elements, upper one much smaller => footer
+            if (cbi.Rows.Count <= 3)
+            {
+                // Check header
+                if (cbi.Rows[0].Bounds.Height < cbi.Rows[1].Bounds.Height / 2)
+                {
+                    cbi.Header = cbi.Rows[0];
+                }
+
+                // Check footer
+                if (cbi.Rows[lastIdx].Bounds.Height < cbi.Rows[lastIdx - 1].Bounds.Height / 2)
+                {
+                    cbi.Footer = cbi.Rows[lastIdx];
+                }
+
+                return;
+            }
+
+            int distanceSum = 0;            
+            for (int i = 1; i < cbi.Rows.Count; i++)
+            {
+                distanceSum += DistanceAboveRow(i, cbi);
+            }
+            float distanceAvg = (float)distanceSum / (cbi.Rows.Count - 1);
+            float minDistance = distanceAvg * 1.2f;
+
+            float heightAvg = cbi.Rows.Average(r => (float)r.Bounds.Height);
+            float maxHeight = heightAvg * 1.5f;
+
+            // Header
+            int headerHeight = cbi.Rows[0].Bounds.Height;
+            int headerDistance = DistanceAboveRow(1, cbi);
+
+            if (headerDistance > minDistance &&
+                headerHeight < maxHeight)
+            {
+                cbi.Header = cbi.Rows[0];
+            }
+
+            // Footer
+            int footerHeight = cbi.Rows[lastIdx].Bounds.Height;
+            int footerDistance = DistanceAboveRow(lastIdx, cbi);
+            if (footerDistance > minDistance &&
+                footerHeight< maxHeight)
+            {
+                cbi.Footer = cbi.Rows[lastIdx];
+            }
+
+            // Note: width heuristic is wrong -- header can be wide
+        }
+
+        int DistanceAboveRow(int index, ContentBoundsInfo cbi)
+        {
+            // Lower.Top - Upper.Bottom
+            return cbi.Rows[index].Bounds.Top - cbi.Rows[index - 1].Bounds.Bottom;
+        }
+
+        void TryAddRow(List<RowBoundsInfo> rows, ref RowBoundsInfo currentRow)
+        {
+            if (currentRow == null) { return; }
+
+            currentRow.Blobs = currentRow.Blobs.Distinct().ToList();
+            currentRow.Bounds = BoundsAroundBlobs(currentRow.Blobs);
+            rows.Add(currentRow);
         }
 
         class BlobsFilter : IBlobsFilter
