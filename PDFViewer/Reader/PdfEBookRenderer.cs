@@ -25,6 +25,12 @@ namespace PDFViewer.Reader
             //xPDFParams.ErrorFile = "C:\\stderr.log";
         }
 
+        #region PdfDoc properties
+
+        public int PageCount { get { return _pdfDoc.PageCount; } }
+
+        #endregion
+
         #region Loading PdfDoc
 
         /// <summary>
@@ -35,6 +41,11 @@ namespace PDFViewer.Reader
             get { return _pdfDoc != null && _pdfDoc.PageCount > 0; }
         }
 
+        void AssertPdfDocLoaded()
+        {
+            if (!PdfDocLoaded) { throw new InvalidOperationException("PdfDoc not loaded."); }
+        }
+
         public void LoadPdf(String filename)
         {            
             try 
@@ -42,7 +53,7 @@ namespace PDFViewer.Reader
                 _pdfDoc = new PDFWrapper();
                 //_pdfDoc.PDFLoadCompeted += new PDFLoadCompletedHandler(_pdfDoc_PDFLoadCompeted);
                 //_pdfDoc.PDFLoadBegin += new PDFLoadBeginHandler(_pdfDoc_PDFLoadBegin);
-                _pdfDoc.UseMuPDF = true;
+                //_pdfDoc.UseMuPDF = true;
 
                 LoadFile(filename, _pdfDoc);
             }
@@ -122,14 +133,10 @@ namespace PDFViewer.Reader
 
         #endregion
 
-        void AssertPdfDocLoaded()
-        {
-            if (!PdfDocLoaded) { throw new InvalidOperationException("PdfDoc not loaded."); }
-        }
 
         const double ZoomConst = 72.0;
 
-        public Bitmap RenderPdfPageToBitmap(Size maxSize, int pageNum)
+        public Bitmap RenderPdfPageToBitmap(int pageNum, Size maxSize, RenderQuality quality)
         {
             AssertPdfDocLoaded();
 
@@ -137,39 +144,40 @@ namespace PDFViewer.Reader
 
             _pdfDoc.CurrentPage = pageNum;
 
+            _pdfDoc.UseMuPDF = false;
+            if (_pdfDoc.SupportsMuPDF && quality == RenderQuality.HighQualityMuPdf) 
+            { 
+                _pdfDoc.UseMuPDF = true; 
+            }
+
             // Scale            
             Size pageSize = new Size(_pdfDoc.PageWidth, _pdfDoc.PageHeight);
             Size size = pageSize.ScaleToFitBounds(maxSize);
             Bitmap bitmap = new Bitmap(size.Width, size.Height);
 
-            try
+            using (Graphics g = Graphics.FromImage(bitmap))
             {
                 _pdfDoc.Zoom = ZoomConst * (double)bitmap.Width / _pdfDoc.PageWidth;
-
-                using (Graphics g = Graphics.FromImage(bitmap))
+                try
                 {
-                    // TODO: decouple RenderPage and DrawPageHDC
-
-                    // Note: not certain what the params mean, but they matter - simple RenderPage
-                    // doesn't work as well (sometimes zoom is not reset to ZoomConst, probably a threading issue)
-                    _pdfDoc.RenderPage(g.GetHdc(), true, true);
+                    // Note: not certain what the params mean.
+                    // Simple RenderPage sometimes does not zoom properly
+                    _pdfDoc.RenderPage(g.GetHdc(), true, false);
                     g.ReleaseHdc();
-
-
-                    Rectangle bounds = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-                    g.FillRectangle(Brushes.Red, bounds);
-
-                    _pdfDoc.ClientBounds = bounds;
-
-                    _pdfDoc.DrawPageHDC(g.GetHdc());
-                    g.ReleaseHdc();
-
-                    g.DrawRectangle(Pens.Red, 0, 0, bitmap.Width - 1, bitmap.Height - 1);
                 }
-            }
-            finally
-            {
-                _pdfDoc.Zoom = ZoomConst;
+                finally
+                {
+                    _pdfDoc.Zoom = ZoomConst;
+                }
+
+                Rectangle bounds = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+                g.FillRectangle(Brushes.Orange, bounds);
+
+                _pdfDoc.ClientBounds = bounds;
+                _pdfDoc.DrawPageHDC(g.GetHdc());
+                g.ReleaseHdc();
+
+                g.DrawRectangle(Pens.Red, 0, 0, bitmap.Width - 1, bitmap.Height - 1);
             }
 
             return bitmap;
@@ -180,6 +188,12 @@ namespace PDFViewer.Reader
         {
             DisposePdfDoc();
         }
+    }
+
+    public enum RenderQuality
+    {
+        Fast,
+        HighQualityMuPdf,
     }
 
     
