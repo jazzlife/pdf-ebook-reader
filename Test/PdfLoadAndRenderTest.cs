@@ -48,8 +48,8 @@ namespace PDFViewer.Test
             Size size = new Size(1000, 1000);
             PerfTimer pageRenderTimer = new PerfTimer("Render pages {0}x{1} {2}", size.Width, size.Height, quality);
             
-            int numPages = Math.Min(15, r.PageCount);
-            for (int pageNum = 1; pageNum <= numPages; pageNum++)
+            int numPages = Math.Min(20, r.PageCount);
+            for (int pageNum = 5; pageNum <= numPages; pageNum++)
             {
                 Bitmap bmp;
                 

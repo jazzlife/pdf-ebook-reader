@@ -28,19 +28,16 @@ namespace PDFViewer.Test
         public void AForgeEdgeDetect()
         {
             _timerDetectBlobs = new PerfTimer("DetectBlobs");
-            _timerMainContent = new PerfTimer("MainContentBounds");
             _timerRows = new PerfTimer("RowBounds");
 
             ProcesAllImages(ProcessOneImage);
 
             Console.WriteLine();
             Console.WriteLine(_timerDetectBlobs);
-            Console.WriteLine(_timerMainContent);
             Console.WriteLine(_timerRows);
         }
 
         PerfTimer _timerDetectBlobs;
-        PerfTimer _timerMainContent;
         PerfTimer _timerRows;
 
         void ProcessOneImage(Bitmap bmp, Graphics g)
@@ -51,10 +48,6 @@ namespace PDFViewer.Test
             using (_timerDetectBlobs.NewRun)
             {
                 cbi = detector.DetectBlobs(bmp, g);
-            }
-            using (_timerMainContent.NewRun)
-            {
-                detector.DetectMainContentBounds(ref cbi, g);
             }
             using (_timerRows.NewRun)
             {
