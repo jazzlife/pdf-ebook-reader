@@ -171,7 +171,7 @@ namespace PDFViewer.Reader
                 }
 
                 Rectangle bounds = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-                g.FillRectangle(Brushes.Orange, bounds);
+                g.FillRectangle(Brushes.White, bounds);
 
                 _pdfDoc.ClientBounds = bounds;
                 _pdfDoc.DrawPageHDC(g.GetHdc());

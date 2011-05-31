@@ -8,6 +8,7 @@ namespace PDFViewer.Reader.GraphicsUtils
 {
     public class WhitespaceEdgeDetector
     {
+        const byte Threshold = 250; // background color threshold
 
         public static void RenderEdgeDetectFrame(Bitmap bmp, Graphics g)
         {
@@ -15,8 +16,6 @@ namespace PDFViewer.Reader.GraphicsUtils
             Rectangle r = d.GetContentBounds(bmp);
             g.DrawRectangle(Pens.Red, r);
         }
-
-        const byte Threshold = 250; // background color threshold
 
         public Rectangle GetContentBounds(Bitmap bmp)
         {
@@ -31,15 +30,12 @@ namespace PDFViewer.Reader.GraphicsUtils
             return new Rectangle(left, top, right - left, bottom - top);
         }
 
+        // Left, Right
         int GetLeftEdge(Bitmap bmp)
         {
             for (int x = 0; x < bmp.Width; x++)
             {
-                for (int y = 0; y < bmp.Height; y++)
-                {
-                    Color c = bmp.GetPixel(x, y);
-                    if (!IsBackground(c)) { return x; }
-                }
+                if (!VerticalLineBlank(bmp, x)) { return x; }
             }
             return -1;
         }
@@ -48,24 +44,17 @@ namespace PDFViewer.Reader.GraphicsUtils
         {
             for (int x = bmp.Width - 1; x >= 0; x--)
             {
-                for (int y = 0; y < bmp.Height; y++)
-                {
-                    Color c = bmp.GetPixel(x, y);
-                    if (!IsBackground(c)) { return x; }
-                }
+                if (!VerticalLineBlank(bmp, x)) { return x; }
             }
             return -1;
         }
 
+        // Top, Bottom
         int GetTopEdge(Bitmap bmp)
         {
             for (int y = 0; y < bmp.Height; y++)
             {
-                for (int x = 0; x < bmp.Width; x++)
-                {
-                    Color c = bmp.GetPixel(x, y);
-                    if (!IsBackground(c)) { return y; }
-                }
+                if (!HorizontalLineBlank(bmp, y)) { return y; }
             }
             return -1;
         }
@@ -74,13 +63,30 @@ namespace PDFViewer.Reader.GraphicsUtils
         {
             for (int y = bmp.Height - 1; y >= 0; y--)
             {
-                for (int x = 0; x < bmp.Width; x++)
-                {
-                    Color c = bmp.GetPixel(x, y);
-                    if (!IsBackground(c)) { return y; }
-                }
+                if (!HorizontalLineBlank(bmp, y)) { return y; }
             }
             return -1;
+        }
+
+        // Line blank detectors
+        bool HorizontalLineBlank(Bitmap bmp, int y)
+        {
+            for (int x = 0; x < bmp.Width; x++)
+            {
+                Color c = bmp.GetPixel(x, y);
+                if (!IsBackground(c)) { return false; }
+            }
+            return true;
+        }
+
+        bool VerticalLineBlank(Bitmap bmp, int x)
+        {
+            for (int y = 0; y < bmp.Height; y++)
+            {
+                Color c = bmp.GetPixel(x, y);
+                if (!IsBackground(c)) { return false; }
+            }
+            return true;
         }
 
         bool IsBackground(Color c)
