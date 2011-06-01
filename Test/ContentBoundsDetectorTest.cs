@@ -16,21 +16,19 @@ namespace PDFViewer.Test
     [TestFixture]
     public class ContentBoundsDetectorTest
     {
-
-
-        IEnumerable<String> GetImageFiles()
+        IEnumerable<String> GetPageImageFiles()
         {
             const String path = @"..\..\PageImages";
             return Directory.GetFiles(path, "*.png");
         }
-        
+
         [Test]
-        public void AForgeEdgeDetect()
+        public void All_DetectPageContentBounds()
         {
             _timerDetectBlobs = new PerfTimer("DetectBlobs");
             _timerRows = new PerfTimer("RowBounds");
 
-            ProcesAllImages(ProcessOneImage);
+            ProcesAllImages(DetectContentBounds);
 
             Console.WriteLine();
             Console.WriteLine(_timerDetectBlobs);
@@ -40,7 +38,7 @@ namespace PDFViewer.Test
         PerfTimer _timerDetectBlobs;
         PerfTimer _timerRows;
 
-        void ProcessOneImage(Bitmap bmp, Graphics g)
+        void DetectContentBounds(Bitmap bmp, Graphics g)
         {
             ContentBoundsInfo cbi;
             ContentBoundsDetector detector = new ContentBoundsDetector();
@@ -57,24 +55,29 @@ namespace PDFViewer.Test
 
         void ProcesAllImages(CustomRenderDelegate fnRender, int numFiles = -1)
         {
-            var files = GetImageFiles().Select(x => x);
+            var files = GetPageImageFiles().Select(x => x);
             if (numFiles > 0) { files = files.Take(numFiles); }
 
             int i = 0;
             foreach (String file in files)
             {
-                using (Bitmap inBmp = new Bitmap(file))
+                ProcessImage(fnRender, file, i++);
+            }
+        }
+
+        void ProcessImage(CustomRenderDelegate fnRender, String file, int index = 0)
+        {
+            using (Bitmap inBmp = new Bitmap(file))
+            {
+                using (Bitmap outBmp = new Bitmap(inBmp.Width, inBmp.Height, PixelFormat.Format24bppRgb))
                 {
-                    using (Bitmap outBmp = new Bitmap(inBmp.Width, inBmp.Height, PixelFormat.Format24bppRgb))
+                    using (Graphics g = Graphics.FromImage(outBmp))
                     {
-                        using (Graphics g = Graphics.FromImage(outBmp))
-                        {
-                            g.DrawImageUnscaled(inBmp, 0, 0);
+                        g.DrawImageUnscaled(inBmp, 0, 0);
 
-                            fnRender(outBmp, g);
+                        fnRender(outBmp, g);
 
-                            outBmp.Save(String.Format(@"C:\temp\out{0:000}.jpg", i++), ImageFormat.Png);
-                        }
+                        outBmp.Save(String.Format(@"C:\temp\out{0:000}.png", index), ImageFormat.Png);
                     }
                 }
             }

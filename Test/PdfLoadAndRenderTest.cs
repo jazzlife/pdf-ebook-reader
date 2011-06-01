@@ -9,6 +9,7 @@ using PDFViewer.Reader;
 using System.Drawing.Imaging;
 using PDFViewer.Test.TestUtils;
 using System.IO;
+using PDFViewer.Reader.GraphicsUtils;
 
 namespace PDFViewer.Test
 {
@@ -16,26 +17,24 @@ namespace PDFViewer.Test
     public class PdfLoadAndRenderTest
     {
         const String PdfFilePath = @"..\..\PDFs";
-        String file1 = "Pictures - Predictably Irrational.pdf";
-        String file2 = "Bad Scan Tilted Facing Pages Big - Solzhenitsyn.pdf";
-        String file3 = "Clean Tex - Hitchhiker's.pdf";
+        //String file_normal = "Pictures - Predictably Irrational.pdf";
+        //String file_badScan = "Bad Scan Tilted Facing Pages Big - Solzhenitsyn.pdf";
+        String file_clean = "Clean Large Margins - McCargo.pdf";
 
-        [Test]
-        public void GeneratePages1_Fast() { GeneratePages(file1, RenderQuality.Fast); }
-        [Test]
-        public void GeneratePages1_Quality() { GeneratePages(file1, RenderQuality.HighQualityMuPdf); }
+        #region PDF page load and render
 
-        [Test]
-        public void GeneratePages2_Fast() { GeneratePages(file2, RenderQuality.Fast); }
-        [Test]
-        public void GeneratePages2_Quality() { GeneratePages(file2, RenderQuality.HighQualityMuPdf); }
+        [Test, Explicit]
+        public void All_LoadAndRenderPdfPages_Fast()
+        {
+            var files = Directory.GetFiles(PdfFilePath, "*.pdf").Select(x => Path.GetFileName(x));
 
-        [Test]
-        public void GeneratePages3_Fast() { GeneratePages(file3, RenderQuality.Fast); }
-        [Test]
-        public void GeneratePages3_Quality() { GeneratePages(file3, RenderQuality.HighQualityMuPdf); }
+            foreach (String file in files)
+            {
+                LoadAndRenderPdfPages(file, RenderQuality.Fast, 1, 10);
+            }
+        }
 
-        void GeneratePages(String file, RenderQuality quality)
+        void LoadAndRenderPdfPages(String file, RenderQuality quality, int start, int count)
         {
             PdfEBookRenderer r = new PdfEBookRenderer();
 
@@ -48,8 +47,8 @@ namespace PDFViewer.Test
             Size size = new Size(1000, 1000);
             PerfTimer pageRenderTimer = new PerfTimer("Render pages {0}x{1} {2}", size.Width, size.Height, quality);
             
-            int numPages = Math.Min(20, r.PageCount);
-            for (int pageNum = 5; pageNum <= numPages; pageNum++)
+            int numPages = Math.Min(start + count - 1, r.PageCount);
+            for (int pageNum = start; pageNum <= numPages; pageNum++)
             {
                 Bitmap bmp;
                 
@@ -68,56 +67,45 @@ namespace PDFViewer.Test
             Console.WriteLine();
         }
 
+        #endregion
+
+        #region Screen Page Render
+
         [Test, Explicit]
-        public void GeneratePagesForAll_Fast()
+        public void All_RenderScreenPages()
         {
             var files = Directory.GetFiles(PdfFilePath, "*.pdf").Select(x => Path.GetFileName(x));
 
             foreach (String file in files)
             {
-                GeneratePages(file, RenderQuality.Fast);
+                RenderScreenPages(file, 1, 15, new Size(800, 600));
             }
-
         }
 
         [Test]
-        public void aRenderScreenPagesForAll_Fast()
+        public void One_RenderScreenPageExtraLongMultiplePDFPages()
         {
-            var files = Directory.GetFiles(PdfFilePath, "*.pdf").Select(x => Path.GetFileName(x));
-
-            foreach (String file in files)
-            {
-                RenderScreenPages(file);
-            }
-
+            RenderScreenPages(file_clean, 1, 10, new Size(600, 1680));
         }
 
-        void RenderScreenPages(String file)
+        void RenderScreenPages(String file, int start, int count, Size screenPageSize)
         {
             file = Path.Combine(PdfFilePath, file);
 
             PdfEBookRenderer r = new PdfEBookRenderer();
             r.LoadPdf(file);
 
-            Size screenPageSize = new Size(800, 600);
-
             PerfTimer timer = new PerfTimer("Screen Page Load {0}x{1} '{2}'", 
                 screenPageSize.Width, screenPageSize.Height, Path.GetFileName(file));
 
-            int numPages = Math.Min(10, r.PageCount);
-            for (int pageNum = 1; pageNum <= numPages; pageNum++)
+            int numPages = Math.Min(start+count-1, r.PageCount);
+            for (int pageNum = start; pageNum <= numPages; pageNum++)
             {
                 using (timer.NewRun)
                 {
                     using (Bitmap screenPage = r.RenderScreenPageToBitmap(pageNum, 0, screenPageSize))
                     {
-                        String imgFile = String.Format(@"C:\temp\{0}-{1:000}a.png", Path.GetFileNameWithoutExtension(file), pageNum);
-                        screenPage.Save(imgFile, ImageFormat.Png);
-                    }
-
-                    using (Bitmap screenPage = r.RenderScreenPageToBitmap(pageNum, screenPageSize.Height, screenPageSize))
-                    {
-                        String imgFile = String.Format(@"C:\temp\{0}-{1:000}b.png", Path.GetFileNameWithoutExtension(file), pageNum);
+                        String imgFile = String.Format(@"C:\temp\{0}-{1:000}.png", Path.GetFileNameWithoutExtension(file), pageNum);
                         screenPage.Save(imgFile, ImageFormat.Png);
                     }
                 }
@@ -125,6 +113,8 @@ namespace PDFViewer.Test
 
             Console.WriteLine(timer);
         }
+
+        #endregion
 
     }
 
