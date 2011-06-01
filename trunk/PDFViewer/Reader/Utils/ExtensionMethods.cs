@@ -15,7 +15,33 @@ namespace PDFViewer.Reader.Utils
             return a.Equals(b, StringComparison.InvariantCultureIgnoreCase);
         }
 
-        // Size
+        // Graphics
+        public static void DrawStringBoxed(this Graphics g, String text, int x, int y,
+            Font font = null, Brush bgBrush = null, Brush fgBrush = null)
+        {
+            if (text == null) { text = "[null]"; } 
+
+            if (font == null) { font = SystemFonts.DefaultFont; }
+            if (bgBrush == null) { bgBrush = Brushes.DarkRed; }
+            if (fgBrush == null) { fgBrush = Brushes.White; }
+
+            const int Off = 4;
+
+            // Debug -- draw page number
+            SizeF textSize = g.MeasureString(text, font);
+            g.FillRectangle(bgBrush, x, y, textSize.Width + Off * 2, textSize.Height + Off * 2);
+            g.DrawString(text, font, fgBrush, x + Off, y + Off);
+        }
+
+        public static void DrawLineVertical(this Graphics g, Pen pen, int x)
+        {
+            g.DrawLine(pen, x, 0, x, 1000);
+        }
+
+        public static void DrawLineHorizontal(this Graphics g, Pen pen, int y)
+        {
+            g.DrawLine(pen, 0, y, 1000, y);
+        }
 
         /// <summary>
         /// Proportionally scale the size to fit within the bounds given by maxSize.
