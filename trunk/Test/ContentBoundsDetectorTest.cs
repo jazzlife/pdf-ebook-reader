@@ -10,6 +10,7 @@ using PDFViewer.Reader.Utils;
 using PDFViewer.Reader.GraphicsUtils;
 using System.Drawing.Imaging;
 using PDFViewer.Reader;
+using PDFViewer.Reader.Render;
 
 namespace PDFViewer.Test
 {
@@ -40,7 +41,7 @@ namespace PDFViewer.Test
 
         void DetectContentBounds(Bitmap bmp, Graphics g)
         {
-            ContentBoundsInfo cbi;
+            PageLayoutInfo cbi;
             ContentBoundsDetector detector = new ContentBoundsDetector();
 
             using (_timerDetectBlobs.NewRun)

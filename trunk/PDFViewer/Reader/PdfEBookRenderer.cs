@@ -9,6 +9,7 @@ using System.Drawing;
 using PDFViewer.Reader.Utils;
 using PDFViewer.Reader.GraphicsUtils;
 using System.Drawing.Imaging;
+using PDFViewer.Reader.Render;
 
 namespace PDFViewer.Reader
 {
@@ -152,14 +153,14 @@ namespace PDFViewer.Reader
                        pdfPageNum <= PageCount)
                 {
                     // Figure out layout
-                    ContentBoundsInfo cbi;
+                    PageLayoutInfo cbi;
                     using (Bitmap pdfLayoutPage = RenderPdfPageToBitmap(pdfPageNum, LayoutRenderSize))
                     {
                         cbi = detector.DetectBounds(pdfLayoutPage);
                     }
 
                     // Empty page special case
-                    if (cbi.Bounds == Rectangle.Empty)
+                    if (cbi.IsEmpty)
                     {
                         // TODO: do something more sensible
                         g.FillEllipse(Brushes.DarkSlateGray, 10, 10, 30, 30);
@@ -167,29 +168,26 @@ namespace PDFViewer.Reader
                     }
 
                     // Render actual page. Bounded by width, but not height.
+
+                    
+
                     Rectangle pdfContentBounds;
                     int maxWidth = (int)((float)screenPageSize.Width / cbi.BoundsRelative.Width);
                     Size displayPageMaxSize = new Size(maxWidth, int.MaxValue);
                     using (Bitmap pdfDisplayPage = RenderPdfPageToBitmap(pdfPageNum, displayPageMaxSize))
                     {
-                        pdfContentBounds = cbi.BoundsScaled(pdfDisplayPage.Size);
-
-                        //displayPageX  = -(int)(cbi.BoundsRelative.X * displayPageSize.Width);
-                        //displayPageY = -topOfPdfPage - (int)(cbi.BoundsRelative.Y * displayPageSize.Height);
-                        //g.DrawImageUnscaled(pdfDisplayPage, displayPageX , displayPageY);
-
-                        //g.DrawImageUnscaled(pdfDisplayPage, screenPageTop-pdfContentBounds.X, -pdfContentBounds.Y);
+                        cbi.ScaleBounds(pdfDisplayPage.Size);
 
                         g.DrawImage(pdfDisplayPage,
-                            new Rectangle(0, screenPageTop, pdfContentBounds.Width, pdfContentBounds.Height),
-                            pdfContentBounds, GraphicsUnit.Pixel);
+                            new Rectangle(0, screenPageTop, cbi.Bounds.Width, cbi.Bounds.Height),
+                            cbi.Bounds, GraphicsUnit.Pixel);
 
                         // Debug -- top-of-page boundary
                         g.DrawLine(Pens.DarkRed, 0, screenPageTop, screenPage.Width, screenPageTop);
                     }
 
                     // NextPage
-                    screenPageTop += pdfContentBounds.Height;
+                    screenPageTop += cbi.Bounds.Height;
                     topOfPdfPage = 0;
                     pdfPageNum++;
                 }
@@ -203,7 +201,7 @@ namespace PDFViewer.Reader
         const double ZoomConst = 72.0;
 
         public Bitmap RenderPdfPageToBitmap(int pageNum, Size maxSize, 
-            RenderQuality quality = RenderQuality.HighQualityMuPdf)
+            RenderQuality quality = RenderQuality.HighQuality)
         {
             if (pageNum < 1) { throw new ArgumentException("pageNum < 1. Should start at 1"); }
             AssertPdfDocLoaded();
@@ -213,7 +211,7 @@ namespace PDFViewer.Reader
             _pdfDoc.CurrentPage = pageNum;
 
             _pdfDoc.UseMuPDF = false;
-            if (_pdfDoc.SupportsMuPDF && quality == RenderQuality.HighQualityMuPdf) 
+            if (_pdfDoc.SupportsMuPDF && quality == RenderQuality.HighQuality) 
             { 
                 _pdfDoc.UseMuPDF = true; 
             }
@@ -268,11 +266,6 @@ namespace PDFViewer.Reader
 
     public delegate void CustomRenderDelegate(Bitmap bmp, Graphics g);
 
-    public enum RenderQuality
-    {
-        Fast,
-        HighQualityMuPdf,
-    }
 
     
 
