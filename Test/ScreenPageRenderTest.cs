@@ -26,7 +26,7 @@ namespace PDFViewer.Test
             IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
             foreach (String file in files)
             {
-                RenderDown(file, 15, analyzer, new Size(800, 600));
+                Render(file, 15, analyzer, new Size(800, 600));
             }
         }
 
@@ -34,25 +34,32 @@ namespace PDFViewer.Test
         public void One_RenderDown()
         {
             IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
-            RenderDown(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(800, 600));
+            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(800, 600));
         }
 
         [Test]
         public void One_RenderDown_ExtraLongPage()
         {
             IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
-            RenderDown(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680));
+            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680));
         }
 
         [Test]
         public void One_RenderDown_ExtraLongPage_NoAnalysis()
         {
             IPageLayoutAnalyzer analyzer = new BlankPageLayoutAnalyzer();
-            RenderDown(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680));
+            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680));
         }
 
-        void RenderDown(String file, int maxPages, 
-            IPageLayoutAnalyzer layoutAnalyzer, Size screenPageSize)
+        [Test]
+        public void One_RenderUp_ExtraLongPage_NoAnalysis()
+        {
+            IPageLayoutAnalyzer analyzer = new BlankPageLayoutAnalyzer();
+            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680), true);
+        }
+
+        void Render(String file, int maxPages, 
+            IPageLayoutAnalyzer layoutAnalyzer, Size screenPageSize, bool renderUp = false)
         {
             PdfPhysicalPageProvider pdfReader = new PdfPhysicalPageProvider(file);
 
@@ -66,7 +73,7 @@ namespace PDFViewer.Test
             {
                 using (timer.NewRun)
                 {
-                    using (Bitmap screenPage = screenPageProvider.RenderNextPage())
+                    using (Bitmap screenPage = RenderFollowing(screenPageProvider, renderUp))
                     {
                         // Last page
                         if (screenPage == null) { break; }
@@ -78,6 +85,12 @@ namespace PDFViewer.Test
             }
 
             Console.WriteLine(timer);
+        }
+
+        Bitmap RenderFollowing(ScreenPageProvider provider, bool renderUp)
+        {
+            if (renderUp) { return provider.RenderPreviousPage(); }
+            else { return provider.RenderNextPage(); }
         }
 
     }
