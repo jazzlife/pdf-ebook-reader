@@ -260,6 +260,9 @@
       <DependentUpon>ReadingPanel.cs</DependentUpon>
     </Compile>
     <Compile Include="Reader\PdfEBookRenderer.cs" />
+    <Compile Include="Reader\Render\IPageLayoutAnalyzer.cs" />
+    <Compile Include="Reader\Render\IPhysicalPageProvider.cs" />
+    <Compile Include="Reader\Render\LayoutInfo.cs" />
     <Compile Include="Reader\Utils\ExtensionMethods.cs" />
     <Compile Include="Reader\Utils\JsonHelper.cs" />
     <Compile Include="Reader\Utils\PathX.cs" />

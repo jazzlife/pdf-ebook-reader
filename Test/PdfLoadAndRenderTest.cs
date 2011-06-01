@@ -10,6 +10,7 @@ using System.Drawing.Imaging;
 using PDFViewer.Test.TestUtils;
 using System.IO;
 using PDFViewer.Reader.GraphicsUtils;
+using PDFViewer.Reader.Render;
 
 namespace PDFViewer.Test
 {

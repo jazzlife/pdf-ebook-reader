@@ -6,57 +6,10 @@ using System.Drawing;
 using AForge.Imaging;
 using PDFViewer.Reader.Utils;
 using AForge.Imaging.Filters;
+using PDFViewer.Reader.Render;
 
 namespace PDFViewer.Reader.GraphicsUtils
 {
-    public class ContentBoundsInfo
-    {
-        readonly public Size PageSize;
-
-        public ContentBoundsInfo(Size pageSize)
-        {
-            PageSize = pageSize;
-        }
-
-        public Blob[] Blobs;
-        public Rectangle Bounds;
-
-        public List<RowBoundsInfo> Rows;
-
-        public RowBoundsInfo Header;
-        public RowBoundsInfo Footer;
-
-        /// <summary>
-        /// Bounds in 0-1 floating point units (scaled by PageSize).
-        /// </summary>
-        public RectangleF BoundsRelative
-        {
-            get
-            {
-                return new RectangleF(
-                    (float)Bounds.X / PageSize.Width,
-                    (float)Bounds.Y / PageSize.Height,
-                    (float)Bounds.Width / PageSize.Width,
-                    (float)Bounds.Height / PageSize.Height);
-            }
-        }
-
-        public Rectangle BoundsScaled(Size newSize)
-        {
-            RectangleF boundsR = BoundsRelative;
-            return new Rectangle(
-                (int)(newSize.Width * BoundsRelative.X),
-                (int)(newSize.Height * BoundsRelative.Y),
-                (int)(newSize.Width * BoundsRelative.Width),
-                (int)(newSize.Height * BoundsRelative.Height));
-        }
-    }
-
-    public class RowBoundsInfo
-    {
-        public List<Blob> Blobs = new List<Blob>();
-        public Rectangle Bounds;
-    }
 
 
     /// <summary>
@@ -68,18 +21,18 @@ namespace PDFViewer.Reader.GraphicsUtils
     /// </summary>
     public class ContentBoundsDetector
     {
-        public ContentBoundsInfo DetectBounds(Bitmap bmp)
+        public PageLayoutInfo DetectBounds(Bitmap bmp)
         {
-            ContentBoundsInfo cbi = DetectBlobs(bmp, null);
+            PageLayoutInfo cbi = DetectBlobs(bmp, null);
             DetectRowBounds(ref cbi, null);
             return cbi;
         }
 
-        internal ContentBoundsInfo DetectBlobs(Bitmap bmp, Graphics g)
+        internal PageLayoutInfo DetectBlobs(Bitmap bmp, Graphics g)
         {
             if (bmp == null) { throw new ArgumentNullException("bmp"); }
 
-            ContentBoundsInfo cbi = new ContentBoundsInfo(bmp.Size);
+            PageLayoutInfo cbi = new PageLayoutInfo(bmp.Size);
 
             Invert filter = new Invert();
             filter.ApplyInPlace(bmp);
@@ -92,7 +45,7 @@ namespace PDFViewer.Reader.GraphicsUtils
 
             bc.ProcessImage(bmp);
 
-            cbi.Blobs = bc.GetObjectsInformation();
+            cbi.Blobs.AddRange(bc.GetObjectsInformation());
             
             if (g != null)
             {
@@ -123,15 +76,14 @@ namespace PDFViewer.Reader.GraphicsUtils
             return new Rectangle(left, top, right - left, bottom - top);
         }
 
-        internal void DetectRowBounds(ref ContentBoundsInfo cbi, Graphics g)
+        internal void DetectRowBounds(ref PageLayoutInfo cbi, Graphics g)
         {
-            if (cbi.Blobs == null) { throw new ArgumentException("cbi.Blobs is null"); }
-            if (cbi.Blobs.Length == 0) { return; }
+            if (cbi.Blobs.Count == 0) { return; }
             if (cbi.Bounds == Rectangle.Empty) { return; }
 
-            cbi.Rows = new List<RowBoundsInfo>();
+            cbi.Rows = new List<LayoutInfo>();
 
-            RowBoundsInfo currentRow = null;
+            LayoutInfo currentRow = null;
             // Attempt drawing lines between the rows.
             for (int y = cbi.Bounds.Top; y < cbi.Bounds.Bottom; y++)
             {
@@ -156,7 +108,7 @@ namespace PDFViewer.Reader.GraphicsUtils
                     // Start new row if needed
                     if (currentRow == null)
                     {
-                        currentRow = new RowBoundsInfo();
+                        currentRow = new LayoutInfo(cbi.PageSize);
                     }
                     currentRow.Blobs.AddRange(blobsInRow);
 
@@ -195,7 +147,7 @@ namespace PDFViewer.Reader.GraphicsUtils
             }
         }
 
-        void DebugDrawHeaderOrFooter(RowBoundsInfo row, Graphics g)
+        void DebugDrawHeaderOrFooter(LayoutInfo row, Graphics g)
         {
             if (g == null) { return; }
 
@@ -203,7 +155,7 @@ namespace PDFViewer.Reader.GraphicsUtils
             g.FillRectangle(Brushes.Yellow, row.Bounds.X, row.Bounds.Y, 10, row.Bounds.Height);
         }
 
-        void FindHeaderAndFooter(ref ContentBoundsInfo cbi)
+        void FindHeaderAndFooter(ref PageLayoutInfo cbi)
         {
             // KEY HEURISTIC: do most OTHER pages have headers and footers.
             // Difficult to implement at this level, but ought to be reliable.
@@ -274,13 +226,13 @@ namespace PDFViewer.Reader.GraphicsUtils
             // Note: width heuristic is wrong -- header can be wide
         }
 
-        int DistanceAboveRow(int index, ContentBoundsInfo cbi)
+        int DistanceAboveRow(int index, PageLayoutInfo cbi)
         {
             // Lower.Top - Upper.Bottom
             return cbi.Rows[index].Bounds.Top - cbi.Rows[index - 1].Bounds.Bottom;
         }
 
-        void TryAddRow(List<RowBoundsInfo> rows, ref RowBoundsInfo currentRow)
+        void TryAddRow(List<LayoutInfo> rows, ref LayoutInfo currentRow)
         {
             if (currentRow == null) { return; }
 
