@@ -186,14 +186,6 @@ namespace PDFViewer.Reader.Render
                 _pdfDoc.ClientBounds = bounds;
                 _pdfDoc.DrawPageHDC(g.GetHdc());
                 g.ReleaseHdc();
-
-                // Debug -- draw page number
-                String text = "Page #" + pageNum;
-                SizeF textSize = g.MeasureString(text, SystemFonts.DefaultFont);
-                g.FillRectangle(Brushes.DarkRed, bounds.Width / 2 - 4, bounds.Height / 2 - 4,
-                    textSize.Width + 8, textSize.Height + 8); 
-                g.DrawString(text, SystemFonts.DefaultFont, Brushes.White,
-                    bounds.Width / 2, bounds.Height / 2);
             }
 
             return bitmap;

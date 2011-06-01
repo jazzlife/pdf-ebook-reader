@@ -18,36 +18,40 @@ namespace PDFViewer.Test
     {
         String file_clean = "Clean Large Margins - McCargo.pdf";
 
-        [Test]
-        public void All_RenderPagesHQ()
+        [Test, Explicit]
+        public void All_RenderDown()
         {
             var files = Directory.GetFiles(TestConst.PdfFilePath, "*.pdf");
 
             IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
             foreach (String file in files)
             {
-                RenderScreenPages(file, 1, 15, analyzer, new Size(800, 600));
+                RenderDown(file, 15, analyzer, new Size(800, 600));
             }
         }
 
         [Test]
-        public void One_RenderExtraLongPage()
+        public void One_RenderDown()
         {
             IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
-            RenderScreenPages(Path.Combine(TestConst.PdfFilePath, file_clean), 
-                1, 10, analyzer, new Size(400, 1680));
+            RenderDown(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(800, 600));
         }
 
         [Test]
-        public void One_RenderExtraLongPage_NoAnalysis()
+        public void One_RenderDown_ExtraLongPage()
         {
-            IPageLayoutAnalyzer analyzer = new BlankPageLayoutAnalyzer();
-
-            RenderScreenPages(Path.Combine(TestConst.PdfFilePath, file_clean),
-                1, 10, analyzer, new Size(400, 1680));
+            IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
+            RenderDown(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680));
         }
 
-        void RenderScreenPages(String file, int start, int count, 
+        [Test]
+        public void One_RenderDown_ExtraLongPage_NoAnalysis()
+        {
+            IPageLayoutAnalyzer analyzer = new BlankPageLayoutAnalyzer();
+            RenderDown(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680));
+        }
+
+        void RenderDown(String file, int maxPages, 
             IPageLayoutAnalyzer layoutAnalyzer, Size screenPageSize)
         {
             PdfPhysicalPageProvider pdfReader = new PdfPhysicalPageProvider(file);
@@ -58,13 +62,15 @@ namespace PDFViewer.Test
             PerfTimer timer = new PerfTimer("Screen Page Load {0}x{1} '{2}'", 
                 screenPageSize.Width, screenPageSize.Height, Path.GetFileName(file));
 
-            int numPages = Math.Min(start+count-1, pdfReader.PageCount);
-            for (int pageNum = start; pageNum <= numPages; pageNum++)
+            for (int pageNum = 0; pageNum < maxPages; pageNum++)
             {
                 using (timer.NewRun)
                 {
-                    using (Bitmap screenPage = screenPageProvider.RenderScreenPageToBitmap(pageNum, 0))
+                    using (Bitmap screenPage = screenPageProvider.RenderNextPage())
                     {
+                        // Last page
+                        if (screenPage == null) { break; }
+
                         String imgFile = String.Format(@"C:\temp\{0}-{1:000}.png", Path.GetFileNameWithoutExtension(file), pageNum);
                         screenPage.Save(imgFile, ImageFormat.Png);
                     }
