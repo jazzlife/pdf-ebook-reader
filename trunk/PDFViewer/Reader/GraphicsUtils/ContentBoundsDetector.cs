@@ -40,6 +40,16 @@ namespace PDFViewer.Reader.GraphicsUtils
                     (float)Bounds.Height / PageSize.Height);
             }
         }
+
+        public Rectangle BoundsScaled(Size newSize)
+        {
+            RectangleF boundsR = BoundsRelative;
+            return new Rectangle(
+                (int)(newSize.Width * BoundsRelative.X),
+                (int)(newSize.Height * BoundsRelative.Y),
+                (int)(newSize.Width * BoundsRelative.Width),
+                (int)(newSize.Height * BoundsRelative.Height));
+        }
     }
 
     public class RowBoundsInfo

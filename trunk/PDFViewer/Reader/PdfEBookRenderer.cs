@@ -148,7 +148,8 @@ namespace PDFViewer.Reader
             using (Graphics g = Graphics.FromImage(screenPage))
             {
                 int screenPageTop = 0;
-                while (screenPageTop < screenPageSize.Height)
+                while (screenPageTop < screenPageSize.Height &&
+                       pdfPageNum <= PageCount)
                 {
                     // Figure out layout
                     ContentBoundsInfo cbi;
@@ -166,20 +167,35 @@ namespace PDFViewer.Reader
                     }
 
                     // Render actual page. Bounded by width, but not height.
+                    Rectangle pdfContentBounds;
                     int maxWidth = (int)((float)screenPageSize.Width / cbi.BoundsRelative.Width);
                     Size displayPageMaxSize = new Size(maxWidth, int.MaxValue);
-
                     using (Bitmap pdfDisplayPage = RenderPdfPageToBitmap(pdfPageNum, displayPageMaxSize))
                     {
-                        g.DrawImageUnscaled(pdfDisplayPage,
-                            - (int)(cbi.BoundsRelative.X * pdfDisplayPage.Width),
-                            - topOfPdfPage - (int)(cbi.BoundsRelative.Y * pdfDisplayPage.Height));
+                        pdfContentBounds = cbi.BoundsScaled(pdfDisplayPage.Size);
+
+                        //displayPageX  = -(int)(cbi.BoundsRelative.X * displayPageSize.Width);
+                        //displayPageY = -topOfPdfPage - (int)(cbi.BoundsRelative.Y * displayPageSize.Height);
+                        //g.DrawImageUnscaled(pdfDisplayPage, displayPageX , displayPageY);
+
+                        //g.DrawImageUnscaled(pdfDisplayPage, screenPageTop-pdfContentBounds.X, -pdfContentBounds.Y);
+
+                        g.DrawImage(pdfDisplayPage,
+                            new Rectangle(0, screenPageTop, pdfContentBounds.Width, pdfContentBounds.Height),
+                            pdfContentBounds, GraphicsUnit.Pixel);
+
+                        // Debug -- top-of-page boundary
+                        g.DrawLine(Pens.DarkRed, 0, screenPageTop, screenPage.Width, screenPageTop);
                     }
 
-                    // TODO: add other pages as needed
-                    break;
+                    // NextPage
+                    screenPageTop += pdfContentBounds.Height;
+                    topOfPdfPage = 0;
+                    pdfPageNum++;
                 }
             }
+
+            // TODO: adjust topOfPage and return for next screen page
 
             return screenPage;
         }
@@ -231,6 +247,14 @@ namespace PDFViewer.Reader
                 _pdfDoc.ClientBounds = bounds;
                 _pdfDoc.DrawPageHDC(g.GetHdc());
                 g.ReleaseHdc();
+
+                // Debug -- draw page number
+                String text = "Page #" + pageNum;
+                SizeF textSize = g.MeasureString(text, SystemFonts.DefaultFont);
+                g.FillRectangle(Brushes.DarkRed, bounds.Width / 2 - 4, bounds.Height / 2 - 4,
+                    textSize.Width + 8, textSize.Height + 8); 
+                g.DrawString(text, SystemFonts.DefaultFont, Brushes.White,
+                    bounds.Width / 2, bounds.Height / 2);
             }
 
             return bitmap;
