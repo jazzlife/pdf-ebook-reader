@@ -82,11 +82,13 @@ namespace PDFViewer.Reader.Render
 
         public Bitmap RenderNextPage()
         {
-            return RenderDown();
+            RenderDown r = new RenderDown(this);
+            return r.Run();
         }
         public Bitmap RenderPreviousPage()
         {
-            throw new NotImplementedException();
+            RenderUp r = new RenderUp(this);
+            return r.Run();
         }
 
         /*
@@ -116,8 +118,6 @@ namespace PDFViewer.Reader.Render
             /// </summary>
             public int TopOnScreen = 0;
 
-            private Bitmap bitmap;
-
             public PhysicalPageInfo(int pageNum, Bitmap image, PageLayoutInfo layout)
             {
                 ArgCheck.GreaterThanOrEqual(pageNum, 1, "pageNum");
@@ -134,7 +134,11 @@ namespace PDFViewer.Reader.Render
             public PageLayoutInfo Layout { get { return _layout; } }
 
             // For convenience
-            public int BottomOnScreen { get { return TopOnScreen + ContentBounds.Height; } }
+            public int BottomOnScreen 
+            { 
+                get { return TopOnScreen + ContentBounds.Height; }
+                set { TopOnScreen = value - ContentBounds.Height; }
+            }
 
             /// <summary>
             /// Usually same as Layout.Bounds, but can be set differently in some
@@ -152,13 +156,6 @@ namespace PDFViewer.Reader.Render
                     ContentBounds = Rectangle.Empty;
                 }
             }
-
-            /*
-            public PhysicalPageInfo Clone()
-            {
-                return new PhysicalPageInfo(this.PageNum, this.Image, this.Layout);
-            }
-            */
 
             public override string ToString()
             {
@@ -215,116 +212,214 @@ namespace PDFViewer.Reader.Render
 
         #endregion
 
-        Bitmap RenderDown()
+        #region Render Down / Up
+
+        abstract class RenderBase
         {
+            protected ScreenPageProvider P;
+            public RenderBase(ScreenPageProvider p) { P = p; }
 
-            // Use bottom page from previous screen, or get an appropriate one
-            PhysicalPageInfo curPage = RenderDown_GetStartingPage();
-
-            // LastPage
-            if (curPage == null || curPage.BottomOnScreen <= 0) { return null; }
-
-            // 24bpp format for compatibility with AForge
-            Bitmap screenBmp = new Bitmap(ScreenSize.Width, ScreenSize.Height, PixelFormat.Format24bppRgb);
-            using (Graphics g = Graphics.FromImage(screenBmp))
+            public Bitmap Run()
             {
-                // Render other pages
-                while (curPage != null)
+                // Use bottom page from previous screen, or get an appropriate one
+                PhysicalPageInfo curPage = GetStartingPage();
+
+                // Final page
+                if (curPage == null || 
+                    curPage.BottomOnScreen <= 0 ||
+                    curPage.TopOnScreen >= P.ScreenSize.Height) { return null; }
+
+                // 24bpp format for compatibility with AForge
+                Bitmap screenBmp = new Bitmap(P.ScreenSize.Width, P.ScreenSize.Height, PixelFormat.Format24bppRgb);
+                using (Graphics g = Graphics.FromImage(screenBmp))
                 {
-                    curPage = RenderDown_OnePage(curPage, g);
+                    // Render other pages
+                    while (curPage != null)
+                    {
+                        curPage = RenderOnePage(curPage, g);
+                    }
                 }
+
+                Trace.WriteLine("Render done: TopPage = " + P.TopPage);
+                Trace.WriteLine("Render done: BottomPage = " + P.BottomPage);
+                Trace.WriteLine("");
+
+                return screenBmp;
             }
 
-            Trace.WriteLine("RenderDown done: TopPage = " + TopPage);
-            Trace.WriteLine("RenderDown done: BottomPage = " + BottomPage);
-            Trace.WriteLine("");
+            protected abstract PhysicalPageInfo GetStartingPage();
 
-            return screenBmp;
+            /// <summary>
+            /// Draw current page.
+            /// Set TopPage/BottomPage if appropriate.
+            /// Return next page (or return null if none)
+            /// </summary>
+            /// <param name="curPage"></param>
+            /// <param name="g"></param>
+            /// <returns></returns>
+            PhysicalPageInfo RenderOnePage(PhysicalPageInfo curPage, Graphics g)
+            {
+                Trace.WriteLine("RenderOnePage: curPage = " + curPage);
+
+                P.DrawPage(g, curPage);
+
+                // Special case: Empty page. 
+                // Keep the page number at both top and bottom.
+                if (curPage.Layout.IsEmpty)
+                {
+                    P.TopPage = curPage;
+                    P.BottomPage = curPage;
+                    return null;
+                }
+
+                // Save new top page
+                if (curPage.TopOnScreen <= 0)
+                {
+                    P.TopPage = curPage;
+                }
+
+                // Save new bottom page
+                if (curPage.BottomOnScreen >= P.ScreenSize.Height)
+                {
+                    P.BottomPage = curPage;
+                }
+
+                // Final page done
+                if (ShouldTerminate(curPage))
+                {
+                    return null;   
+                }
+
+                AdvanceCurPage(ref curPage);
+                return curPage;
+            }
+
+            protected abstract void AdvanceCurPage(ref PhysicalPageInfo curPage);
+            protected abstract bool ShouldTerminate(PhysicalPageInfo curPage);
         }
 
-        PhysicalPageInfo RenderDown_GetStartingPage()
+        class RenderDown : RenderBase
         {
-            PhysicalPageInfo curPage;
-            if (BottomPage == null)
-            {
-                Trace.WriteLine("RenderDown_GetStarting: no BottomPage, getting first page in doc");
-                curPage = GetPhysicalPage(1);
-            }
-            else if (BottomPage.TopOnScreen < ScreenSize.Height)
-            {
-                Trace.WriteLine("RenderDown_GetStarting: using BottomPage");
+            public RenderDown(ScreenPageProvider p) : base(p) { }
 
-                // Bottom page included on screen. Adjust offset for next screen.
-                curPage = BottomPage;
-                curPage.TopOnScreen = BottomPage.TopOnScreen - ScreenSize.Height;
-            }
-            else
+            protected override PhysicalPageInfo GetStartingPage()
             {
-                Trace.WriteLine("RenderDown_GetStarting: bottomPage is above screen, getting next page");
+                PhysicalPageInfo curPage;
+                if (P.BottomPage == null)
+                {
+                    Trace.WriteLine("RenderDown_GetStarting: no BottomPage, getting first page in doc");
+                    curPage = P.GetPhysicalPage(1);
+                }
+                else if (P.BottomPage.TopOnScreen < P.ScreenSize.Height)
+                {
+                    Trace.WriteLine("RenderDown_GetStarting: using BottomPage");
 
-                // Render a new page
-                // NOTE: null if past-the-last page
-                curPage = GetPhysicalPage(BottomPage.PageNum + 1);
+                    // Bottom page included on screen. Adjust offset for next screen.
+                    curPage = P.BottomPage;
+                    curPage.TopOnScreen = P.BottomPage.TopOnScreen - P.ScreenSize.Height;
+                }
+                else
+                {
+                    Trace.WriteLine("RenderDown_GetStarting: bottomPage is above screen, getting next page");
+
+                    // Render a new page
+                    // NOTE: null if past-the-last page
+                    curPage = P.GetPhysicalPage(P.BottomPage.PageNum + 1);
+                }
+                return curPage;
             }
-            return curPage;
+
+            protected override bool ShouldTerminate(PhysicalPageInfo curPage)
+            {
+                // Final page (no spill over necessary, may terminate early)
+                if (curPage.PageNum == P.PhysicalPageProvider.PageCount) 
+                {
+                    P.BottomPage = curPage;
+                    return true; 
+                }
+
+                // Page is spilling over to next
+                if (curPage.BottomOnScreen >= P.ScreenSize.Height)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            protected override void AdvanceCurPage(ref PhysicalPageInfo curPage)
+            {
+                int newTop = curPage.BottomOnScreen;
+                curPage = P.GetPhysicalPage(curPage.PageNum + 1);
+
+                Debug.Assert(curPage != null, "curPage null, should not be, we checked earlier");
+
+                curPage.TopOnScreen = newTop;
+            }
         }
 
-        /// <summary>
-        /// Draw current page.
-        /// Set TopPage/BottomPage if appropriate.
-        /// Return next page (or return null if none)
-        /// </summary>
-        /// <param name="curPage"></param>
-        /// <param name="g"></param>
-        /// <returns></returns>
-        PhysicalPageInfo RenderDown_OnePage(PhysicalPageInfo curPage, Graphics g)
+        class RenderUp : RenderBase
         {
-            Trace.WriteLine("RenderDownOnePage: curPage = " + curPage);
+            public RenderUp(ScreenPageProvider p) : base(p) { }
 
-            DrawPage(g, curPage);
-
-            // Special case: Empty page. 
-            // Keep the page number at both top and bottom.
-            if (curPage.Layout.IsEmpty)
+            protected override PhysicalPageInfo GetStartingPage()
             {
-                TopPage = curPage;
-                BottomPage = curPage;
-                return null;
+                PhysicalPageInfo curPage;
+                if (P.TopPage == null)
+                {
+                    Trace.WriteLine("RenderUp.GetStarting: no TopPage, getting last page in doc (and setting bounds)");
+                    curPage = P.GetPhysicalPage(P.PhysicalPageProvider.PageCount);
+                    curPage.BottomOnScreen = P.ScreenSize.Height;
+                }
+                else if (P.TopPage.BottomOnScreen > 0)
+                {
+                    Trace.WriteLine("RenderUp_GetStarting: using TopPage");
+
+                    // Bottom page included on screen. Adjust offset for next screen.
+                    curPage = P.TopPage;
+                    curPage.TopOnScreen = P.ScreenSize.Height + P.TopPage.TopOnScreen; // ???
+                }
+                else
+                {
+                    Trace.WriteLine("RenderUp_GetStarting: TopPage below screen, getting previous page");
+
+                    // Render a new page
+                    // NOTE: null if past-the-last page
+                    curPage = P.GetPhysicalPage(P.TopPage.PageNum - 1);
+                }
+                return curPage;
             }
 
-            // Save new top page
-            if (curPage.TopOnScreen <= 0)
+            protected override bool ShouldTerminate(PhysicalPageInfo curPage)
             {
-                TopPage = curPage;
+                // Final page (no spill over necessary, may terminate early)
+                if (curPage.PageNum == 1)
+                {
+                    P.TopPage = curPage;
+                    return true;
+                }
+
+                // Page is spilling over to next
+                if (curPage.TopOnScreen <= 0)
+                {
+                    return true;
+                }
+
+                return false;
             }
 
-            // Save new bottom page
-            if (curPage.BottomOnScreen >= ScreenSize.Height)
+            protected override void AdvanceCurPage(ref PhysicalPageInfo curPage)
             {
-                BottomPage = curPage;
+                int newBottom = curPage.TopOnScreen;
+                curPage = P.GetPhysicalPage(curPage.PageNum - 1);
+
+                Debug.Assert(curPage != null, "curPage null, should not be, we checked earlier");
+
+                curPage.BottomOnScreen = newBottom;
             }
-
-            // Special case -- last page
-            if (curPage.PageNum == PhysicalPageProvider.PageCount)
-            {
-                // Last page, not filled
-                BottomPage = curPage;
-                return null;
-            }
-
-            if (curPage.BottomOnScreen >= ScreenSize.Height)
-            {
-                return null;
-            }
-
-            int newTop = curPage.BottomOnScreen;
-            curPage = GetPhysicalPage(curPage.PageNum + 1);
-
-            Debug.Assert(curPage != null, "curPage null, should not be, we checked earlier");
-
-            curPage.TopOnScreen = newTop; 
-            return curPage;
         }
+        #endregion
+
 
         void DrawPage(Graphics g, PhysicalPageInfo curPage)
         {
