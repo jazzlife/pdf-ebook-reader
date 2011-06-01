@@ -9,8 +9,10 @@ namespace PDFViewer.Reader.Render
     /// <summary>
     /// Provides physical pages from a book 
     /// (e.g. PDF file, folder with images etc.)
+    /// 
+    /// Disposable since it may contain large in-memory objects.
     /// </summary>
-    interface IPhysicalPageProvider
+    public interface IPhysicalPageProvider : IDisposable
     {
         /// <summary>
         /// Total number of pages in the book.
@@ -24,9 +26,7 @@ namespace PDFViewer.Reader.Render
         /// <param name="maxSize">Maximum size to fit the page within (preserving aspect ratio)</param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        Bitmap RenderPage(int pageNum, Size maxSize, RenderQuality quality);
-
-
+        Bitmap RenderPage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality);
     }
 
     public enum RenderQuality

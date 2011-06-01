@@ -7,25 +7,28 @@ using PDFLibNet;
 using System.Windows.Forms;
 using System.Drawing;
 using PDFViewer.Reader.Utils;
-using PDFViewer.Reader.GraphicsUtils;
 using System.Drawing.Imaging;
 using PDFViewer.Reader.Render;
 
-namespace PDFViewer.Reader
+namespace PDFViewer.Reader.Render
 {
 
-    public class PdfEBookRenderer : IDisposable
+    public class PdfPhysicalPageProvider : IPhysicalPageProvider
     {
         PDFWrapper _pdfDoc;
 
-        public PdfEBookRenderer()
+        public PdfPhysicalPageProvider(String file)
         {
+            ArgCheck.NotNull(file, "file");
+
             InitialzeXPdfConfig();
 
             PDFLibNet.xPDFParams.Antialias = true;
             PDFLibNet.xPDFParams.VectorAntialias = true;
             //xPDFParams.ErrorQuiet =true;
             //xPDFParams.ErrorFile = "C:\\stderr.log";
+
+            LoadPdf(file);
         }
 
         #region PdfDoc properties
@@ -49,8 +52,9 @@ namespace PDFViewer.Reader
             if (!PdfDocLoaded) { throw new InvalidOperationException("PdfDoc not loaded."); }
         }
 
-        public void LoadPdf(String filename)
-        {            
+        // TODO: consider making it public
+        void LoadPdf(String filename)
+        {
             try 
             {
                 _pdfDoc = new PDFWrapper();
@@ -136,72 +140,9 @@ namespace PDFViewer.Reader
 
         #endregion
 
-        readonly Size LayoutRenderSize = new Size(1000, 1000);
-
-        public Bitmap RenderScreenPageToBitmap(int pdfPageNum, int topOfPdfPage, Size screenPageSize)
-        {
-            if (pdfPageNum < 1) { throw new ArgumentException("pdfPageNum < 1. Should start at 1"); }
-
-            // 24bpp format for compatibility with AForge
-            Bitmap screenPage = new Bitmap(screenPageSize.Width, screenPageSize.Height, PixelFormat.Format24bppRgb);
-            ContentBoundsDetector detector = new ContentBoundsDetector();
-
-            using (Graphics g = Graphics.FromImage(screenPage))
-            {
-                int screenPageTop = 0;
-                while (screenPageTop < screenPageSize.Height &&
-                       pdfPageNum <= PageCount)
-                {
-                    // Figure out layout
-                    PageLayoutInfo cbi;
-                    using (Bitmap pdfLayoutPage = RenderPdfPageToBitmap(pdfPageNum, LayoutRenderSize))
-                    {
-                        cbi = detector.DetectBounds(pdfLayoutPage);
-                    }
-
-                    // Empty page special case
-                    if (cbi.IsEmpty)
-                    {
-                        // TODO: do something more sensible
-                        g.FillEllipse(Brushes.DarkSlateGray, 10, 10, 30, 30);
-                        break;
-                    }
-
-                    // Render actual page. Bounded by width, but not height.
-
-                    
-
-                    Rectangle pdfContentBounds;
-                    int maxWidth = (int)((float)screenPageSize.Width / cbi.BoundsRelative.Width);
-                    Size displayPageMaxSize = new Size(maxWidth, int.MaxValue);
-                    using (Bitmap pdfDisplayPage = RenderPdfPageToBitmap(pdfPageNum, displayPageMaxSize))
-                    {
-                        cbi.ScaleBounds(pdfDisplayPage.Size);
-
-                        g.DrawImage(pdfDisplayPage,
-                            new Rectangle(0, screenPageTop, cbi.Bounds.Width, cbi.Bounds.Height),
-                            cbi.Bounds, GraphicsUnit.Pixel);
-
-                        // Debug -- top-of-page boundary
-                        g.DrawLine(Pens.DarkRed, 0, screenPageTop, screenPage.Width, screenPageTop);
-                    }
-
-                    // NextPage
-                    screenPageTop += cbi.Bounds.Height;
-                    topOfPdfPage = 0;
-                    pdfPageNum++;
-                }
-            }
-
-            // TODO: adjust topOfPage and return for next screen page
-
-            return screenPage;
-        }
-
         const double ZoomConst = 72.0;
 
-        public Bitmap RenderPdfPageToBitmap(int pageNum, Size maxSize, 
-            RenderQuality quality = RenderQuality.HighQuality)
+        public Bitmap RenderPage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality)
         {
             if (pageNum < 1) { throw new ArgumentException("pageNum < 1. Should start at 1"); }
             AssertPdfDocLoaded();
@@ -262,6 +203,7 @@ namespace PDFViewer.Reader
         {
             DisposePdfDoc();
         }
+
     }
 
     public delegate void CustomRenderDelegate(Bitmap bmp, Graphics g);

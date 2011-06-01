@@ -4,9 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using AForge.Imaging;
+using System.Drawing.Imaging;
 
 namespace PDFViewer.Reader.Render
 {
+    /// <summary>
+    /// Layout info for a page element
+    /// </summary>
     public class LayoutInfo 
     {
         public Size PageSize { get; private set; }
@@ -57,24 +61,6 @@ namespace PDFViewer.Reader.Render
 
         // Blobs. For internal use, never scaled.
         internal List<Blob> Blobs = new List<Blob>();
-    }
-
-    public class PageLayoutInfo : LayoutInfo
-    {
-        public List<LayoutInfo> Rows = new List<LayoutInfo>();
-        public LayoutInfo Header;
-        public LayoutInfo Footer;
-
-        public PageLayoutInfo(Size pageSize) : base(pageSize) { }
-
-        public override void ScaleBounds(Size newPageSize)
-        {
-            base.ScaleBounds(newPageSize);
-
-            Rows.ForEach(x => x.ScaleBounds(newPageSize));
-            if (Header != null) { Header.ScaleBounds(newPageSize); }
-            if (Footer != null) { Footer.ScaleBounds(newPageSize); }
-        }
     }
 
 }

@@ -234,7 +234,6 @@
     <Compile Include="RawPrinterHelper.cs" />
     <Compile Include="Reader\BookLibrary.cs" />
     <Compile Include="Reader\BookListViewItem.cs" />
-    <Compile Include="Reader\GraphicsUtils\ContentBoundsDetector.cs" />
     <Compile Include="Reader\PDFViewerControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -259,10 +258,16 @@
     <Compile Include="Reader\ReadingPanel.Designer.cs">
       <DependentUpon>ReadingPanel.cs</DependentUpon>
     </Compile>
-    <Compile Include="Reader\PdfEBookRenderer.cs" />
+    <Compile Include="Reader\Render\BlobPageLayoutAnalyzer.cs" />
+    <Compile Include="Reader\Render\DebugOnlyAttribute.cs" />
+    <Compile Include="Reader\Render\PageLayoutInfo.cs" />
+    <Compile Include="Reader\Render\ScreenPageProvider.cs" />
+    <Compile Include="Reader\Render\PdfPhysicalPageProvider.cs" />
     <Compile Include="Reader\Render\IPageLayoutAnalyzer.cs" />
     <Compile Include="Reader\Render\IPhysicalPageProvider.cs" />
     <Compile Include="Reader\Render\LayoutInfo.cs" />
+    <Compile Include="Reader\Render\BlankPageLayoutAnalyzer.cs" />
+    <Compile Include="Reader\Utils\ArgCheck.cs" />
     <Compile Include="Reader\Utils\ExtensionMethods.cs" />
     <Compile Include="Reader\Utils\JsonHelper.cs" />
     <Compile Include="Reader\Utils\PathX.cs" />

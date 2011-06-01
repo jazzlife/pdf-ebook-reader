@@ -65,12 +65,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ContentBoundsDetectorTest.cs" />
+    <Compile Include="BlobPageLayoutAnalyzerTest.cs" />
+    <Compile Include="ArgCheckTest.cs" />
+    <Compile Include="PdfPhysicalPageRenderTest.cs" />
     <Compile Include="SizeScaleTest.cs" />
-    <Compile Include="PdfLoadAndRenderTest.cs" />
+    <Compile Include="ScreenPageRenderTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestUtils\PerfTimer.cs" />
+    <Compile Include="TestUtils\TestConst.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
