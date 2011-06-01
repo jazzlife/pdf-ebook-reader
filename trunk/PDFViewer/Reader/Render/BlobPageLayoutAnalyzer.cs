@@ -3,37 +3,33 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
-using AForge.Imaging;
 using PDFViewer.Reader.Utils;
+using AForge.Imaging;
 using AForge.Imaging.Filters;
-using PDFViewer.Reader.Render;
 
-namespace PDFViewer.Reader.GraphicsUtils
+namespace PDFViewer.Reader.Render
 {
-
-
     /// <summary>
-    /// Detects real bounds of main text (without margins), as well as 
-    /// presence of header/footer.
-    /// 
-    /// Works from a physical page image (any image, usually but 
-    /// not necessarily PDF).
+    /// Analyzes the page layout based on connected blobs contained within it.
     /// </summary>
-    public class ContentBoundsDetector
+    public class BlobPageLayoutAnalyzer : IPageLayoutAnalyzer
     {
-        public PageLayoutInfo DetectBounds(Bitmap bmp)
+
+        public PageLayoutInfo DetectPageLayout(Bitmap bmp)
         {
-            PageLayoutInfo cbi = DetectBlobs(bmp, null);
-            DetectRowBounds(ref cbi, null);
-            return cbi;
+            ArgCheck.NotNull(bmp, "bmp");
+
+            PageLayoutInfo layout = new PageLayoutInfo(bmp.Size);
+
+            DetectBlobs(ref layout, bmp);
+            layout.Bounds = BoundsAroundBlobs(layout.Blobs);
+            DetectRowBounds(ref layout);
+
+            return layout;
         }
 
-        internal PageLayoutInfo DetectBlobs(Bitmap bmp, Graphics g)
+        void DetectBlobs(ref PageLayoutInfo cbi, Bitmap bmp)
         {
-            if (bmp == null) { throw new ArgumentNullException("bmp"); }
-
-            PageLayoutInfo cbi = new PageLayoutInfo(bmp.Size);
-
             Invert filter = new Invert();
             filter.ApplyInPlace(bmp);
 
@@ -46,37 +42,9 @@ namespace PDFViewer.Reader.GraphicsUtils
             bc.ProcessImage(bmp);
 
             cbi.Blobs.AddRange(bc.GetObjectsInformation());
-            
-            if (g != null)
-            {
-                if (bc.ObjectsCount == 0) { g.FillEllipse(Brushes.Red, 0, 0, 10, 10); }
-                else { cbi.Blobs.ForEach(b => g.DrawRectangle(Pens.Orange, b.Rectangle)); }
-            }
-
-            cbi.Bounds = BoundsAroundBlobs(cbi.Blobs);
-
-            if (g != null)
-            {
-                g.DrawRectangle(Pens.Cyan, cbi.Bounds);
-            }
-
-            return cbi;
         }
 
-        Rectangle BoundsAroundBlobs(IEnumerable<Blob> blobs)
-        {
-            if (blobs == null) { throw new ArgumentNullException("blobs"); }
-            if (blobs.FirstOrDefault() == null) { return Rectangle.Empty; }
-
-            int left = blobs.Select(b => b.Rectangle.Left).Min();
-            int right = blobs.Select(b => b.Rectangle.Right).Max();
-            int top = blobs.Select(b => b.Rectangle.Top).Min();
-            int bottom = blobs.Select(b => b.Rectangle.Bottom).Max();
-
-            return new Rectangle(left, top, right - left, bottom - top);
-        }
-
-        internal void DetectRowBounds(ref PageLayoutInfo cbi, Graphics g)
+        void DetectRowBounds(ref PageLayoutInfo cbi)
         {
             if (cbi.Blobs.Count == 0) { return; }
             if (cbi.Bounds == Rectangle.Empty) { return; }
@@ -93,12 +61,6 @@ namespace PDFViewer.Reader.GraphicsUtils
 
                 if (blobsInRow.FirstOrDefault() == null)
                 {
-                    // Draw space between rows
-                    if (g != null)
-                    {
-                        g.DrawRectangle(Pens.DarkSlateGray, rowRect);
-                    }
-
                     // Empty row detected. Commit current row (if any)
                     TryAddRow(cbi.Rows, ref currentRow);
                     currentRow = null;
@@ -121,38 +83,13 @@ namespace PDFViewer.Reader.GraphicsUtils
             // Add row at the end
             TryAddRow(cbi.Rows, ref currentRow);
 
-            // Draw rows 
-            if (g != null) { cbi.Rows.ForEach(r => g.DrawRectangle(Pens.HotPink, r.Bounds)); }
-
             FindHeaderAndFooter(ref cbi);
 
-            // TODO: refactor
-            if (cbi.Header != null)
-            {
-                DebugDrawHeaderOrFooter(cbi.Header, g);
-                cbi.Rows.Remove(cbi.Header);
-            }
-            if (cbi.Footer != null)
-            {
-                DebugDrawHeaderOrFooter(cbi.Footer, g);
-                cbi.Rows.Remove(cbi.Footer);
-            }
+            // Remove header and footer from rows, recompute main content bounds
+            if (cbi.Header != null) { cbi.Rows.Remove(cbi.Header); }
+            if (cbi.Footer != null) { cbi.Rows.Remove(cbi.Footer); }
 
             cbi.Bounds = BoundsAroundBlobs(cbi.Rows.SelectMany(x => x.Blobs));
-
-            // Draw adjusted bounds
-            if (g != null && (cbi.Header != null || cbi.Footer != null))
-            {
-                g.DrawRectangle(Pens.Green, cbi.Bounds);
-            }
-        }
-
-        void DebugDrawHeaderOrFooter(LayoutInfo row, Graphics g)
-        {
-            if (g == null) { return; }
-
-            g.DrawRectangle(Pens.Yellow, row.Bounds);
-            g.FillRectangle(Brushes.Yellow, row.Bounds.X, row.Bounds.Y, 10, row.Bounds.Height);
         }
 
         void FindHeaderAndFooter(ref PageLayoutInfo cbi)
@@ -193,7 +130,7 @@ namespace PDFViewer.Reader.GraphicsUtils
                 return;
             }
 
-            int distanceSum = 0;            
+            int distanceSum = 0;
             for (int i = 1; i < cbi.Rows.Count; i++)
             {
                 distanceSum += DistanceAboveRow(i, cbi);
@@ -218,7 +155,7 @@ namespace PDFViewer.Reader.GraphicsUtils
             int footerHeight = cbi.Rows[lastIdx].Bounds.Height;
             int footerDistance = DistanceAboveRow(lastIdx, cbi);
             if (footerDistance > minDistance &&
-                footerHeight< maxHeight)
+                footerHeight < maxHeight)
             {
                 cbi.Footer = cbi.Rows[lastIdx];
             }
@@ -239,6 +176,19 @@ namespace PDFViewer.Reader.GraphicsUtils
             currentRow.Blobs = currentRow.Blobs.Distinct().ToList();
             currentRow.Bounds = BoundsAroundBlobs(currentRow.Blobs);
             rows.Add(currentRow);
+        }
+
+        static Rectangle BoundsAroundBlobs(IEnumerable<Blob> blobs)
+        {
+            if (blobs == null) { throw new ArgumentNullException("blobs"); }
+            if (blobs.FirstOrDefault() == null) { return Rectangle.Empty; }
+
+            int left = blobs.Select(b => b.Rectangle.Left).Min();
+            int right = blobs.Select(b => b.Rectangle.Right).Max();
+            int top = blobs.Select(b => b.Rectangle.Top).Min();
+            int bottom = blobs.Select(b => b.Rectangle.Bottom).Max();
+
+            return new Rectangle(left, top, right - left, bottom - top);
         }
 
         class BlobsFilter : IBlobsFilter

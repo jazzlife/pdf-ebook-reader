@@ -5,7 +5,6 @@ using System.Text;
 using NUnit.Framework;
 using System.Drawing;
 using PDFViewer.Reader.Utils;
-using PDFViewer.Reader.GraphicsUtils;
 
 namespace PDFViewer.Test
 {

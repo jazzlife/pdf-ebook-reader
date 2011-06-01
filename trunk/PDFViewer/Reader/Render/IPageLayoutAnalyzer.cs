@@ -9,9 +9,10 @@ namespace PDFViewer.Reader.Render
     /// <summary>
     /// Analyzes the layout of a physical page.
     /// </summary>
-    interface IPageLayoutAnalyzer
+    public interface IPageLayoutAnalyzer
     {
-
+        PageLayoutInfo DetectPageLayout(Bitmap physicalPage);
     }
+
 
 }
