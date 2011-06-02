@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using System.Drawing;
-using PDFViewer.Reader.Utils;
-using PDFViewer.Reader;
+using PdfBookReader.Utils;
+using PdfBookReader;
 using System.Drawing.Imaging;
-using PDFViewer.Test.TestUtils;
+using PdfBookReader.Test.TestUtils;
 using System.IO;
-using PDFViewer.Reader.Render;
+using PdfBookReader.Render;
 
-namespace PDFViewer.Test
+namespace PdfBookReader.Test
 {
     [TestFixture]
     public class ScreenPageRenderTest
@@ -30,12 +30,14 @@ namespace PDFViewer.Test
             }
         }
 
+        // Render down
         [Test]
         public void One_RenderDown()
         {
             IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
             Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(800, 600));
         }
+
 
         [Test]
         public void One_RenderDown_ExtraLongPage()
@@ -49,6 +51,15 @@ namespace PDFViewer.Test
         {
             IPageLayoutAnalyzer analyzer = new BlankPageLayoutAnalyzer();
             Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680));
+        }
+
+
+        // Render up
+        [Test]
+        public void One_RenderUp()
+        {
+            IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
+            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(800, 600), true);
         }
 
         [Test]

@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using System.IO;
-using PDFViewer.Reader.Render;
-using PDFViewer.Test.TestUtils;
+using PdfBookReader.Render;
+using PdfBookReader.Test.TestUtils;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace PDFViewer.Test
+namespace PdfBookReader.Test
 {
     [TestFixture]
     class PdfPhysicalPageRenderTest

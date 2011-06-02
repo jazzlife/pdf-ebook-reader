@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C# Express 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{E8298BB1-7939-4CCF-B1F0-B467E000F827}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookReader", "BookReader\BookReader.csproj", "{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Debug|Any CPU.Build.0 = Debug|x86
+		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Debug|x86.ActiveCfg = Debug|x86
+		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Debug|x86.Build.0 = Debug|x86
+		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Release|Any CPU.ActiveCfg = Release|x86
+		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Release|x86.ActiveCfg = Release|x86
+		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Release|x86.Build.0 = Release|x86
+		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Debug|Any CPU.Build.0 = Debug|x86
+		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Debug|x86.ActiveCfg = Debug|x86
+		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Debug|x86.Build.0 = Debug|x86
+		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Release|Any CPU.ActiveCfg = Release|x86
+		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Release|x86.ActiveCfg = Release|x86
+		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

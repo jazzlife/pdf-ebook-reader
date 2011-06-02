@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using System.Drawing;
-using PDFViewer.Reader.Utils;
+using PdfBookReader.Utils;
 
-namespace PDFViewer.Test
+namespace PdfBookReader.Test
 {
     [TestFixture]
     public class ArgCheckTest
