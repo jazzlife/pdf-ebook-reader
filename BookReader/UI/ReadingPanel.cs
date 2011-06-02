@@ -47,6 +47,7 @@ namespace PdfBookReader.UI
                 // TODO: render page at stored position in the book
                 // (no the first "current" page).
                 CurrentPageImage = ScreenProvider.RenderCurrentPage(pbContent.Size);
+                UpdateBookProgressBar();
             }
         }
 
@@ -73,10 +74,7 @@ namespace PdfBookReader.UI
             set { value.AssignNewDisposeOld(ref _physicalPageProvider); }
         }
 
-
-
         public event EventHandler GoToLibrary;
-
 
         private void pbContent_Resize(object sender, EventArgs e)
         {
@@ -94,7 +92,9 @@ namespace PdfBookReader.UI
         {
             timerResize.Stop();
             if (ScreenProvider == null) { return; }
+
             CurrentPageImage = ScreenProvider.RenderCurrentPage(pbContent.Size);
+            UpdateBookProgressBar();
         }
 
         private void bLibrary_Click(object sender, EventArgs e)
@@ -105,11 +105,13 @@ namespace PdfBookReader.UI
         private void bNextPage_Click(object sender, EventArgs e)
         {
             CurrentPageImage = ScreenProvider.RenderNextPage();
+            UpdateBookProgressBar();
         }
 
         private void bPrevPage_Click(object sender, EventArgs e)
         {
             CurrentPageImage = ScreenProvider.RenderPreviousPage();
+            UpdateBookProgressBar();
         }
 
         const int WidthIncrement = 100;
@@ -124,6 +126,26 @@ namespace PdfBookReader.UI
             pMargins.Width -= WidthIncrement;
             pMargins.Left += WidthIncrement / 2;
         }
+
+        void UpdateBookProgressBar()
+        {
+            float posF = ScreenProvider.Position;
+            int pageCount = ScreenProvider.PhysicalPageProvider.PageCount;
+            bookProgressBar.Value = (int)(posF * bookProgressBar.Maximum);
+            lbPageNum.Text = String.Format("{0:0.0}/{1}", 1 + (posF * pageCount), pageCount);
+        }
+
+        private void bookProgressBar_MouseUp(object sender, MouseEventArgs e)
+        {
+            // Set position
+            float pos = (float)e.X / bookProgressBar.Width;
+            if (pos > 1) { pos = 1; }
+            if (pos < 0) { pos = 0; }
+
+            CurrentPageImage = ScreenProvider.RenderPage(pos);
+            UpdateBookProgressBar();
+        }
+
 
     }
 }

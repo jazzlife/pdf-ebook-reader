@@ -71,12 +71,52 @@ namespace PdfBookReader.Render
         // page number depends on screen page size, whitespace 
         // in physical pages, etc.
 
-        public Bitmap RenderPage(float positionInBook)
+        /// <summary>
+        /// Position of currnet screen within the book, 0-1
+        /// </summary>
+        public float Position
         {
-            throw new NotImplementedException();
+            get
+            {
+                float pageIndex = (TopPage == null) ? 0 : TopPage.PageNum - 1;
+
+                // TODO: consider position WITHIN a page as well
+                // (more precision within onePageIncrement)
+                float positionWithinPage = 0;
+
+                if (TopPage != null &&
+                    TopPage.BottomOnScreen > 0 &&
+                    TopPage.ContentBounds.Height > 0)
+                {
+                    positionWithinPage = -(float)TopPage.TopOnScreen / TopPage.ContentBounds.Height;
+                }
+
+                pageIndex += positionWithinPage;
+
+                return pageIndex / PhysicalPageProvider.PageCount;
+            }
         }
 
-        //public float Position { get; } 
+        public Bitmap RenderPage(float positionInBook)
+        {
+            ArgCheck.IsRatio(positionInBook, "positionInBook");
+
+            // Find and set TopPage
+            float pageIndex = positionInBook * PhysicalPageProvider.PageCount;
+            int pageNum = (int)pageIndex + 1;
+            TopPage = GetPhysicalPage(pageNum);
+
+            if (TopPage.ContentBounds.Height > 0)
+            {
+                // Fractional part of pageIndex
+                float topOnScreenRelative = pageIndex - ((int)pageIndex);
+                TopPage.TopOnScreen = -(int)(topOnScreenRelative * TopPage.ContentBounds.Height);
+            }
+
+            // Render "current" page based on new TopPage. No change in size.
+            RenderCurrent r = new RenderCurrent(this, ScreenSize);
+            return r.Run();
+        }
 
         public Bitmap RenderFirstPage() 
         {
