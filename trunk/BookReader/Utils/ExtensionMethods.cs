@@ -8,12 +8,58 @@ namespace PdfBookReader.Utils
 {
     public static class ExtensionMethods
     {
-        // String
+        #region String
         public static bool EqualsIC(this String a, String b)
         {
             if (a == null) { return b == null; }
             return a.Equals(b, StringComparison.InvariantCultureIgnoreCase);
         }
+        #endregion
+
+
+        #region IDisposable
+
+        /// <summary>
+        /// Assign a new value to a disposable field, and dispose the old value (if any).
+        /// 
+        /// NOTE: recommended to use only when value is created within a class (private setter).
+        /// For values that are created externally, the creator should dispose them.
+        /// 
+        /// Usage: value.AssignNewDisposeOld(ref field)
+        /// 
+        /// Would be better to have an extension method on *field*, but C# doesn't support "this ref".
+        /// </summary>
+        /// <typeparam name="T">Type (IDisposable)</typeparam>
+        /// <param name="value">New value to assign</param>
+        /// <param name="targetField">Field to assign the value to</param>
+        /// <param name="otherFieldValues">All other fields which may contain the old value (prevent disposing if still in use)</param>
+        /// <remarks></remarks>
+        public static void AssignNewDisposeOld<T>(this T value, ref T targetField, params T[] otherFieldValues)
+            where T: class, IDisposable
+        {
+            
+            if (value == targetField) { return; }
+
+            // Dispose value if needed
+            T fieldValue = targetField;
+            if (fieldValue != null && 
+                // Check if value is still in use
+                otherFieldValues.TrueForAll(ofv => fieldValue != ofv))
+            {
+                targetField.Dispose();
+                targetField = null;
+            }
+
+            targetField = value;
+        }
+
+
+
+        #endregion
+
+
+
+        #region Drawing
 
         // Graphics
         public static void DrawStringBoxed(this Graphics g, String text, int x, int y,
@@ -66,7 +112,9 @@ namespace PdfBookReader.Utils
 
             return new Size(width, height);
         }
+        #endregion
 
+        #region LINQ-like
         // LINQ-like
         public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T> action)
         {
@@ -84,6 +132,27 @@ namespace PdfBookReader.Utils
                 action(item, index++);
             }
         }
+
+        public static bool TrueForAny<T>(this IEnumerable<T> enumeration, Func<T, bool> predicate)
+        {
+            foreach (T item in enumeration)
+            {
+                if (predicate(item)) { return true; }
+            }
+            return false;
+        }
+
+        public static bool TrueForAll<T>(this IEnumerable<T> enumeration, Func<T, bool> predicate)
+        {
+            foreach (T item in enumeration)
+            {
+                if (!predicate(item)) { return false; }
+            }
+            return true;
+        }
+
+        #endregion
+
 
     }
 }

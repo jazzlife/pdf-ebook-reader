@@ -66,9 +66,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BlobPageLayoutAnalyzerTest.cs" />
-    <Compile Include="ArgCheckTest.cs" />
+    <Compile Include="Utils\ArgCheckTest.cs" />
+    <Compile Include="Utils\ExtensionMethodsTest.cs" />
     <Compile Include="PdfPhysicalPageRenderTest.cs" />
-    <Compile Include="SizeScaleTest.cs" />
+    <Compile Include="Utils\SizeScaleTest.cs" />
     <Compile Include="ScreenPageRenderTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

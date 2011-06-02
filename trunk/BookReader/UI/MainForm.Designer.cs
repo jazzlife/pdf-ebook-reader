@@ -28,9 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.pLibrary = new PdfBookReader.UI.LibraryPanel();
             this.pReading = new PdfBookReader.UI.ReadingPanel();
+            this.pLibrary = new PdfBookReader.UI.LibraryPanel();
             this.SuspendLayout();
+            // 
+            // pReading
+            // 
+            this.pReading.BackColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.pReading.Location = new System.Drawing.Point(467, 0);
+            this.pReading.Name = "pReading";
+            this.pReading.Size = new System.Drawing.Size(318, 597);
+            this.pReading.TabIndex = 1;
+            this.pReading.GoToLibrary += new System.EventHandler(this.pReading_GoToLibrary);
             // 
             // pLibrary
             // 
@@ -38,25 +47,15 @@
             this.pLibrary.BackColor = System.Drawing.SystemColors.ControlDarkDark;
             this.pLibrary.Location = new System.Drawing.Point(0, 0);
             this.pLibrary.Name = "pLibrary";
-            this.pLibrary.Size = new System.Drawing.Size(326, 597);
+            this.pLibrary.Size = new System.Drawing.Size(461, 597);
             this.pLibrary.TabIndex = 0;
             this.pLibrary.OpenBook += new System.EventHandler<PdfBookReader.UI.OpenBookEventArgs>(this.pLibrary_OpenBook);
-            // 
-            // pReading
-            // 
-            this.pReading.BackColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.pReading.Book = null;
-            this.pReading.Location = new System.Drawing.Point(332, 0);
-            this.pReading.Name = "pReading";
-            this.pReading.Size = new System.Drawing.Size(318, 597);
-            this.pReading.TabIndex = 1;
-            this.pReading.GoToLibrary += new System.EventHandler(this.pReading_GoToLibrary);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(649, 597);
+            this.ClientSize = new System.Drawing.Size(783, 860);
             this.Controls.Add(this.pReading);
             this.Controls.Add(this.pLibrary);
             this.Name = "MainForm";
