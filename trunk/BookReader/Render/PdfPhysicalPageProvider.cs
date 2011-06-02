@@ -16,6 +16,7 @@ namespace PdfBookReader.Render
     public class PdfPhysicalPageProvider : IPhysicalPageProvider
     {
         PDFWrapper _pdfDoc;
+        String _fullPath;
 
         public PdfPhysicalPageProvider(String file)
         {
@@ -28,8 +29,17 @@ namespace PdfBookReader.Render
             //xPDFParams.ErrorQuiet =true;
             //xPDFParams.ErrorFile = "C:\\stderr.log";
 
+            _fullPath = file;
+
             LoadPdf(file);
         }
+
+        public string FullPath
+        {
+            get { return _fullPath; }
+        }
+
+
 
         #region PdfDoc properties
 
@@ -163,7 +173,6 @@ namespace PdfBookReader.Render
                 _pdfDoc.UseMuPDF = true; 
             }
 
-
             // Scale            
             Size pageSize = new Size(_pdfDoc.PageWidth, _pdfDoc.PageHeight);
             Size size = pageSize.ScaleToFitBounds(maxSize);
@@ -203,10 +212,5 @@ namespace PdfBookReader.Render
         }
 
     }
-
-    public delegate void CustomRenderDelegate(Bitmap bmp, Graphics g);
-
-
-    
 
 }

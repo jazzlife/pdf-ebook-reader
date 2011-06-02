@@ -6,6 +6,7 @@ using System.Drawing;
 using PdfBookReader.Utils;
 using AForge.Imaging;
 using AForge.Imaging.Filters;
+using System.Diagnostics;
 
 namespace PdfBookReader.Render
 {
@@ -49,7 +50,7 @@ namespace PdfBookReader.Render
             if (cbi.Blobs.Count == 0) { return; }
             if (cbi.Bounds == Rectangle.Empty) { return; }
 
-            cbi.Rows = new List<LayoutInfo>();
+            Debug.Assert(cbi.Rows != null && cbi.Rows.Count == 0);
 
             LayoutInfo currentRow = null;
             // Attempt drawing lines between the rows.

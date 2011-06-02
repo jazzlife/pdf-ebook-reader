@@ -22,6 +22,7 @@ namespace PdfBookReader.UI
         private void pLibrary_OpenBook(object sender, OpenBookEventArgs e)
         {
             this.Text = "eBook - " + e.Book.Title;
+            ;
             pReading.Book = e.Book;
             pReading.Visible = true;
             pLibrary.Visible = false;
