@@ -33,16 +33,19 @@
             this.pbContent = new System.Windows.Forms.PictureBox();
             this.pMargins = new System.Windows.Forms.Panel();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
-            this.bWidthMinus = new System.Windows.Forms.ToolStripButton();
+            this.bLibrary = new System.Windows.Forms.ToolStripButton();
+            this.lbPageNum = new System.Windows.Forms.ToolStripLabel();
+            this.bookProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.bPrevPage = new System.Windows.Forms.ToolStripButton();
             this.bNextPage = new System.Windows.Forms.ToolStripButton();
-            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.timerResize = new System.Windows.Forms.Timer(this.components);
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.bLibrary = new System.Windows.Forms.ToolStripButton();
-            this.bWidthPlus = new System.Windows.Forms.ToolStripButton();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.bWidthPlus = new System.Windows.Forms.ToolStripButton();
+            this.bWidthMinus = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.timerResize = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pbContent)).BeginInit();
             this.pMargins.SuspendLayout();
             this.toolStrip.SuspendLayout();
@@ -79,6 +82,8 @@
             this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.bLibrary,
+            this.lbPageNum,
+            this.bookProgressBar,
             this.bPrevPage,
             this.bNextPage,
             this.toolStripLabel2,
@@ -86,23 +91,42 @@
             this.toolStripSeparator2,
             this.toolStripLabel1,
             this.bWidthPlus,
-            this.bWidthMinus});
+            this.bWidthMinus,
+            this.toolStripSeparator3});
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
             this.toolStrip.Size = new System.Drawing.Size(60, 600);
             this.toolStrip.TabIndex = 3;
             this.toolStrip.Text = "toolBar";
             // 
-            // bWidthMinus
+            // bLibrary
             // 
-            this.bWidthMinus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.bWidthMinus.Image = ((System.Drawing.Image)(resources.GetObject("bWidthMinus.Image")));
-            this.bWidthMinus.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.bWidthMinus.Name = "bWidthMinus";
-            this.bWidthMinus.Size = new System.Drawing.Size(58, 19);
-            this.bWidthMinus.Text = "(-)";
-            this.bWidthMinus.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
-            this.bWidthMinus.Click += new System.EventHandler(this.bWidthMinus_Click);
+            this.bLibrary.Image = ((System.Drawing.Image)(resources.GetObject("bLibrary.Image")));
+            this.bLibrary.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.bLibrary.Name = "bLibrary";
+            this.bLibrary.Size = new System.Drawing.Size(58, 35);
+            this.bLibrary.Text = "Library";
+            this.bLibrary.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.bLibrary.Click += new System.EventHandler(this.bLibrary_Click);
+            // 
+            // lbPageNum
+            // 
+            this.lbPageNum.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.lbPageNum.ForeColor = System.Drawing.Color.White;
+            this.lbPageNum.Name = "lbPageNum";
+            this.lbPageNum.Size = new System.Drawing.Size(58, 15);
+            this.lbPageNum.Text = "1/100";
+            // 
+            // bookProgressBar
+            // 
+            this.bookProgressBar.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.bookProgressBar.MarqueeAnimationSpeed = 10000;
+            this.bookProgressBar.Maximum = 10000;
+            this.bookProgressBar.Name = "bookProgressBar";
+            this.bookProgressBar.Size = new System.Drawing.Size(56, 15);
+            this.bookProgressBar.Step = 100;
+            this.bookProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.bookProgressBar.MouseUp += new System.Windows.Forms.MouseEventHandler(this.bookProgressBar_MouseUp);
             // 
             // bPrevPage
             // 
@@ -126,12 +150,13 @@
             this.bNextPage.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
             this.bNextPage.Click += new System.EventHandler(this.bNextPage_Click);
             // 
-            // toolStripLabel1
+            // toolStripLabel2
             // 
-            this.toolStripLabel1.ForeColor = System.Drawing.Color.White;
-            this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(58, 15);
-            this.toolStripLabel1.Text = "Margin";
+            this.toolStripLabel2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripLabel2.ForeColor = System.Drawing.Color.White;
+            this.toolStripLabel2.Name = "toolStripLabel2";
+            this.toolStripLabel2.Size = new System.Drawing.Size(58, 15);
+            this.toolStripLabel2.Text = "Page";
             // 
             // toolStripSeparator1
             // 
@@ -139,24 +164,17 @@
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(58, 6);
             // 
-            // timerResize
-            // 
-            this.timerResize.Tick += new System.EventHandler(this.timerResize_Tick);
-            // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(58, 6);
             // 
-            // bLibrary
+            // toolStripLabel1
             // 
-            this.bLibrary.Image = ((System.Drawing.Image)(resources.GetObject("bLibrary.Image")));
-            this.bLibrary.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.bLibrary.Name = "bLibrary";
-            this.bLibrary.Size = new System.Drawing.Size(58, 35);
-            this.bLibrary.Text = "Library";
-            this.bLibrary.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
-            this.bLibrary.Click += new System.EventHandler(this.bLibrary_Click);
+            this.toolStripLabel1.ForeColor = System.Drawing.Color.White;
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(58, 15);
+            this.toolStripLabel1.Text = "Margin";
             // 
             // bWidthPlus
             // 
@@ -169,13 +187,25 @@
             this.bWidthPlus.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
             this.bWidthPlus.Click += new System.EventHandler(this.bWidthPlus_Click);
             // 
-            // toolStripLabel2
+            // bWidthMinus
             // 
-            this.toolStripLabel2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.toolStripLabel2.ForeColor = System.Drawing.Color.White;
-            this.toolStripLabel2.Name = "toolStripLabel2";
-            this.toolStripLabel2.Size = new System.Drawing.Size(58, 15);
-            this.toolStripLabel2.Text = "Page";
+            this.bWidthMinus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.bWidthMinus.Image = ((System.Drawing.Image)(resources.GetObject("bWidthMinus.Image")));
+            this.bWidthMinus.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.bWidthMinus.Name = "bWidthMinus";
+            this.bWidthMinus.Size = new System.Drawing.Size(58, 19);
+            this.bWidthMinus.Text = "(-)";
+            this.bWidthMinus.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.bWidthMinus.Click += new System.EventHandler(this.bWidthMinus_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(58, 6);
+            // 
+            // timerResize
+            // 
+            this.timerResize.Tick += new System.EventHandler(this.timerResize_Tick);
             // 
             // ReadingPanel
             // 
@@ -206,8 +236,11 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.Timer timerResize;
         private System.Windows.Forms.ToolStripButton bLibrary;
-        private System.Windows.Forms.ToolStripLabel toolStripLabel2;
+        private System.Windows.Forms.ToolStripLabel lbPageNum;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripButton bWidthPlus;
+        private System.Windows.Forms.ToolStripProgressBar bookProgressBar;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel2;
     }
 }
