@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
-namespace PDFViewer.Test.TestUtils
+namespace PdfBookReader.Test.TestUtils
 {
     public class PerfTimer 
     {
