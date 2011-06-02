@@ -20,6 +20,11 @@ namespace PdfBookReader.Render
         int PageCount { get; }
 
         /// <summary>
+        /// Full path to document or folder or url containing the book.
+        /// </summary>
+        string FullPath { get; }
+
+        /// <summary>
         /// Render and return the specific physical page.
         /// </summary>
         /// <param name="pageNum"></param>

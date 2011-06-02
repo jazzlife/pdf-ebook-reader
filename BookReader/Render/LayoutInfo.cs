@@ -5,19 +5,23 @@ using System.Text;
 using System.Drawing;
 using AForge.Imaging;
 using System.Drawing.Imaging;
+using System.Runtime.Serialization;
 
 namespace PdfBookReader.Render
 {
     /// <summary>
     /// Layout info for a page element
     /// </summary>
+    [DataContract]
     public class LayoutInfo 
     {
+        [DataMember]
         public Size PageSize { get; private set; }
 
         /// <summary>
         /// Bounds based on PageSize
         /// </summary>
+        [DataMember]
         public Rectangle Bounds;
 
         public LayoutInfo(Size pageSize)

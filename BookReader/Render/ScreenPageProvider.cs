@@ -21,6 +21,8 @@ namespace PdfBookReader.Render
         IPhysicalPageProvider _physicalPageProvider;
         IPageLayoutAnalyzer _pageLayoutAnalyzer;
 
+        PhysicalPageCache PpiCache;
+
         public ScreenPageProvider(
             IPhysicalPageProvider physicalPageProvider,
             IPageLayoutAnalyzer layoutAnalyzer,
@@ -29,6 +31,8 @@ namespace PdfBookReader.Render
             ScreenSize = screenPageSize;
             PhysicalPageProvider = physicalPageProvider;
             LayoutAnalyzer = layoutAnalyzer;
+
+            PpiCache = new PhysicalPageCache();
         }
 
         #region Config Properties
@@ -86,14 +90,21 @@ namespace PdfBookReader.Render
 
                 if (TopPage != null &&
                     TopPage.BottomOnScreen > 0 &&
-                    TopPage.ContentBounds.Height > 0)
+                    TopPage.Layout.Bounds.Height > 0)
                 {
-                    positionWithinPage = -(float)TopPage.TopOnScreen / TopPage.ContentBounds.Height;
+                    positionWithinPage = -(float)TopPage.TopOnScreen / TopPage.Layout.Bounds.Height;
                 }
 
                 pageIndex += positionWithinPage;
 
-                return pageIndex / PhysicalPageProvider.PageCount;
+                float position = pageIndex / PhysicalPageProvider.PageCount;
+
+                // This can happen (e.g. when page top is positive 
+                // on first page after iterating backwards)
+                if (position < 0) { position = 0; }
+                if (position > 1) { position = 1; }
+
+                return position;
             }
         }
 
@@ -106,11 +117,11 @@ namespace PdfBookReader.Render
             int pageNum = (int)pageIndex + 1;
             TopPage = GetPhysicalPage(pageNum);
 
-            if (TopPage.ContentBounds.Height > 0)
+            if (TopPage.Layout.Bounds.Height > 0)
             {
                 // Fractional part of pageIndex
                 float topOnScreenRelative = pageIndex - ((int)pageIndex);
-                TopPage.TopOnScreen = -(int)(topOnScreenRelative * TopPage.ContentBounds.Height);
+                TopPage.TopOnScreen = -(int)(topOnScreenRelative * TopPage.Layout.Bounds.Height);
             }
 
             // Render "current" page based on new TopPage. No change in size.
@@ -218,8 +229,8 @@ namespace PdfBookReader.Render
 
             // Render current page
             Rectangle destRect = new Rectangle(0, curPage.TopOnScreen,
-                    curPage.ContentBounds.Width, curPage.ContentBounds.Height);
-            Rectangle srcRect = curPage.ContentBounds;
+                    curPage.Layout.Bounds.Width, curPage.Layout.Bounds.Height);
+            Rectangle srcRect = curPage.Layout.Bounds;
 
             g.DrawImage(curPage.Image, destRect, srcRect, GraphicsUnit.Pixel);
 
@@ -247,7 +258,8 @@ namespace PdfBookReader.Render
         readonly Size LayoutRenderSize = new Size(1000, 1000);
 
         /// <summary>
-        /// Get physical page info. Null if pageNum is out of range.
+        /// Get physical page info (render or from cache). 
+        /// Null if pageNum is out of range.
         /// </summary>
         /// <param name="pageNum"></param>
         /// <returns></returns>
@@ -262,9 +274,32 @@ namespace PdfBookReader.Render
 
             Trace.WriteLine("GetPhysicalPage: pageNum = " + pageNum);
 
+            // Try to get from cache
+            PhysicalPageInfo pageInfo;
+            if (PpiCache != null)
+            {
+                pageInfo = PpiCache.GetPage(PhysicalPageProvider.FullPath, pageNum, ScreenSize.Width);
+
+                Trace.WriteLine("GetPhysicalPage: returning cached page");
+                if (pageInfo != null) { return pageInfo; }
+            }
+
+            // Render actual page (takes long)
+            pageInfo = RenderPhysicalPage(pageNum);
+
+            // Save to cache
+            if (PpiCache != null) 
+            {
+                PpiCache.SavePage(pageInfo, PhysicalPageProvider.FullPath, ScreenSize.Width);
+            }
+            return pageInfo;
+        }
+
+        PhysicalPageInfo RenderPhysicalPage(int pageNum)
+        {
+            PhysicalPageInfo pageInfo;
             // NOTE: rendering the page twice -- we need the layout in order to figure out
             // the best dimensions for the final render.
-
             PageLayoutInfo layout;
             using (Bitmap bmpLayoutPage = PhysicalPageProvider.RenderPage(pageNum, LayoutRenderSize))
             {
@@ -279,7 +314,8 @@ namespace PdfBookReader.Render
 
             layout.ScaleBounds(image.Size);
 
-            return new PhysicalPageInfo(pageNum, image, layout);
+            pageInfo = new PhysicalPageInfo(pageNum, image, layout);
+            return pageInfo;
         }
 
         public void Dispose()

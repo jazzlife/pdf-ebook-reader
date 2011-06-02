@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.Serialization;
 
 namespace PdfBookReader.Render
 {
@@ -12,10 +13,16 @@ namespace PdfBookReader.Render
     /// Information about a physical page content layout:
     /// rows, header, footer
     /// </summary>
+    [DataContract]
     public class PageLayoutInfo : LayoutInfo
     {
-        public List<LayoutInfo> Rows = new List<LayoutInfo>();
+        [DataMember(Name = "Rows")]
+        List<LayoutInfo> _rows;
+
+        [DataMember]
         public LayoutInfo Header;
+
+        [DataMember]
         public LayoutInfo Footer;
 
         public PageLayoutInfo(Size pageSize) : base(pageSize) { }
@@ -28,6 +35,16 @@ namespace PdfBookReader.Render
             if (Header != null) { Header.ScaleBounds(newPageSize); }
             if (Footer != null) { Footer.ScaleBounds(newPageSize); }
         }
+
+        public List<LayoutInfo> Rows 
+        {
+            get 
+            { 
+                if (_rows == null) { _rows = new List<LayoutInfo>(); }
+                return _rows;
+            }            
+        }
+
 
         #region Debug
         /// <summary>

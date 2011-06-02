@@ -4,21 +4,27 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using PdfBookReader.Utils;
+using System.Runtime.Serialization;
+using System.IO;
 
 namespace PdfBookReader.Render
 {
     /// <summary>
     /// Information about a rendered physical page. 
     /// </summary>
+    [DataContract]
     class PhysicalPageInfo : IDisposable
     {
+        [DataMember]
         public readonly int PageNum; // page number in document, 1-n
-
-        Bitmap _image; // physical page image
+        
+        [DataMember (Name = "Layout")]
         PageLayoutInfo _layout; // content layout
 
-        // Distance between top of screen page and content bounds content bounds and 
+        // Serialized separately
+        Bitmap _image; // physical page image
 
+        // Not serialized
         /// <summary>
         /// Distance between content bounds top and creen page top 
         /// screen.Top - countentBounds.Top
@@ -33,25 +39,22 @@ namespace PdfBookReader.Render
             PageNum = pageNum;
             _image = image;
             _layout = layout;
-
-            ContentBounds = Layout.Bounds;
         }
 
-        public Bitmap Image { get { return _image; } }
+        public Bitmap Image 
+        { 
+            get { return _image; }
+            private set { _image = value; }
+        }
+
         public PageLayoutInfo Layout { get { return _layout; } }
 
         // For convenience
         public int BottomOnScreen
         {
-            get { return TopOnScreen + ContentBounds.Height; }
-            set { TopOnScreen = value - ContentBounds.Height; }
+            get { return TopOnScreen + Layout.Bounds.Height; }
+            set { TopOnScreen = value - Layout.Bounds.Height; }
         }
-
-        /// <summary>
-        /// Usually same as Layout.Bounds, but can be set differently in some
-        /// tweaking scenarios (e.g. to avoid splitting a row)
-        /// </summary>
-        public Rectangle ContentBounds { get; set; }
 
         public void Dispose()
         {
@@ -60,7 +63,6 @@ namespace PdfBookReader.Render
                 _image.Dispose();
                 _image = null;
                 _layout = null;
-                ContentBounds = Rectangle.Empty;
             }
         }
 
@@ -68,6 +70,37 @@ namespace PdfBookReader.Render
         {
             return "PhysicalPage #" + PageNum + " TopOnScreen = " + TopOnScreen;
         }
+
+        #region Serialization
+
+        public void Save(String dataFileName)
+        {
+            XmlHelper.Serialize(this, dataFileName);
+            String imageFileName = GetImageFileName(dataFileName);
+            this.Image.Save(imageFileName);
+        }
+
+        public static PhysicalPageInfo Load(String dataFileName)
+        {
+            if (!File.Exists(dataFileName)) { throw new FileNotFoundException("No data file" + dataFileName); }
+
+            String imageFileName = GetImageFileName(dataFileName);
+            if (!File.Exists(imageFileName)) { throw new FileNotFoundException("No image file: " + imageFileName); }
+
+            PhysicalPageInfo ppi = XmlHelper.Deserialize<PhysicalPageInfo>(dataFileName);
+            Bitmap image = new Bitmap(imageFileName);
+            ppi.Image = image;
+
+            return ppi;
+        }
+
+        static String GetImageFileName(String dataFileName)
+        {
+            return Path.Combine(Path.GetDirectoryName(dataFileName),
+                Path.GetFileNameWithoutExtension(dataFileName) + ".png");
+        }
+
+        #endregion
     }
 
 }
