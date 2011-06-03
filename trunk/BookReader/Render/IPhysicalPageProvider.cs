@@ -36,8 +36,21 @@ namespace PdfBookReader.Render
 
     public enum RenderQuality
     {
+        /// <summary>
+        /// Fast rendering algorithm, lower quality.
+        /// </summary>
         Fast,
+        
+        /// <summary>
+        /// Highest quality rendering.
+        /// </summary>
         HighQuality,
+
+        /// <summary>
+        /// Determine optimal rendering quality.
+        /// (high if possible, but fast if high is too slow)
+        /// </summary>
+        Optimal,
     }
 
 }

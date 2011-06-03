@@ -41,8 +41,8 @@ namespace PdfBookReader.UI
 
                 // Rendering components
                 PhysicalPageProvider = new PdfPhysicalPageProvider(_book.Filename);
-                IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer(); // not disposable
-                ScreenProvider = new ScreenPageProvider(PhysicalPageProvider, analyzer, pbContent.Size);
+                IPageContentProvider contentProvider = new DefaultPageContentProvider(); // not disposable
+                ScreenProvider = new ScreenPageProvider(PhysicalPageProvider, contentProvider, pbContent.Size);
 
                 // TODO: render page at stored position in the book
                 // (no the first "current" page).

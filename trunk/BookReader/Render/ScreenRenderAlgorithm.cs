@@ -8,7 +8,7 @@ using System.Drawing.Imaging;
 
 namespace PdfBookReader.Render
 {
-    public partial class ScreenPageProvider
+    partial class ScreenPageProvider
     {
         #region Render Down / Up
 
@@ -24,7 +24,7 @@ namespace PdfBookReader.Render
             public Bitmap Run()
             {
                 // Use bottom page from previous screen, or get an appropriate one
-                PhysicalPageInfo curPage = GetStartingPage();
+                PageContent curPage = GetStartingPage();
 
                 // Final page
                 if (curPage == null ||
@@ -53,7 +53,7 @@ namespace PdfBookReader.Render
                 return screenBmp;
             }
 
-            protected abstract PhysicalPageInfo GetStartingPage();
+            protected abstract PageContent GetStartingPage();
 
             /// <summary>
             /// Draw current page.
@@ -63,7 +63,7 @@ namespace PdfBookReader.Render
             /// <param name="curPage"></param>
             /// <param name="g"></param>
             /// <returns></returns>
-            PhysicalPageInfo DrawCurPageRenderNext(PhysicalPageInfo curPage, Graphics g)
+            PageContent DrawCurPageRenderNext(PageContent curPage, Graphics g)
             {
                 Trace.WriteLine("RenderOnePage: curPage = " + curPage);
 
@@ -91,8 +91,8 @@ namespace PdfBookReader.Render
                 return curPage;
             }
 
-            protected abstract void AdvanceCurPage(ref PhysicalPageInfo curPage);
-            protected abstract bool ShouldTerminate(PhysicalPageInfo curPage);
+            protected abstract void AdvanceCurPage(ref PageContent curPage);
+            protected abstract bool ShouldTerminate(PageContent curPage);
         }
 
         /// <summary>
@@ -102,9 +102,9 @@ namespace PdfBookReader.Render
         {
             public RenderDown(ScreenPageProvider parent) : base(parent) { }
 
-            protected override PhysicalPageInfo GetStartingPage()
+            protected override PageContent GetStartingPage()
             {
-                PhysicalPageInfo curPage;
+                PageContent curPage;
                 if (p.BottomPage == null)
                 {
                     Trace.WriteLine("RenderDown_GetStarting: no BottomPage, getting first page in doc");
@@ -129,7 +129,7 @@ namespace PdfBookReader.Render
                 return curPage;
             }
 
-            protected override bool ShouldTerminate(PhysicalPageInfo curPage)
+            protected override bool ShouldTerminate(PageContent curPage)
             {
                 // Final page (no spill over necessary, may terminate early)
                 if (curPage.PageNum == p.PhysicalPageProvider.PageCount)
@@ -147,7 +147,7 @@ namespace PdfBookReader.Render
                 return false;
             }
 
-            protected override void AdvanceCurPage(ref PhysicalPageInfo curPage)
+            protected override void AdvanceCurPage(ref PageContent curPage)
             {
                 int newTop = curPage.BottomOnScreen;
                 curPage = p.GetPhysicalPage(curPage.PageNum + 1);
@@ -171,9 +171,9 @@ namespace PdfBookReader.Render
                 OldScreenSize = oldScreenSize;
             }
 
-            protected override PhysicalPageInfo GetStartingPage()
+            protected override PageContent GetStartingPage()
             {
-                PhysicalPageInfo curPage;
+                PageContent curPage;
                 if (p.TopPage == null)
                 {
                     Trace.WriteLine("RenderCurrent_GetStarting: no top page, getting first page in doc");
@@ -221,9 +221,9 @@ namespace PdfBookReader.Render
         {
             public RenderUp(ScreenPageProvider parent) : base(parent) { }
 
-            protected override PhysicalPageInfo GetStartingPage()
+            protected override PageContent GetStartingPage()
             {
-                PhysicalPageInfo curPage;
+                PageContent curPage;
                 if (p.TopPage == null)
                 {
                     Trace.WriteLine("RenderUp.GetStarting: no TopPage, getting last page in doc (and setting bounds)");
@@ -249,7 +249,7 @@ namespace PdfBookReader.Render
                 return curPage;
             }
 
-            protected override bool ShouldTerminate(PhysicalPageInfo curPage)
+            protected override bool ShouldTerminate(PageContent curPage)
             {
                 // Final page (no spill over necessary, may terminate early)
                 if (curPage.PageNum == 1)
@@ -267,7 +267,7 @@ namespace PdfBookReader.Render
                 return false;
             }
 
-            protected override void AdvanceCurPage(ref PhysicalPageInfo curPage)
+            protected override void AdvanceCurPage(ref PageContent curPage)
             {
                 int newBottom = curPage.TopOnScreen;
                 curPage = p.GetPhysicalPage(curPage.PageNum - 1);

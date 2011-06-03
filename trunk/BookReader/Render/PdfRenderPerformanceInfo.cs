@@ -12,10 +12,8 @@ namespace PdfBookReader.Render
     /// Tracks performance of Fast vs. HighQuality PDF rendering,
     /// and chooses the optimal one.
     /// </summary>
-    struct PdfRenderPerformanceInfo
+    class PdfRenderPerformanceInfo
     {
-        public readonly Size ScreenSize;
-
         double _highQualityTime;
         int _highQualityCount;
 
@@ -25,10 +23,8 @@ namespace PdfBookReader.Render
         public int MeasureThreshold;
         public int ImprovementThreshold;
 
-        public PdfRenderPerformanceInfo(Size screenSize)
+        public PdfRenderPerformanceInfo()
         {
-            ScreenSize = screenSize;
-
             _highQualityCount = 0;
             _highQualityTime = 0;
 

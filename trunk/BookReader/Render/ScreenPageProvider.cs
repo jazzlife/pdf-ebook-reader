@@ -13,27 +13,22 @@ namespace PdfBookReader.Render
     /// Renders screen pages based on physical pages.
     /// Keeps track of current page with ability to request next/previous.
     /// </summary>
-    public partial class ScreenPageProvider : IDisposable
+    partial class ScreenPageProvider : IDisposable
     {
-        public bool UseCache = true;
         public bool DrawDebugMarks = true;
 
         Size _screenSize;
         IPhysicalPageProvider _physicalPageProvider;
-        IPageLayoutAnalyzer _pageLayoutAnalyzer;
-
-        PhysicalPageInfoCache PpiCache;
+        IPageContentProvider _contentProvider;
 
         public ScreenPageProvider(
             IPhysicalPageProvider physicalPageProvider,
-            IPageLayoutAnalyzer layoutAnalyzer,
+            IPageContentProvider contentProvider,
             Size screenPageSize)
         {
             ScreenSize = screenPageSize;
             PhysicalPageProvider = physicalPageProvider;
-            LayoutAnalyzer = layoutAnalyzer;
-
-            PpiCache = new PhysicalPageInfoCache();
+            ContentProvider = contentProvider;
         }
 
         #region Config Properties
@@ -59,13 +54,13 @@ namespace PdfBookReader.Render
             }
         }
 
-        public IPageLayoutAnalyzer LayoutAnalyzer 
+        public IPageContentProvider ContentProvider
         {
-            get { return _pageLayoutAnalyzer; }
+            get { return _contentProvider; }
             set
             {
                 ArgCheck.NotNull(value);
-                _pageLayoutAnalyzer = value;
+                _contentProvider = value;
             }
         }
 
@@ -166,14 +161,14 @@ namespace PdfBookReader.Render
 
         // NOTE: careful when disposing these. Generally, should be disposed on assignment, but
         // NOT if TopPage == BottomPage
-        PhysicalPageInfo _topPage = null;
-        PhysicalPageInfo _bottomPage = null;
+        PageContent _topPage = null;
+        PageContent _bottomPage = null;
              
         /// <summary>
         /// Top physical page of the current screen page.
         /// Previous page needs this when rendering (RenderUp)
         /// </summary>
-        PhysicalPageInfo TopPage 
+        PageContent TopPage 
         { 
             get { return _topPage; }
             set 
@@ -187,7 +182,7 @@ namespace PdfBookReader.Render
         /// Bottom physical page of current screen page
         /// Next page needs this when rendering (RenderDown)
         /// </summary>
-        PhysicalPageInfo BottomPage 
+        PageContent BottomPage 
         { 
             get { return _bottomPage; }
             set 
@@ -213,7 +208,7 @@ namespace PdfBookReader.Render
             }
         }
 
-        void DrawPhysicalPage(Graphics g, PhysicalPageInfo curPage)
+        void DrawPhysicalPage(Graphics g, PageContent curPage)
         {
             Trace.WriteLine("DrawPage: " + curPage);
 
@@ -242,18 +237,13 @@ namespace PdfBookReader.Render
 
         #endregion
 
-
-        // Smaller probably renders faster, but rows are hard to distinguish.
-        // experiment later
-        readonly Size LayoutRenderSize = new Size(1000, 1000);
-
         /// <summary>
-        /// Get physical page info (render or from cache). 
+        /// Get physical page info from the provider.
         /// Null if pageNum is out of range.
         /// </summary>
         /// <param name="pageNum"></param>
         /// <returns></returns>
-        PhysicalPageInfo GetPhysicalPage(int pageNum)
+        PageContent GetPhysicalPage(int pageNum)
         {
             // No physical page
             if (pageNum < 1 || pageNum > PhysicalPageProvider.PageCount)
@@ -264,74 +254,10 @@ namespace PdfBookReader.Render
 
             Trace.WriteLine("GetPhysicalPage: pageNum = " + pageNum);
 
-            // Try to get from cache
-            PhysicalPageInfo pageInfo;
-            if (UseCache && PpiCache != null)
-            {
-                pageInfo = PpiCache.GetPage(PhysicalPageProvider.FullPath, pageNum, ScreenSize.Width);
-                if (pageInfo != null) 
-                {
-                    Trace.WriteLine("GetPhysicalPage: returning cached page");
-                    return pageInfo; 
-                }
-            }
+            // Render actual page (may take long)
+            return ContentProvider.RenderPhysicalPage(pageNum, ScreenSize, PhysicalPageProvider);
+        }        
 
-            // Render actual page (takes long)
-            pageInfo = RenderPhysicalPage(pageNum);
-
-            // Save to cache
-            if (UseCache && PpiCache != null) 
-            {
-                PpiCache.SavePage(pageInfo, PhysicalPageProvider.FullPath, ScreenSize.Width);
-            }
-            return pageInfo;
-        }
-
-        // Adaptive slowing
-        PdfRenderPerformanceInfo _renderPerfInfo;
-        
-
-        PhysicalPageInfo RenderPhysicalPage(int pageNum)
-        {
-            PhysicalPageInfo pageInfo;
-            // NOTE: rendering the page twice -- we need the layout in order to figure out
-            // the best dimensions for the final render.
-            PageLayoutInfo layout;
-            using (Bitmap bmpLayoutPage = PhysicalPageProvider.RenderPage(pageNum, LayoutRenderSize, RenderQuality.Fast))
-            {
-                layout = LayoutAnalyzer.DetectPageLayout(bmpLayoutPage);
-            }
-
-            // Empty page
-            if (layout.Bounds.IsEmpty) 
-            {
-                layout.Bounds = new Rectangle(0,0,ScreenSize.Width, 100);
-                return new PhysicalPageInfo(pageNum, new Bitmap(layout.Bounds.Width, layout.Bounds.Height), layout);
-            }
-
-            // Render actual page. Bounded by width, but not height.
-            int maxWidth = (int)((float)ScreenSize.Width / layout.BoundsRelative.Width);
-            Size displayPageMaxSize = new Size(maxWidth, int.MaxValue);
-
-            // Measure performance
-            if (_renderPerfInfo.ScreenSize != ScreenSize)
-            {
-                _renderPerfInfo = new PdfRenderPerformanceInfo(ScreenSize);
-            }
-
-            // Get quality, high by default
-            RenderQuality quality = _renderPerfInfo.QualityToUse;
-
-            DateTime startTime = DateTime.Now;
-
-            Bitmap image = PhysicalPageProvider.RenderPage(pageNum, displayPageMaxSize, quality);
-
-            _renderPerfInfo.SaveTime((DateTime.Now - startTime).TotalMilliseconds, quality);
-            
-            layout.ScaleBounds(image.Size);
-            pageInfo = new PhysicalPageInfo(pageNum, image, layout);
-            return pageInfo;
-        }
 
         public void Dispose()
         {
@@ -340,4 +266,5 @@ namespace PdfBookReader.Render
             BottomPage = null;
         }
     }
+
 }

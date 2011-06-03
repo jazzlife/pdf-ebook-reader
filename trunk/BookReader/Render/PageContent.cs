@@ -10,12 +10,12 @@ using System.IO;
 namespace PdfBookReader.Render
 {
     /// <summary>
-    /// Information about a rendered physical page. 
+    /// Rendered physical page with the detected layout info. 
     /// </summary>
-    [DataContract]
-    class PhysicalPageInfo : IDisposable
+    [DataContract(Name = "PageContent")]
+    class PageContent : IDisposable
     {
-        [DataMember]
+        [DataMember (Name = "PageNum")]
         public readonly int PageNum; // page number in document, 1-n
         
         [DataMember (Name = "Layout")]
@@ -31,7 +31,7 @@ namespace PdfBookReader.Render
         /// </summary>
         public int TopOnScreen = 0;
 
-        public PhysicalPageInfo(int pageNum, Bitmap image, PageLayoutInfo layout)
+        public PageContent(int pageNum, Bitmap image, PageLayoutInfo layout)
         {
             ArgCheck.GreaterThanOrEqual(pageNum, 1, "pageNum");
             ArgCheck.NotNull(image);
@@ -80,14 +80,14 @@ namespace PdfBookReader.Render
             this.Image.Save(imageFileName);
         }
 
-        public static PhysicalPageInfo Load(String dataFileName)
+        public static PageContent Load(String dataFileName)
         {
             if (!File.Exists(dataFileName)) { throw new FileNotFoundException("No data file" + dataFileName); }
 
             String imageFileName = GetImageFileName(dataFileName);
             if (!File.Exists(imageFileName)) { throw new FileNotFoundException("No image file: " + imageFileName); }
 
-            PhysicalPageInfo ppi = XmlHelper.Deserialize<PhysicalPageInfo>(dataFileName);
+            PageContent ppi = XmlHelper.Deserialize<PageContent>(dataFileName);
             Bitmap image = new Bitmap(imageFileName);
             ppi.Image = image;
 

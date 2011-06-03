@@ -18,6 +18,9 @@ namespace PdfBookReader.Render
         PDFWrapper _pdfDoc;
         String _fullPath;
 
+        // Performance tuning
+        PdfRenderPerformanceInfo PerfInfo;
+
         public PdfPhysicalPageProvider(String file)
         {
             ArgCheck.NotNull(file, "file");
@@ -87,6 +90,9 @@ namespace PdfBookReader.Render
             {
                 MessageBox.Show(ex.Message, "InvalidDataException");
             }
+
+            // New doc requires new performance info
+            PerfInfo = new PdfRenderPerformanceInfo();
         }
 
         static bool LoadFile(string filename, PDFWrapper pdfDoc)
@@ -159,11 +165,29 @@ namespace PdfBookReader.Render
 
         const double ZoomConst = 72.0;
 
-        public Bitmap RenderPage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality)
+
+        public Bitmap RenderPage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.Optimal)
         {
             if (pageNum < 1) { throw new ArgumentException("pageNum < 1. Should start at 1"); }
             AssertPdfDocLoaded();
 
+            // Get quality, high by default
+            if (quality == RenderQuality.Optimal)
+            {
+                quality = PerfInfo.QualityToUse;
+            }
+
+            DateTime startTime = DateTime.Now;
+            Bitmap image = RenderPageCore(pageNum, maxSize, quality);
+
+            double time = (DateTime.Now - startTime).TotalMilliseconds;
+            PerfInfo.SaveTime(time, quality);
+
+            return image;
+        }
+
+        Bitmap RenderPageCore(int pageNum, Size maxSize, RenderQuality quality)
+        {
             if (pageNum < 1 || pageNum > _pdfDoc.PageCount) { return null; }
 
             _pdfDoc.CurrentPage = pageNum;
