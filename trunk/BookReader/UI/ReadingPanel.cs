@@ -56,6 +56,8 @@ namespace PdfBookReader.UI
             get { return _currentScreenImage; }
             set
             {
+                if (value == null) { return; }
+                
                 pbContent.Image = null;
                 value.AssignNewDisposeOld(ref _currentScreenImage);
                 pbContent.Image = _currentScreenImage;
@@ -105,12 +107,14 @@ namespace PdfBookReader.UI
         private void bNextPage_Click(object sender, EventArgs e)
         {
             CurrentPageImage = ScreenProvider.RenderNextPage();
+            if (CurrentPageImage == null) { return; }
             UpdateBookProgressBar();
         }
 
         private void bPrevPage_Click(object sender, EventArgs e)
         {
             CurrentPageImage = ScreenProvider.RenderPreviousPage();
+            if (CurrentPageImage == null) { return; }
             UpdateBookProgressBar();
         }
 

@@ -69,15 +69,6 @@ namespace PdfBookReader.Render
 
                 p.DrawPhysicalPage(g, curPage);
 
-                // Special case: Empty page. 
-                // Keep the page number at both top and bottom.
-                if (curPage.Layout.IsEmpty)
-                {
-                    p.TopPage = curPage;
-                    p.BottomPage = curPage;
-                    return null;
-                }
-
                 // Save new top page
                 if (curPage.TopOnScreen <= 0)
                 {
