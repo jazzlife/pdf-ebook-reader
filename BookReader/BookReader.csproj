@@ -77,7 +77,9 @@
   <ItemGroup>
     <Compile Include="Metadata\Book.cs" />
     <Compile Include="Metadata\BookLibrary.cs" />
-    <Compile Include="Render\ScreenRender\PdfRenderPerformanceInfo.cs" />
+    <Compile Include="Render\DefaultPageContentProvider.cs" />
+    <Compile Include="Render\IPageContentProvider.cs" />
+    <Compile Include="Render\PdfRenderPerformanceInfo.cs" />
     <Compile Include="Render\PhysicalPageInfoCache.cs" />
     <Compile Include="UI\BookListViewItem.cs" />
     <Compile Include="UI\LibraryPanel.cs">
@@ -101,16 +103,16 @@
       <DependentUpon>ReadingPanel.cs</DependentUpon>
     </Compile>
     <Compile Include="Render\BlankPageLayoutAnalyzer.cs" />
-    <Compile Include="Render\BlobPageLayoutAnalyzer.cs" />
+    <Compile Include="Render\DefaultPageLayoutAnalyzer.cs" />
     <Compile Include="Utils\DebugOnlyAttribute.cs" />
     <Compile Include="Render\IPageLayoutAnalyzer.cs" />
     <Compile Include="Render\IPhysicalPageProvider.cs" />
     <Compile Include="Render\LayoutInfo.cs" />
     <Compile Include="Render\PageLayoutInfo.cs" />
     <Compile Include="Render\PdfPhysicalPageProvider.cs" />
-    <Compile Include="Render\PhysicalPageInfo.cs" />
+    <Compile Include="Render\PageContent.cs" />
     <Compile Include="Render\ScreenPageProvider.cs" />
-    <Compile Include="Render\ScreenRender\ScreenRenderAlgorithms.cs" />
+    <Compile Include="Render\ScreenRenderAlgorithm.cs" />
     <Compile Include="Utils\ArgCheck.cs" />
     <Compile Include="Utils\ExtensionMethods.cs" />
     <Compile Include="Utils\PathX.cs" />

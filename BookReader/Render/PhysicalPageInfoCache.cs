@@ -70,7 +70,7 @@ namespace PdfBookReader.Render
         }
         #endregion 
 
-        internal PhysicalPageInfo GetPage(String fullBookPath, int pageNum, int contentWidth)
+        internal PageContent GetPage(String fullBookPath, int pageNum, int contentWidth)
         {
             // FullPath is unique, but unwieldy for use in filenames. 
             // Instead, we use an ID
@@ -82,10 +82,10 @@ namespace PdfBookReader.Render
             String filename = GetFilename(id, pageNum, contentWidth);
             if (!File.Exists(filename)) { return null; }
 
-            PhysicalPageInfo ppi = null;
+            PageContent ppi = null;
             try 
             {
-                ppi = PhysicalPageInfo.Load(filename);
+                ppi = PageContent.Load(filename);
             }
             catch (Exception e)
             {
@@ -95,7 +95,7 @@ namespace PdfBookReader.Render
             return ppi;
         }
 
-        public void SavePage(PhysicalPageInfo ppi, String fullBookPath, int contentWidth)
+        public void SavePage(PageContent ppi, String fullBookPath, int contentWidth)
         {            
             // TODO: delete items from cache occasionally (e.g. when requested
             // width of saved item changes). Easy to delete wNNN_*.*

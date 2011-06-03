@@ -9,7 +9,7 @@ namespace PdfBookReader.Render
     /// <summary>
     /// Full physical page area as layout, no header/footer. 
     /// </summary>
-    public class BlankPageLayoutAnalyzer : IPageLayoutAnalyzer
+    class BlankPageLayoutAnalyzer : IPageLayoutAnalyzer
     {
         public PageLayoutInfo DetectPageLayout(Bitmap physicalPage)
         {

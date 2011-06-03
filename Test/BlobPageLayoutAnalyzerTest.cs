@@ -49,7 +49,7 @@ namespace PdfBookReader.Test
 
         void ProcessImage(String file, int index = 0)
         {
-            BlobPageLayoutAnalyzer detector = new BlobPageLayoutAnalyzer();
+            DefaultPageLayoutAnalyzer detector = new DefaultPageLayoutAnalyzer();
             PageLayoutInfo layout;
 
             // Convert format

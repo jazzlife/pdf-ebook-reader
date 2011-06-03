@@ -36,12 +36,13 @@ namespace PdfBookReader.Test
 
         void RenderOneFile(PerfTimer timer, String file)
         {
+            DefaultPageContentProvider dpcp = new DefaultPageContentProvider();
+            dpcp.UseCache = false;
+
             ScreenPageProvider provider = new ScreenPageProvider(
                 new PdfPhysicalPageProvider(file),
-                new BlobPageLayoutAnalyzer(),
+                new DefaultPageContentProvider(),
                 ScreenSize);
-
-            provider.UseCache = false;
 
             const int RenderNextRepeats = 10;
             const int RenderMiddleRepeats = 5;

@@ -23,10 +23,9 @@ namespace PdfBookReader.Test
         {
             var files = Directory.GetFiles(TestConst.PdfFilePath, "*.pdf");
 
-            IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
             foreach (String file in files)
             {
-                Render(file, 15, analyzer, new Size(800, 600));
+                Render(file, 15, new Size(800, 600));
             }
         }
 
@@ -34,23 +33,15 @@ namespace PdfBookReader.Test
         [Test]
         public void One_RenderDown()
         {
-            IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
-            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(800, 600));
+            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, new Size(800, 600));
         }
 
 
         [Test]
         public void One_RenderDown_ExtraLongPage()
         {
-            IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
-            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680));
-        }
-
-        [Test]
-        public void One_RenderDown_ExtraLongPage_NoAnalysis()
-        {
-            IPageLayoutAnalyzer analyzer = new BlankPageLayoutAnalyzer();
-            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680));
+            IPageLayoutAnalyzer analyzer = new DefaultPageLayoutAnalyzer();
+            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, new Size(440, 1680));
         }
 
 
@@ -58,24 +49,16 @@ namespace PdfBookReader.Test
         [Test]
         public void One_RenderUp()
         {
-            IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
-            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(800, 600), true);
+            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, new Size(800, 600), true);
         }
 
-        [Test]
-        public void One_RenderUp_ExtraLongPage_NoAnalysis()
+        void Render(String file, int maxPages, Size screenPageSize, bool renderUp = false)
         {
-            IPageLayoutAnalyzer analyzer = new BlankPageLayoutAnalyzer();
-            Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, analyzer, new Size(440, 1680), true);
-        }
-
-        void Render(String file, int maxPages, 
-            IPageLayoutAnalyzer layoutAnalyzer, Size screenPageSize, bool renderUp = false)
-        {
-            PdfPhysicalPageProvider pdfReader = new PdfPhysicalPageProvider(file);
+            IPhysicalPageProvider pdfReader = new PdfPhysicalPageProvider(file);
+            IPageContentProvider contentProvider = new DefaultPageContentProvider();
 
             ScreenPageProvider screenPageProvider =
-                new ScreenPageProvider(pdfReader, layoutAnalyzer, screenPageSize);
+                new ScreenPageProvider(pdfReader, contentProvider, screenPageSize);
 
             PerfTimer timer = new PerfTimer("Screen Page Load {0}x{1} '{2}'", 
                 screenPageSize.Width, screenPageSize.Height, Path.GetFileName(file));

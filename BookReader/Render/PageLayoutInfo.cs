@@ -15,7 +15,7 @@ namespace PdfBookReader.Render
     /// rows, header, footer
     /// </summary>
     [DataContract]
-    public class PageLayoutInfo : LayoutInfo
+    class PageLayoutInfo : LayoutInfo
     {
         [DataMember(Name = "Rows")]
         List<LayoutInfo> _rows;
