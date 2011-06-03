@@ -7,6 +7,6 @@ namespace PdfBookReader.Test.TestUtils
 {
     internal static class TestConst
     {
-        public const String PdfFilePath = @"..\..\PDFs";
+        public const String PdfFilePath = @"E:\temp\PdfEBookReaderSourcePdfs";
     }
 }

@@ -66,11 +66,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BlobPageLayoutAnalyzerTest.cs" />
+    <Compile Include="ScreenRenderPerformanceTest.cs" />
     <Compile Include="Utils\ArgCheckTest.cs" />
     <Compile Include="Utils\ExtensionMethodsTest.cs" />
     <Compile Include="PdfPhysicalPageRenderTest.cs" />
     <Compile Include="Utils\SizeScaleTest.cs" />
-    <Compile Include="ScreenPageRenderTest.cs" />
+    <Compile Include="ScreenRenderTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestUtils\PerfTimer.cs" />

@@ -21,6 +21,7 @@ namespace PdfBookReader.Render
         public PdfPhysicalPageProvider(String file)
         {
             ArgCheck.NotNull(file, "file");
+            ArgCheck.FileExists(file);
 
             InitialzeXPdfConfig();
 

@@ -8,7 +8,7 @@ namespace PdfBookReader.Test.TestUtils
 {
     public class PerfTimer 
     {
-        readonly String Name;
+        public readonly String Name;
 
         TimeSpan _totalTime = TimeSpan.Zero;
         int _count = 0;
