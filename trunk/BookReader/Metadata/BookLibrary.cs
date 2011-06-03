@@ -56,12 +56,38 @@ namespace PdfBookReader.Metadata
             }
         }
 
-        public static BookLibrary Load(String filename)
+        /// <summary>
+        /// Load the library.
+        /// </summary>
+        /// <param name="filename">XML file for the library</param>
+        /// <param name="removeMissingBooks">Remove books that no longer exist on disk</param>
+        /// <returns></returns>
+        public static BookLibrary Load(String filename, bool removeMissingBooks = true)
         {
             BookLibrary library = XmlHelper.Deserialize<BookLibrary>(filename);
-            library.Filename = filename;            
+            library.Filename = filename;
+
+            if (removeMissingBooks)
+            {
+                library.RemoveMissingBooks();
+                library.Save();
+            }
 
             return library;
+        }
+
+        /// <summary>
+        /// Remove books that no longer exist on disk.
+        /// </summary>
+        public void RemoveMissingBooks()
+        {
+            foreach (Book b in Books)
+            {
+                if (!File.Exists(b.Filename))
+                {
+                    Books.Remove(b);
+                }
+            }
         }
 
         public void Save()

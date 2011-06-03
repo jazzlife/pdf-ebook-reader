@@ -59,5 +59,24 @@ namespace PdfBookReader.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Book file not found:
+        ///{0}.
+        /// </summary>
+        internal static string errBookFileNotFound {
+            get {
+                return ResourceManager.GetString("errBookFileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error.
+        /// </summary>
+        internal static string error {
+            get {
+                return ResourceManager.GetString("error", resourceCulture);
+            }
+        }
     }
 }

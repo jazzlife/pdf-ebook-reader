@@ -1,0 +1,108 @@
+Index: BookReader.sln
+===================================================================
+--- BookReader.sln	(revision 19)
++++ BookReader.sln	(working copy)
+@@ -18,6 +18,7 @@
+ 		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Debug|x86.ActiveCfg = Debug|x86
+ 		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Debug|x86.Build.0 = Debug|x86
+ 		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Release|Any CPU.ActiveCfg = Release|x86
++		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Release|Any CPU.Build.0 = Release|x86
+ 		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Release|x86.ActiveCfg = Release|x86
+ 		{E8298BB1-7939-4CCF-B1F0-B467E000F827}.Release|x86.Build.0 = Release|x86
+ 		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Debug|Any CPU.ActiveCfg = Debug|x86
+@@ -25,6 +26,7 @@
+ 		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Debug|x86.ActiveCfg = Debug|x86
+ 		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Debug|x86.Build.0 = Debug|x86
+ 		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Release|Any CPU.ActiveCfg = Release|x86
++		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Release|Any CPU.Build.0 = Release|x86
+ 		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Release|x86.ActiveCfg = Release|x86
+ 		{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}.Release|x86.Build.0 = Release|x86
+ 	EndGlobalSection
+Index: BookReader/Render/BlobPageLayoutAnalyzer.cs
+===================================================================
+--- BookReader/Render/BlobPageLayoutAnalyzer.cs	(revision 22)
++++ BookReader/Render/BlobPageLayoutAnalyzer.cs	(working copy)
+@@ -31,8 +31,6 @@
+ 
+         void DetectBlobs(ref PageLayoutInfo cbi, Bitmap bmp)
+         {
+-            Invert filter = new Invert();
+-            filter.ApplyInPlace(bmp);
+ 
+             BlobCounter bc = new BlobCounter();
+             bc.BackgroundThreshold = Color.FromArgb(8, 8, 8);
+@@ -40,7 +38,11 @@
+             bc.BlobsFilter = new BlobsFilter(bmp.Size);
+             bc.FilterBlobs = true;
+ 
++            // Must invert the image before processing
++            Invert filter = new Invert();            
++            filter.ApplyInPlace(bmp);
+             bc.ProcessImage(bmp);
++            filter.ApplyInPlace(bmp);
+ 
+             cbi.Blobs.AddRange(bc.GetObjectsInformation());
+         }
+Index: BookReader/Render/ScreenPageProvider.cs
+===================================================================
+--- BookReader/Render/ScreenPageProvider.cs	(revision 23)
++++ BookReader/Render/ScreenPageProvider.cs	(working copy)
+@@ -6,6 +6,7 @@
+ using System.Drawing.Imaging;
+ using PdfBookReader.Utils;
+ using System.Diagnostics;
++using System.Windows.Forms;
+ 
+ namespace PdfBookReader.Render
+ {
+@@ -296,23 +297,25 @@
+         PhysicalPageInfo RenderPhysicalPage(int pageNum)
+         {
+             PhysicalPageInfo pageInfo;
+-            // NOTE: rendering the page twice -- we need the layout in order to figure out
+-            // the best dimensions for the final render.
++
++            Size renderSize = new Size(ScreenSize.Width * 2, ScreenSize.Width * 2);
++
+             PageLayoutInfo layout;
+-            using (Bitmap bmpLayoutPage = PhysicalPageProvider.RenderPage(pageNum, LayoutRenderSize))
++            Bitmap bmpFinalPage;
++            using (Bitmap bmpOversizedPage = PhysicalPageProvider.RenderPage(pageNum, renderSize))
+             {
+-                layout = LayoutAnalyzer.DetectPageLayout(bmpLayoutPage);
+-            }
++                layout = LayoutAnalyzer.DetectPageLayout(bmpOversizedPage);
+ 
+-            // Render actual page. Bounded by width, but not height.
+-            int maxWidth = (int)((float)ScreenSize.Width / layout.BoundsRelative.Width);
+-            Size displayPageMaxSize = new Size(maxWidth, int.MaxValue);
++                // Render actual page. Bounded by width, but not height.
++                int maxWidth = (int)((float)ScreenSize.Width / layout.BoundsRelative.Width);
++                Size displayPageMaxSize = new Size(maxWidth, int.MaxValue);
++                Size newSize = bmpOversizedPage.Size.ScaleToFitBounds(displayPageMaxSize);
+ 
+-            Bitmap image = PhysicalPageProvider.RenderPage(pageNum, displayPageMaxSize);
++                // What scaling method is used? Is it good?
++                bmpFinalPage = new Bitmap(bmpOversizedPage, newSize);
++            }
+ 
+-            layout.ScaleBounds(image.Size);
+-
+-            pageInfo = new PhysicalPageInfo(pageNum, image, layout);
++            pageInfo = new PhysicalPageInfo(pageNum, bmpFinalPage, layout);
+             return pageInfo;
+         }
+ 
+Index: Test/ScreenRenderPerformanceTest.cs
+===================================================================
+--- Test/ScreenRenderPerformanceTest.cs	(revision 24)
++++ Test/ScreenRenderPerformanceTest.cs	(working copy)
+@@ -29,7 +29,7 @@
+         public void RenderBigSlowFile()
+         {
+             RenderOneFile(new PerfTimer("Render"),
+-                Path.Combine(TestConst.PdfFilePath, @"Scan Tilted Facing Pages Big - Solzhenitsyn.pdf"));
++                Path.Combine(TestConst.PdfFilePath, @"Bad Scan Tilted Facing Pages Big - Solzhenitsyn.pdf"));
+         }
+ 
+ 

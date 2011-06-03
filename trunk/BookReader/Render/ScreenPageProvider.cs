@@ -15,6 +15,7 @@ namespace PdfBookReader.Render
     /// </summary>
     public partial class ScreenPageProvider : IDisposable
     {
+        public bool UseCache = true;
         public bool DrawDebugMarks = true;
 
         Size _screenSize;
@@ -274,24 +275,30 @@ namespace PdfBookReader.Render
 
             // Try to get from cache
             PhysicalPageInfo pageInfo;
-            if (PpiCache != null)
+            if (UseCache && PpiCache != null)
             {
                 pageInfo = PpiCache.GetPage(PhysicalPageProvider.FullPath, pageNum, ScreenSize.Width);
-
-                Trace.WriteLine("GetPhysicalPage: returning cached page");
-                if (pageInfo != null) { return pageInfo; }
+                if (pageInfo != null) 
+                {
+                    Trace.WriteLine("GetPhysicalPage: returning cached page");
+                    return pageInfo; 
+                }
             }
 
             // Render actual page (takes long)
             pageInfo = RenderPhysicalPage(pageNum);
 
             // Save to cache
-            if (PpiCache != null) 
+            if (UseCache && PpiCache != null) 
             {
                 PpiCache.SavePage(pageInfo, PhysicalPageProvider.FullPath, ScreenSize.Width);
             }
             return pageInfo;
         }
+
+        // Adaptive slowing
+        PdfRenderPerformanceInfo _renderPerfInfo;
+        
 
         PhysicalPageInfo RenderPhysicalPage(int pageNum)
         {
@@ -299,7 +306,7 @@ namespace PdfBookReader.Render
             // NOTE: rendering the page twice -- we need the layout in order to figure out
             // the best dimensions for the final render.
             PageLayoutInfo layout;
-            using (Bitmap bmpLayoutPage = PhysicalPageProvider.RenderPage(pageNum, LayoutRenderSize))
+            using (Bitmap bmpLayoutPage = PhysicalPageProvider.RenderPage(pageNum, LayoutRenderSize, RenderQuality.Fast))
             {
                 layout = LayoutAnalyzer.DetectPageLayout(bmpLayoutPage);
             }
@@ -308,10 +315,22 @@ namespace PdfBookReader.Render
             int maxWidth = (int)((float)ScreenSize.Width / layout.BoundsRelative.Width);
             Size displayPageMaxSize = new Size(maxWidth, int.MaxValue);
 
-            Bitmap image = PhysicalPageProvider.RenderPage(pageNum, displayPageMaxSize);
+            // Measure performance
+            if (_renderPerfInfo.ScreenSize != ScreenSize)
+            {
+                _renderPerfInfo = new PdfRenderPerformanceInfo(ScreenSize);
+            }
 
+            // Get quality, high by default
+            RenderQuality quality = _renderPerfInfo.QualityToUse;
+
+            DateTime startTime = DateTime.Now;
+
+            Bitmap image = PhysicalPageProvider.RenderPage(pageNum, displayPageMaxSize, quality);
+
+            _renderPerfInfo.SaveTime((DateTime.Now - startTime).TotalMilliseconds, quality);
+            
             layout.ScaleBounds(image.Size);
-
             pageInfo = new PhysicalPageInfo(pageNum, image, layout);
             return pageInfo;
         }

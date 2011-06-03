@@ -14,6 +14,19 @@ namespace PdfBookReader.Utils
             if (a == null) { return b == null; }
             return a.Equals(b, StringComparison.InvariantCultureIgnoreCase);
         }
+
+        /// <summary>
+        /// Same as String.Format(this, args);
+        /// Usage: "foo {0}={1}".F(a1, a2)
+        /// </summary>
+        /// <param name="format"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public static string F(this String format, params object[] args)
+        {
+            return String.Format(format, args);
+        }
+
         #endregion
 
 
