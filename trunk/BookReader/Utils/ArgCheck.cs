@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using System.IO;
 
 namespace PdfBookReader.Utils
 {
@@ -23,8 +24,17 @@ namespace PdfBookReader.Utils
             if (falseCondition()) { throw new ArgumentException(argName); }
         }
 
-        // Specific types
+        // Files
+        public static void FileExists(String filename)
+        {
+            if (!File.Exists(filename))
+            {
+                throw new ArgumentException("File does not exits: " + Path.GetFullPath(filename));
+            }
+        }
 
+
+        // Specific types
         public static void InRange(int arg, int minInclusive, int maxInclusive, String argName = null)
         {
             if (arg < minInclusive || arg > maxInclusive)

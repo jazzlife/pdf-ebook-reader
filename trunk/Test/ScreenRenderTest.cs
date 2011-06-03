@@ -14,7 +14,7 @@ using PdfBookReader.Render;
 namespace PdfBookReader.Test
 {
     [TestFixture]
-    public class ScreenPageRenderTest
+    public class ScreenRenderTest
     {
         String file_clean = "Clean Large Margins - McCargo.pdf";
 
