@@ -217,15 +217,6 @@ namespace PdfBookReader.Render
         {
             Trace.WriteLine("DrawPage: " + curPage);
 
-            // Special case: empty page
-            if (curPage.Layout.IsEmpty)
-            {
-                // TODO: do something prettier
-                g.FillEllipse(Brushes.DarkSlateGray, 10, 10, 30, 30);
-
-                return;
-            }
-
             // Render current page
             Rectangle destRect = new Rectangle(0, curPage.TopOnScreen,
                     curPage.Layout.Bounds.Width, curPage.Layout.Bounds.Height);
@@ -309,6 +300,13 @@ namespace PdfBookReader.Render
             using (Bitmap bmpLayoutPage = PhysicalPageProvider.RenderPage(pageNum, LayoutRenderSize, RenderQuality.Fast))
             {
                 layout = LayoutAnalyzer.DetectPageLayout(bmpLayoutPage);
+            }
+
+            // Empty page
+            if (layout.Bounds.IsEmpty) 
+            {
+                layout.Bounds = new Rectangle(0,0,ScreenSize.Width, 100);
+                return new PhysicalPageInfo(pageNum, new Bitmap(layout.Bounds.Width, layout.Bounds.Height), layout);
             }
 
             // Render actual page. Bounded by width, but not height.
