@@ -21,7 +21,7 @@ namespace PdfBookReader.Render
         IPhysicalPageProvider _physicalPageProvider;
         IPageLayoutAnalyzer _pageLayoutAnalyzer;
 
-        PhysicalPageCache PpiCache;
+        PhysicalPageInfoCache PpiCache;
 
         public ScreenPageProvider(
             IPhysicalPageProvider physicalPageProvider,
@@ -32,7 +32,7 @@ namespace PdfBookReader.Render
             PhysicalPageProvider = physicalPageProvider;
             LayoutAnalyzer = layoutAnalyzer;
 
-            PpiCache = new PhysicalPageCache();
+            PpiCache = new PhysicalPageInfoCache();
         }
 
         #region Config Properties
@@ -84,10 +84,8 @@ namespace PdfBookReader.Render
             {
                 float pageIndex = (TopPage == null) ? 0 : TopPage.PageNum - 1;
 
-                // TODO: consider position WITHIN a page as well
-                // (more precision within onePageIncrement)
+                // Position within physical page (since screen breaks != physical page breaks)
                 float positionWithinPage = 0;
-
                 if (TopPage != null &&
                     TopPage.BottomOnScreen > 0 &&
                     TopPage.Layout.Bounds.Height > 0)
@@ -140,7 +138,7 @@ namespace PdfBookReader.Render
         {
             TopPage = null;
             BottomPage = null;
-            return RenderLastPage();
+            return RenderPreviousPage();
         }
 
         public Bitmap RenderCurrentPage(Size newScreenPageSize)
