@@ -19,17 +19,17 @@ namespace PdfBookReader.Test
         // RenderNext, RenderPrev, Render(page)
 
         [Test]
-        public void RenderNormalFile()
+        public void RenderNormalFileNoCache()
         {
             RenderOneFile(new PerfTimer("Render"), 
                 Path.Combine(TestConst.PdfFilePath, @"Clean Margins Pictures - Balasevic.pdf"));
         }
 
         [Test]
-        public void RenderBigSlowFile()
+        public void RenderBigSlowFileNoCache()
         {
             RenderOneFile(new PerfTimer("Render"),
-                Path.Combine(TestConst.PdfFilePath, @"Scan Tilted Facing Pages Big - Solzhenitsyn.pdf"));
+                Path.Combine(TestConst.PdfFilePath, @"Bad Scan Tilted Facing Pages Big - Solzhenitsyn.pdf"));
         }
 
 
@@ -40,6 +40,8 @@ namespace PdfBookReader.Test
                 new PdfPhysicalPageProvider(file),
                 new BlobPageLayoutAnalyzer(),
                 ScreenSize);
+
+            provider.UseCache = false;
 
             const int RenderNextRepeats = 10;
             const int RenderMiddleRepeats = 5;

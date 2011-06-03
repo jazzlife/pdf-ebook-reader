@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using PdfBookReader.Utils;
 using PdfBookReader.Metadata;
+using PdfBookReader.Properties;
 
 namespace PdfBookReader.UI
 {
@@ -113,6 +114,14 @@ namespace PdfBookReader.UI
             if (lbBooks.SelectedItems.Count == 0) { return; }
 
             Book bookToOpen = (lbBooks.SelectedItems[0] as BookListViewItem).Book;
+
+            if (!File.Exists(bookToOpen.Filename))
+            {
+                MessageBox.Show(Resources.errBookFileNotFound.F(bookToOpen.Title), 
+                    Resources.error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            
             if (OpenBook != null)
             {
                 OpenBook(this, new OpenBookEventArgs(bookToOpen));
