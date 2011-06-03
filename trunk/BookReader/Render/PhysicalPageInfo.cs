@@ -42,7 +42,7 @@ namespace PdfBookReader.Render
         }
 
         public Bitmap Image 
-        { 
+        {
             get { return _image; }
             private set { _image = value; }
         }
