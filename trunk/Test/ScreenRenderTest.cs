@@ -55,7 +55,7 @@ namespace PdfBookReader.Test
         void Render(String file, int maxPages, Size screenPageSize, bool renderUp = false)
         {
             IPhysicalPageProvider pdfReader = new PdfPhysicalPageProvider(file);
-            IPageContentProvider contentProvider = new DefaultPageContentProvider(new PageContentCache());
+            IPageContentProvider contentProvider = new DefaultPageContentProvider(null);
 
             ScreenPageProvider screenPageProvider =
                 new ScreenPageProvider(pdfReader, contentProvider, screenPageSize);

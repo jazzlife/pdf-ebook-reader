@@ -28,7 +28,7 @@ namespace PdfBookReader.UI
         {
             InitializeComponent();
 
-            _pageCache = new PageContentCache();
+            _pageCache = PageContentCache.Load();
             _pageCache.PageCached += OnPageCached;
 
 
