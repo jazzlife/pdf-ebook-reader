@@ -13,6 +13,12 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
+            // Save the cache
+            if (_pageCache != null)
+            {
+                _pageCache.Save();
+            }
+
             // Stop prefetch manager, it may be using other parts
             if (_prefetchManager != null)
             {

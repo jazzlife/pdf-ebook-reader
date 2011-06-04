@@ -15,13 +15,31 @@ namespace PdfBookReader.Render
     [DataContract]
     public class LayoutInfo 
     {
-        [DataMember]
+        // For serialization - cut down on ridiculous amount of XML crap
+        [DataMember(Name = "S")]
+        string StringRep
+        {
+            get
+            {
+                return PageSize.Width + "x" + PageSize.Height + " "
+                    + Bounds.X + "," + Bounds.Y + "," + Bounds.Width + "," + Bounds.Height;
+            }
+            set
+            {
+                String[] parts = value.Split('x', ' ', ',');
+                int i=0;
+                PageSize = new Size(int.Parse(parts[i++]), int.Parse(parts[i++]));
+                Bounds = new Rectangle(int.Parse(parts[i++]), int.Parse(parts[i++]), int.Parse(parts[i++]), int.Parse(parts[i++]));
+            }
+        }
+
+
+
         public Size PageSize { get; private set; }
 
         /// <summary>
         /// Bounds based on PageSize
         /// </summary>
-        [DataMember]
         public Rectangle Bounds;
 
         public LayoutInfo(Size pageSize)

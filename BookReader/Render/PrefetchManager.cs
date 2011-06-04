@@ -80,7 +80,7 @@ namespace PdfBookReader.Render
                 {
                     // TODO: something more sensible than just sleeping.
                     // e.g. Wait and pulse when book changes
-                    Thread.Sleep(2000);
+                    Thread.Sleep(1000);
 
                     // TODO: render the start of other books if this one
                     // is done
@@ -123,6 +123,7 @@ namespace PdfBookReader.Render
 
         bool ShouldRestartFetch(ScreenPageProvider currentBook, int currentPageNum, Size currentSize)
         {
+            if (_stopLoop) { return true; }
             if (currentBook != CurrentBook) { return true; }
             if (currentPageNum != PhysicalPageNum) { return true; }
             if (currentSize.Width != CurrentBook.ScreenSize.Width) { return true; }

@@ -12,13 +12,65 @@ using System.Runtime.CompilerServices;
 
 namespace PdfBookReader.Render
 {
+
+    /// <summary>
+    /// Cache of physical page content object. 
+    /// Remember to Save() when exiting the app.
+    /// </summary>
     [TheadSafe]
+    [DataContract]
     class PageContentCache
     {
-        readonly object MyLock = new object();
-
+        object MyLock = new object();
         const string CacheDirName = "PdfEBookReaderCache";
-        String CacheFolderPath
+
+        // Serialized fields
+        // Mapping fullFilePath to Guid for the file
+        [DataMember(Name = "Guids")]
+        Dictionary<string, Guid> _guidSet = new Dictionary<string, Guid>();
+
+        // Mapping key(guid,pageNum,width) to a PageContent object
+        // Note: never pass info objects directly, always make a copy adding/stripping the bitmap
+        [DataMember(Name = "ContentInfos")]
+        Dictionary<string, PageContent> _contentInfoSet = new Dictionary<string, PageContent>();
+
+
+        private PageContentCache() { }
+
+        public static PageContentCache Load()
+        {
+            PageContentCache cache = null;
+            try
+            {
+                cache = XmlHelper.Deserialize<PageContentCache>(DataFilePath);
+                // Serialization does not call ctor
+                cache.MyLock = new object();
+            }
+            catch (FileNotFoundException)
+            {
+                // This is OK, no message needed
+                cache = new PageContentCache();
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError("Exception reading: " + DataFilePath + " " + e.Message);
+                cache = new PageContentCache();
+            }
+
+            // TODO: check required bitmaps exist to aovid orphan entries
+
+            return cache;
+        }
+
+        public void Save()
+        {
+            lock (MyLock)
+            {
+                XmlHelper.Serialize(this, DataFilePath);
+            }
+        }
+
+        static String CacheFolderPath
         {
             get
             {
@@ -35,54 +87,15 @@ namespace PdfBookReader.Render
             }
         }
 
-        #region Path to ID map
-        Dictionary<string, Guid> _pathToId;
-
-        Dictionary<string, Guid> PathToId
+        static String DataFilePath
         {
-            get
-            {
-                if (_pathToId == null) { LoadPathToIdMap(); }
-                return _pathToId;
-            }
+            get { return Path.Combine(CacheFolderPath, "PageContentCache.xml"); }
         }
-
-        String PathToIdFilePath
-        {
-            get 
-            {
-                return Path.Combine(CacheFolderPath, "PathToIdMap.xml");
-            }
-        }
-
-        void SavePathToIdMap()
-        {
-            XmlHelper.Serialize<Dictionary<string, Guid>>(PathToId, PathToIdFilePath);
-        }
-
-        void LoadPathToIdMap()
-        {
-            try
-            {
-                _pathToId = XmlHelper.Deserialize<Dictionary<string, Guid>>(PathToIdFilePath);
-            }
-            catch (FileNotFoundException)
-            {
-                // This is OK, no message needed
-                _pathToId = new Dictionary<string, Guid>();
-            }
-            catch (Exception e)
-            {
-                Trace.TraceError("Exception reading: " + PathToIdFilePath + " " + e.Message);
-                _pathToId = new Dictionary<string, Guid>();
-            }
-        }
-        #endregion 
 
         /// <summary>
         /// True if cache contains the page, false otherwise.
-        /// NOTE: in multithreaded applications, things can happen between 
-        /// this and the next line, so be careful with it. 
+        /// May return false positives -- only checks the in-memory 
+        /// table, not the disk files.
         /// </summary>
         /// <param name="fullBookPath"></param>
         /// <param name="pageNum"></param>
@@ -92,10 +105,9 @@ namespace PdfBookReader.Render
         {
             lock (MyLock)
             {
-                Guid id;
-                if (!PathToId.TryGetValue(fullBookPath, out id)) { return false; }
-                String filename = GetFilename(id, pageNum, contentWidth);
-                return File.Exists(filename);
+                String key = GetKey(fullBookPath, pageNum, contentWidth);
+                if (key == null) { return false; }
+                return _contentInfoSet.ContainsKey(key);
             }
         }
 
@@ -110,27 +122,23 @@ namespace PdfBookReader.Render
         {
             lock (MyLock)
             {
+                String key = GetKey(fullBookPath, pageNum, contentWidth);
+                if (key == null) { return null; }
 
-                // FullPath is unique, but unwieldy for use in filenames. 
-                // Instead, we use an ID
-                Guid id;
-
-                // No cache entry
-                if (!PathToId.TryGetValue(fullBookPath, out id)) { return null; }
-
-                String filename = GetFilename(id, pageNum, contentWidth);
-                if (!File.Exists(filename)) { return null; }
-
-                PageContent ppi = null;
-                try
+                // Return a *copy*
+                PageContent cachedPage;
+                if (!_contentInfoSet.TryGetValue(key, out cachedPage))
                 {
-                    ppi = PageContent.Load(filename);
+                    return null;
                 }
-                catch (Exception e)
-                {
-                    Trace.TraceError("Failed loading image: " + filename + e.Message);
-                    ppi = null;
-                }
+
+                // Load image
+                String imageFilename = GetImageFilename(key);
+                if (!File.Exists(imageFilename)) { return null; }
+
+                Bitmap image = new Bitmap(imageFilename);
+
+                PageContent ppi = new PageContent(cachedPage.PageNum, image, cachedPage.Layout);
                 return ppi;
             }
         }
@@ -145,22 +153,25 @@ namespace PdfBookReader.Render
         {
             lock (MyLock)
             {
-                // TODO: delete items from cache occasionally (e.g. when requested
-                // width of saved item changes). Easy to delete wNNN_*.*
+                ArgCheck.NotNull(ppi, "ppi");
+                ArgCheck.NotNull(ppi.Image, "ppi.Image");
+                
 
-                // Get ID or create new if necessary
-                Guid id;
-                if (!PathToId.TryGetValue(fullBookPath, out id))
-                {
-                    id = Guid.NewGuid();
-                    PathToId.Add(fullBookPath, id);
-                    SavePathToIdMap();
-                }
+                String key = GetKey(fullBookPath, ppi.PageNum, contentWidth, true);
 
-                String filename = GetFilename(id, ppi.PageNum, contentWidth);
-                ppi.Save(filename);
+
+                // Make and save a copy. Do not hog the handle to the bitmap (in the hashtable). 
+                PageContent copyToSave = new PageContent(ppi.PageNum, ppi.Layout);
+               
+                // Remove old one if it exists (just in case, usuall not there)
+                _contentInfoSet.Remove(key);
+                _contentInfoSet.Add(key, copyToSave);
+
+                String imageFilename = GetImageFilename(key);
+                ppi.Image.Save(imageFilename);
             }
 
+            // Raise an event
             if (PageCached != null)
             {
                 PageCached(this, new PageCachedEventArgs(fullBookPath, ppi.PageNum, contentWidth));
@@ -169,9 +180,40 @@ namespace PdfBookReader.Render
 
         public event EventHandler<PageCachedEventArgs> PageCached;
 
-        String GetFilename(Guid id, int pageNum, int contentWidth)
+        /// <summary>
+        /// Get the key, or null if it does not exist
+        /// </summary>
+        String GetKey(String filename, int pageNum, int contentWidth, bool createNew = false)
         {
-            return Path.Combine(CacheFolderPath, "w" + contentWidth + "_" + id + "_p" + pageNum + ".xml");
+            lock (MyLock)
+            {
+                // Lookup the guid
+                Guid id;
+                if (_guidSet.TryGetValue(filename, out id))
+                {
+                    return GetKey(id, pageNum, contentWidth);
+                }
+
+                // Not found, create new
+                if (createNew)
+                {
+                    id = Guid.NewGuid();
+                    _guidSet.Add(filename, id);
+                    return GetKey(id, pageNum, contentWidth);
+                }
+
+                // Not found, return null
+                return null;
+            }
+        }
+        String GetKey(Guid id, int pageNum, int contentWidth)
+        {
+            return contentWidth + "_" + id + "_" + pageNum;
+        }
+
+        String GetImageFilename(String key)
+        {
+            return Path.Combine(CacheFolderPath, key + ".png"); 
         }
 
     }

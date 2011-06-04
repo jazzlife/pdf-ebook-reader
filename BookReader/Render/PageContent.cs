@@ -41,12 +41,15 @@ namespace PdfBookReader.Render
             _layout = layout;
         }
 
-        public Bitmap Image 
+        public PageContent(int pageNum, PageLayoutInfo layout)
         {
-            get { return _image; }
-            private set { _image = value; }
+            ArgCheck.GreaterThanOrEqual(pageNum, 1, "pageNum");
+
+            PageNum = pageNum;
+            _layout = layout;
         }
 
+        public Bitmap Image { get { return _image; } }
         public PageLayoutInfo Layout { get { return _layout; } }
 
         // For convenience
@@ -71,36 +74,6 @@ namespace PdfBookReader.Render
             return "PhysicalPage #" + PageNum + " TopOnScreen = " + TopOnScreen;
         }
 
-        #region Serialization
-
-        public void Save(String dataFileName)
-        {
-            XmlHelper.Serialize(this, dataFileName);
-            String imageFileName = GetImageFileName(dataFileName);
-            this.Image.Save(imageFileName);
-        }
-
-        public static PageContent Load(String dataFileName)
-        {
-            if (!File.Exists(dataFileName)) { throw new FileNotFoundException("No data file" + dataFileName); }
-
-            String imageFileName = GetImageFileName(dataFileName);
-            if (!File.Exists(imageFileName)) { throw new FileNotFoundException("No image file: " + imageFileName); }
-
-            PageContent ppi = XmlHelper.Deserialize<PageContent>(dataFileName);
-            Bitmap image = new Bitmap(imageFileName);
-            ppi.Image = image;
-
-            return ppi;
-        }
-
-        static String GetImageFileName(String dataFileName)
-        {
-            return Path.Combine(Path.GetDirectoryName(dataFileName),
-                Path.GetFileNameWithoutExtension(dataFileName) + ".png");
-        }
-
-        #endregion
     }
 
 }
