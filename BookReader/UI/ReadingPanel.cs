@@ -19,11 +19,21 @@ namespace PdfBookReader.UI
         IPhysicalPageProvider _physicalPageProvider;
         ScreenPageProvider _screenPageProvider;
 
+        PageContentCache _pageCache;
+        PrefetchManager _prefetchManager;
+
         Bitmap _currentScreenImage;
 
         public ReadingPanel()
         {
             InitializeComponent();
+
+            _pageCache = new PageContentCache();
+            _pageCache.PageCached += OnPageCached;
+
+
+            _prefetchManager = new PrefetchManager(null, _pageCache);
+            _prefetchManager.Start();
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -41,15 +51,66 @@ namespace PdfBookReader.UI
 
                 // Rendering components
                 PhysicalPageProvider = new PdfPhysicalPageProvider(_book.Filename);
-                IPageContentProvider contentProvider = new DefaultPageContentProvider(); // not disposable
+                IPageContentProvider contentProvider = new DefaultPageContentProvider(_pageCache); // not disposable
                 ScreenProvider = new ScreenPageProvider(PhysicalPageProvider, contentProvider, pbContent.Size);
+
+                _prefetchManager.CurrentBook = ScreenProvider;
 
                 // TODO: render page at stored position in the book
                 // (no the first "current" page).
                 CurrentPageImage = ScreenProvider.RenderCurrentPage(pbContent.Size);
-                UpdateBookProgressBar();
+                UpdateUIState();
+                FillProgressBarWithCacheInfo();
             }
         }
+
+        #region Progress bar handling
+
+        // Navigate to the given page
+        private void bookProgressBar_MouseUp(object sender, MouseEventArgs e)
+        {
+            // Set position
+            float pos = (float)e.X / bookProgressBar.Width;
+            if (pos > 1) { pos = 1; }
+            if (pos < 0) { pos = 0; }
+
+            CurrentPageImage = ScreenProvider.RenderPage(pos);
+
+            FillProgressBarWithCacheInfo();
+            UpdateUIState();
+        }
+
+        // Display progress of caching
+        void OnPageCached(object sender, PageCachedEventArgs e)
+        {
+            if (this.InvokeIfRequired(OnPageCached, sender, e)) { return; }
+
+            // Main thead stuff
+            if (e.FullPath != PhysicalPageProvider.FullPath) { return; }
+            if (e.Width != ScreenProvider.ScreenSize.Width) { return; }
+            bookProgressBar.AddLoadedPage(e.PageNum);
+        }
+
+        // Display progress at start
+        void FillProgressBarWithCacheInfo()
+        {
+            if (PhysicalPageProvider == null || _pageCache == null) { return; }
+
+            bookProgressBar.ClearLoadedPages();
+            bookProgressBar.PageIncrementSize = 1.0f / PhysicalPageProvider.PageCount;
+
+            List<int> cachedPages = new List<int>();
+            for(int pageCount = 0; pageCount <= PhysicalPageProvider.PageCount; pageCount++)
+            {
+                if (_pageCache.ContainsPage(PhysicalPageProvider.FullPath, pageCount, ScreenProvider.ScreenSize.Width))
+                {
+                    cachedPages.Add(pageCount);
+                }
+            }
+            bookProgressBar.AddLoadedPages(cachedPages);
+        }
+
+        #endregion
 
         private Bitmap CurrentPageImage
         {
@@ -96,8 +157,30 @@ namespace PdfBookReader.UI
             if (ScreenProvider == null) { return; }
 
             CurrentPageImage = ScreenProvider.RenderCurrentPage(pbContent.Size);
+
+            UpdateUIState();
+        }
+
+        #region UI update
+        void UpdateUIState()
+        {
+            if (ScreenProvider == null) { return; }
+
+            bNextPage.Enabled = ScreenProvider.HasNextPage();
+            bPrevPage.Enabled = ScreenProvider.HasPreviousPage();
+
             UpdateBookProgressBar();
         }
+
+        void UpdateBookProgressBar()
+        {
+            float posF = ScreenProvider.Position;
+            int pageCount = ScreenProvider.PhysicalPageProvider.PageCount;
+            bookProgressBar.Value = posF;
+            lbPageNum.Text = String.Format("{0:0.0}/{1}", 1 + (posF * pageCount), pageCount);
+        }
+        #endregion
+
 
         private void bLibrary_Click(object sender, EventArgs e)
         {
@@ -107,15 +190,15 @@ namespace PdfBookReader.UI
         private void bNextPage_Click(object sender, EventArgs e)
         {
             CurrentPageImage = ScreenProvider.RenderNextPage();
-            if (CurrentPageImage == null) { return; }
-            UpdateBookProgressBar();
+            
+            UpdateUIState();
         }
 
         private void bPrevPage_Click(object sender, EventArgs e)
         {
             CurrentPageImage = ScreenProvider.RenderPreviousPage();
-            if (CurrentPageImage == null) { return; }
-            UpdateBookProgressBar();
+            
+            UpdateUIState();
         }
 
         const int WidthIncrement = 100;
@@ -123,31 +206,18 @@ namespace PdfBookReader.UI
         {
             pMargins.Width += WidthIncrement;
             pMargins.Left -= WidthIncrement / 2;
+
+            FillProgressBarWithCacheInfo();
+            UpdateUIState();
         }
 
         private void bWidthMinus_Click(object sender, EventArgs e)
         {
             pMargins.Width -= WidthIncrement;
             pMargins.Left += WidthIncrement / 2;
-        }
-
-        void UpdateBookProgressBar()
-        {
-            float posF = ScreenProvider.Position;
-            int pageCount = ScreenProvider.PhysicalPageProvider.PageCount;
-            bookProgressBar.Value = (int)(posF * bookProgressBar.Maximum);
-            lbPageNum.Text = String.Format("{0:0.0}/{1}", 1 + (posF * pageCount), pageCount);
-        }
-
-        private void bookProgressBar_MouseUp(object sender, MouseEventArgs e)
-        {
-            // Set position
-            float pos = (float)e.X / bookProgressBar.Width;
-            if (pos > 1) { pos = 1; }
-            if (pos < 0) { pos = 0; }
-
-            CurrentPageImage = ScreenProvider.RenderPage(pos);
-            UpdateBookProgressBar();
+            
+            FillProgressBarWithCacheInfo();
+            UpdateUIState();
         }
 
 

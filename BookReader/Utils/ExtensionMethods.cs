@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using System.Windows.Forms;
 
 namespace PdfBookReader.Utils
 {
@@ -29,6 +30,37 @@ namespace PdfBookReader.Utils
 
         #endregion
 
+        #region Threading
+        /// <summary>
+        /// Invokes the value on the UI thread if necessary.
+        ///
+        /// Usage:
+        /// void MyHandler(object source, EventArgs e) 
+        /// { 
+        ///    if (this.InvokeIfRequired(MyHandlerName, source, e) { return; }
+        ///    // do the stuff on the UI thread
+        /// }
+        /// 
+        /// </summary>
+        /// <typeparam name="TEventArgs"></typeparam>
+        /// <param name="control"></param>
+        /// <param name="handler"></param>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public static bool InvokeIfRequired<TEventArgs>(this Control control,
+            EventHandler<TEventArgs> handler,
+            object sender, TEventArgs e)
+                where TEventArgs : EventArgs
+        {
+            if (control.InvokeRequired)
+            {
+                control.Invoke(new EventHandler<TEventArgs>(handler), sender, e);
+                return true;
+            }
+            return false;
+        }
+        #endregion
 
         #region IDisposable
 
@@ -70,9 +102,27 @@ namespace PdfBookReader.Utils
 
         #endregion
 
-
-
         #region Drawing
+
+
+        public static Color NewShade(this Color color, double brightnessMultiplier)
+        {
+            return NewShade(color, brightnessMultiplier, brightnessMultiplier, brightnessMultiplier);
+        }
+
+        public static Color NewShade(this Color color, double rMultiplier, double gMultiplier, double bMultiplier)
+        {
+            double r = color.R * rMultiplier;
+            double g = color.G * gMultiplier;
+            double b = color.B * bMultiplier;
+
+            int rInt = (int)Math.Min(255, r);
+            int gInt = (int)Math.Min(255, b);
+            int bInt = (int)Math.Min(255, b);
+
+            return Color.FromArgb(color.A, rInt, gInt, bInt);
+        }
+
 
         // Graphics
         public static void DrawStringBoxed(this Graphics g, String text, int x, int y,

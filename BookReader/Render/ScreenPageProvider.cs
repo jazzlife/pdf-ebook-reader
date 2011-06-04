@@ -66,13 +66,18 @@ namespace PdfBookReader.Render
 
         #endregion
 
-        // Notion of screen page number is fuzzy/undefined.
-        // We do not render the whole document at once. Current 
-        // page number depends on screen page size, whitespace 
-        // in physical pages, etc.
+        /// <summary>
+        /// Position in the document changed
+        /// </summary>
+        public event EventHandler PositionChanged;
 
         /// <summary>
         /// Position of currnet screen within the book, 0-1
+        /// 
+        /// Notion of screen page number does not exist.
+        /// We do not render the whole document at once. Current 
+        /// page number depends on screen page size, whitespace 
+        /// in physical pages, etc.
         /// </summary>
         public float Position
         {
@@ -102,12 +107,23 @@ namespace PdfBookReader.Render
             }
         }
 
+        /// <summary>
+        /// Render the page at given position, and set it as current page
+        /// </summary>
+        /// <param name="positionInBook"></param>
+        /// <returns></returns>
         public Bitmap RenderPage(float positionInBook)
         {
             ArgCheck.IsRatio(positionInBook, "positionInBook");
 
+            // Fix for showing the full last page
+            // 1.0 position corresponds to the END of last page, we want the start
+            float onePageIncrement = 1.0f / PhysicalPageProvider.PageCount;
+            if (positionInBook > 1 - onePageIncrement) { positionInBook = 1 - onePageIncrement; }
+
             // Find and set TopPage
             float pageIndex = positionInBook * PhysicalPageProvider.PageCount;
+
             int pageNum = (int)pageIndex + 1;
             TopPage = GetPhysicalPage(pageNum);
 
@@ -123,6 +139,10 @@ namespace PdfBookReader.Render
             return r.Run();
         }
 
+        /// <summary>
+        /// Render the first screen page, and set it as current page
+        /// </summary>
+        /// <returns></returns>
         public Bitmap RenderFirstPage() 
         {
             TopPage = null;
@@ -130,6 +150,10 @@ namespace PdfBookReader.Render
             return RenderNextPage();
         }
 
+        /// <summary>
+        /// Render the last screen page, and set it as current page
+        /// </summary>
+        /// <returns></returns>
         public Bitmap RenderLastPage()
         {
             TopPage = null;
@@ -137,6 +161,11 @@ namespace PdfBookReader.Render
             return RenderPreviousPage();
         }
 
+        /// <summary>
+        /// Render the current screen page at a different screen size.
+        /// </summary>
+        /// <param name="newScreenPageSize"></param>
+        /// <returns></returns>
         public Bitmap RenderCurrentPage(Size newScreenPageSize)
         {
             Size oldSize = ScreenSize;
@@ -145,16 +174,43 @@ namespace PdfBookReader.Render
             return r.Run();
         }
 
+        /// <summary>
+        /// Render the next screen, set it as current page.
+        /// If there is no current page, renders the first page.
+        /// If currently at last page, returns null.
+        /// </summary>
+        /// <returns></returns>
         public Bitmap RenderNextPage()
         {
             RenderDown r = new RenderDown(this);
             return r.Run();
         }
 
+        /// <summary>
+        /// Checks if there next page exists.
+        /// </summary>
+        /// <returns></returns>
+        public bool HasNextPage()
+        {
+            float onePage = 1.0f / PhysicalPageProvider.PageCount;
+            return Position < (1 - onePage);
+        }
+
+        /// <summary>
+        /// Render the previous screen, set it as current page.
+        /// If there is no current page, renders the last page.
+        /// If currently at first page, returns null.
+        /// </summary>
+        /// <returns></returns>
         public Bitmap RenderPreviousPage()
         {
             RenderUp r = new RenderUp(this);
             return r.Run();
+        }
+
+        public bool HasPreviousPage()
+        {
+            return Position > 0;
         }
 
         #region PhysicalPageInfo fields
@@ -175,6 +231,11 @@ namespace PdfBookReader.Render
             {
                 Trace.WriteLine("TopPage set to: " + value);
                 value.AssignNewDisposeOld(ref _topPage, _bottomPage);
+
+                if (PositionChanged != null)
+                {
+                    PositionChanged(this, EventArgs.Empty);
+                }
             }
         }
 

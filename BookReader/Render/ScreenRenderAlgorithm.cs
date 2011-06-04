@@ -116,7 +116,10 @@ namespace PdfBookReader.Render
 
                     // Bottom page included on screen. Adjust offset for next screen.
                     curPage = p.BottomPage;
-                    curPage.TopOnScreen = p.BottomPage.TopOnScreen - p.ScreenSize.Height;
+                    if (p.BottomPage.BottomOnScreen > p.ScreenSize.Height)
+                    {
+                        curPage.TopOnScreen = p.BottomPage.TopOnScreen - p.ScreenSize.Height;
+                    }
                 }
                 else
                 {
