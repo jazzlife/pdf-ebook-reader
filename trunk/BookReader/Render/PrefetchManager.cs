@@ -96,15 +96,15 @@ namespace PdfBookReader.Render
 
             int currentPageNum = PhysicalPageNum;
             int pageCount = CurrentBook.PhysicalPageProvider.PageCount;
+            Size currentScreenSize = CurrentBook.ScreenSize;
 
-            // Next
+            // Next page until end
             for (int pageNume = currentPageNum; pageNume <= pageCount; pageNume++)
             {
                 PrefetchPage(currentBook, pageNume);
 
                 // Quite if current page changed
-                if (currentBook != CurrentBook ||
-                    currentPageNum != PhysicalPageNum) { return false; }
+                if (ShouldRestartFetch(currentBook, currentPageNum, currentScreenSize)) { return false; }
             }
 
             // Fill back from start
@@ -113,17 +113,28 @@ namespace PdfBookReader.Render
                 PrefetchPage(currentBook, pageNume);
 
                 // Quite if current page changed
-                if (currentBook != CurrentBook ||
-                    currentPageNum != PhysicalPageNum) { return false; }
+                if (ShouldRestartFetch(currentBook, currentPageNum, currentScreenSize)) { return false; }
             }
 
+            // TODO: maybe fill a bit backwards from current (after filling sufficiently forward).
+
             return true;
+        }
+
+        bool ShouldRestartFetch(ScreenPageProvider currentBook, int currentPageNum, Size currentSize)
+        {
+            if (currentBook != CurrentBook) { return true; }
+            if (currentPageNum != PhysicalPageNum) { return true; }
+            if (currentSize.Width != CurrentBook.ScreenSize.Width) { return true; }
+
+            return false;
+
         }
 
         public void Start()
         {
             _stopLoop = false;
-            if (_prefetchThread != null)
+            if (_prefetchThread == null)
             {
                 _prefetchThread = new Thread(DoLoop);
                 _prefetchThread.Name = "Prefetch thread";
@@ -166,17 +177,5 @@ namespace PdfBookReader.Render
             }
         }
 
-        // No need, will just ask the provider...
-        void Foo()
-        {
-            // Locking is a chore... we don't want to lock on cache read...
-            
-            // If the page is in cache, it should be returned immediately, not block
-            // waiting on some very long prefetch render of another unrelated page.
-
-            // That's all we need to do... PPP will cache things appropriately
-            CurrentBook.ContentProvider.RenderPhysicalPage(PhysicalPageNum,
-                CurrentBook.ScreenSize, CurrentBook.PhysicalPageProvider);
-        }
     }
 }
