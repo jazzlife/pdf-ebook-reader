@@ -77,6 +77,7 @@ namespace PdfBookReader.UI
             CurrentPageImage = ScreenProvider.RenderPage(pos);
 
             FillProgressBarWithCacheInfo();
+
             UpdateUIState();
         }
 
@@ -158,6 +159,7 @@ namespace PdfBookReader.UI
 
             CurrentPageImage = ScreenProvider.RenderCurrentPage(pbContent.Size);
 
+            FillProgressBarWithCacheInfo();
             UpdateUIState();
         }
 
@@ -196,8 +198,8 @@ namespace PdfBookReader.UI
 
         private void bPrevPage_Click(object sender, EventArgs e)
         {
-            CurrentPageImage = ScreenProvider.RenderPreviousPage();
-            
+            CurrentPageImage = ScreenProvider.RenderPreviousPage();            
+
             UpdateUIState();
         }
 
@@ -206,18 +208,12 @@ namespace PdfBookReader.UI
         {
             pMargins.Width += WidthIncrement;
             pMargins.Left -= WidthIncrement / 2;
-
-            FillProgressBarWithCacheInfo();
-            UpdateUIState();
         }
 
         private void bWidthMinus_Click(object sender, EventArgs e)
         {
             pMargins.Width -= WidthIncrement;
-            pMargins.Left += WidthIncrement / 2;
-            
-            FillProgressBarWithCacheInfo();
-            UpdateUIState();
+            pMargins.Left += WidthIncrement / 2;            
         }
 
 
