@@ -80,8 +80,14 @@
     <Compile Include="Render\DefaultPageContentProvider.cs" />
     <Compile Include="Render\IPageContentProvider.cs" />
     <Compile Include="Render\PdfRenderPerformanceInfo.cs" />
-    <Compile Include="Render\PhysicalPageInfoCache.cs" />
+    <Compile Include="Render\PageContentCache.cs" />
+    <Compile Include="Render\PrefetchManager.cs" />
+    <Compile Include="Render\TheadSafe.cs" />
     <Compile Include="UI\BookListViewItem.cs" />
+    <Compile Include="UI\BookProgressBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\EHandler.cs" />
     <Compile Include="UI\LibraryPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -114,6 +120,7 @@
     <Compile Include="Render\ScreenPageProvider.cs" />
     <Compile Include="Render\ScreenRenderAlgorithm.cs" />
     <Compile Include="Utils\ArgCheck.cs" />
+    <Compile Include="Utils\EventHandling.cs" />
     <Compile Include="Utils\ExtensionMethods.cs" />
     <Compile Include="Utils\PathX.cs" />
     <Compile Include="Utils\XmlHelper.cs" />

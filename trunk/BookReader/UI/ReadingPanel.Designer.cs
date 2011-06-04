@@ -13,10 +13,17 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
+            // Stop prefetch manager, it may be using other parts
+            if (_prefetchManager != null)
+            {
+                _prefetchManager.Stop();
+            }
+
             if (disposing && (components != null))
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
@@ -35,7 +42,6 @@
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.bLibrary = new System.Windows.Forms.ToolStripButton();
             this.lbPageNum = new System.Windows.Forms.ToolStripLabel();
-            this.bookProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.bPrevPage = new System.Windows.Forms.ToolStripButton();
             this.bNextPage = new System.Windows.Forms.ToolStripButton();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
@@ -46,6 +52,7 @@
             this.bWidthMinus = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.timerResize = new System.Windows.Forms.Timer(this.components);
+            this.bookProgressBar = new PdfBookReader.UI.BookProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.pbContent)).BeginInit();
             this.pMargins.SuspendLayout();
             this.toolStrip.SuspendLayout();
@@ -82,10 +89,9 @@
             this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.bLibrary,
-            this.lbPageNum,
-            this.bookProgressBar,
             this.bPrevPage,
             this.bNextPage,
+            this.lbPageNum,
             this.toolStripLabel2,
             this.toolStripSeparator1,
             this.toolStripSeparator2,
@@ -116,17 +122,6 @@
             this.lbPageNum.Name = "lbPageNum";
             this.lbPageNum.Size = new System.Drawing.Size(58, 15);
             this.lbPageNum.Text = "1/100";
-            // 
-            // bookProgressBar
-            // 
-            this.bookProgressBar.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.bookProgressBar.MarqueeAnimationSpeed = 10000;
-            this.bookProgressBar.Maximum = 10000;
-            this.bookProgressBar.Name = "bookProgressBar";
-            this.bookProgressBar.Size = new System.Drawing.Size(56, 15);
-            this.bookProgressBar.Step = 100;
-            this.bookProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            this.bookProgressBar.MouseUp += new System.Windows.Forms.MouseEventHandler(this.bookProgressBar_MouseUp);
             // 
             // bPrevPage
             // 
@@ -207,11 +202,23 @@
             // 
             this.timerResize.Tick += new System.EventHandler(this.timerResize_Tick);
             // 
+            // bookProgressBar
+            // 
+            this.bookProgressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.bookProgressBar.Location = new System.Drawing.Point(60, 590);
+            this.bookProgressBar.Name = "bookProgressBar";
+            this.bookProgressBar.Size = new System.Drawing.Size(740, 10);
+            this.bookProgressBar.TabIndex = 4;
+            this.bookProgressBar.Text = "bookProgressBar";
+            this.bookProgressBar.Value = 0F;
+            this.bookProgressBar.MouseUp += new System.Windows.Forms.MouseEventHandler(this.bookProgressBar_MouseUp);
+            // 
             // ReadingPanel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.Controls.Add(this.bookProgressBar);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.pMargins);
             this.Name = "ReadingPanel";
@@ -239,8 +246,8 @@
         private System.Windows.Forms.ToolStripLabel lbPageNum;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripButton bWidthPlus;
-        private System.Windows.Forms.ToolStripProgressBar bookProgressBar;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripLabel toolStripLabel2;
+        private BookProgressBar bookProgressBar;
     }
 }
