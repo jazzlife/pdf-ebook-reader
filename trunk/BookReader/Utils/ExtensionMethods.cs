@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
+using PdfBookReader.Render.Cache;
 
 namespace PdfBookReader.Utils
 {
@@ -92,6 +93,25 @@ namespace PdfBookReader.Utils
                 otherFieldValues.TrueForAll(ofv => fieldValue != ofv))
             {
                 targetField.Dispose();
+                targetField = null;
+            }
+
+            targetField = value;
+        }
+
+        public static void AssignNewReturnOld<T>(this T value, ref T targetField, params T[] otherFieldValues)
+            where T : class, ICachedDisposable
+        {
+
+            if (value == targetField) { return; }
+
+            // Dispose value if needed
+            T fieldValue = targetField;
+            if (fieldValue != null &&
+                // Check if value is still in use
+                otherFieldValues.TrueForAll(ofv => fieldValue != ofv))
+            {
+                targetField.Return();
                 targetField = null;
             }
 

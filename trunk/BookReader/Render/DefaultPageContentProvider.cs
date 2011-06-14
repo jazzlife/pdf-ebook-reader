@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Diagnostics;
+using PdfBookReader.Render.Cache;
 
 namespace PdfBookReader.Render
 {
@@ -16,28 +17,23 @@ namespace PdfBookReader.Render
         public IPageLayoutAnalyzer LayoutAnalyzer { get; set; }
 
         // Cache
-        readonly PageContentCache PpiCache;
+        readonly PageContentCache Cache;
 
         object MyLock = new object();
 
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="cache"></param>
         public DefaultPageContentProvider(PageContentCache cache)
         {
             LayoutAnalyzer = new DefaultPageLayoutAnalyzer();
-            PpiCache = cache;
+            Cache = cache;
         }
 
         public PageContent RenderPhysicalPage(int pageNum, Size screenSize, IPhysicalPageProvider physicalPageProvider) 
         {
             // Try to get from cache
             PageContent pageInfo;
-            if (PpiCache != null)
+            if (Cache != null)
             {
-                pageInfo = PpiCache.GetPage(physicalPageProvider.FullPath, pageNum, screenSize.Width);
+                pageInfo = Cache.Get(physicalPageProvider.FullPath, pageNum, screenSize.Width);
                 if (pageInfo != null)
                 {
                     Trace.WriteLine("GetPhysicalPage: returning cached page");
@@ -48,9 +44,9 @@ namespace PdfBookReader.Render
             pageInfo = RenderPhysicalPageCore(pageNum, screenSize, physicalPageProvider);
 
             // Save to cache
-            if (PpiCache != null)
+            if (Cache != null)
             {
-                PpiCache.SavePage(pageInfo, physicalPageProvider.FullPath, screenSize.Width);
+                Cache.Add(physicalPageProvider.FullPath, pageNum, screenSize.Width, pageInfo);
             }
 
             return pageInfo;

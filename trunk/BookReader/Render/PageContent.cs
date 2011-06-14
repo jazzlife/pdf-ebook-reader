@@ -6,6 +6,7 @@ using System.Drawing;
 using PdfBookReader.Utils;
 using System.Runtime.Serialization;
 using System.IO;
+using PdfBookReader.Render.Cache;
 
 namespace PdfBookReader.Render
 {
@@ -13,7 +14,7 @@ namespace PdfBookReader.Render
     /// Rendered physical page with the detected layout info. 
     /// </summary>
     [DataContract(Name = "PageContent")]
-    class PageContent : IDisposable
+    class PageContent : ICachedDisposable
     {
         [DataMember (Name = "PageNum")]
         public readonly int PageNum; // page number in document, 1-n
@@ -34,18 +35,10 @@ namespace PdfBookReader.Render
         public PageContent(int pageNum, Bitmap image, PageLayoutInfo layout)
         {
             ArgCheck.GreaterThanOrEqual(pageNum, 1, "pageNum");
-            ArgCheck.NotNull(image);
+            //ArgCheck.NotNull(image);
 
             PageNum = pageNum;
             _image = image;
-            _layout = layout;
-        }
-
-        public PageContent(int pageNum, PageLayoutInfo layout)
-        {
-            ArgCheck.GreaterThanOrEqual(pageNum, 1, "pageNum");
-
-            PageNum = pageNum;
             _layout = layout;
         }
 
@@ -59,21 +52,26 @@ namespace PdfBookReader.Render
             set { TopOnScreen = value - Layout.Bounds.Height; }
         }
 
-        public void Dispose()
-        {
-            if (_image != null)
-            {
-                _image.Dispose();
-                _image = null;
-                _layout = null;
-            }
-        }
-
         public override string ToString()
         {
             return "PhysicalPage #" + PageNum + " TopOnScreen = " + TopOnScreen;
         }
 
+
+        #region ICachedDisposable
+
+        bool _inUse = true;
+        public void Return()
+        {
+            _inUse = false;
+        }
+
+        public bool InUse
+        {
+            get { return _inUse; }
+        }
+
+        #endregion
     }
 
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using System.Threading;
+using PdfBookReader.Render.Cache;
 
 namespace PdfBookReader.Render
 {
@@ -163,7 +164,7 @@ namespace PdfBookReader.Render
                     return;
                 }
 
-                if (Cache.ContainsPage(
+                if (Cache.Contains(
                         CurrentBook.PhysicalPageProvider.FullPath,
                         physicalPageNum,
                         CurrentBook.ScreenSize.Width))

@@ -18,8 +18,8 @@ namespace PdfBookReader.Test.Utils
         {
             Point pt = new Point();
 
-            ArgCheck.Is(() => pt.IsEmpty, "pass");
-            ArgCheck.Is(() => pt.X == 10, "fail");
+            ArgCheck.Is(pt.IsEmpty, "pass");
+            ArgCheck.Is(pt.X == 10, "fail");
         }
 
 
@@ -29,8 +29,8 @@ namespace PdfBookReader.Test.Utils
         {
             Point pt = new Point();
 
-            ArgCheck.IsNot(() => pt.X == 10, "pass");
-            ArgCheck.IsNot(() => pt.IsEmpty, "fail");
+            ArgCheck.IsNot(pt.X == 10, "pass");
+            ArgCheck.IsNot(pt.IsEmpty, "fail");
         }
 
     }

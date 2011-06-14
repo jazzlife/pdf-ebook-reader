@@ -14,14 +14,14 @@ namespace PdfBookReader.Utils
             if (arg == null) { throw new ArgumentNullException(argName); }
         }
 
-        public static void Is(Func<bool> trueCondition, String argName = null)
+        public static void Is(bool trueCondition, String message = null)
         {
-            if (!trueCondition()) { throw new ArgumentException(argName); }
+            if (!trueCondition) { throw new ArgumentException(message); }
         }
 
-        public static void IsNot(Func<bool> falseCondition, String argName = null)
+        public static void IsNot(bool falseCondition, String message = null)
         {
-            if (falseCondition()) { throw new ArgumentException(argName); }
+            if (falseCondition) { throw new ArgumentException(message); }
         }
 
         // Files
@@ -33,6 +33,13 @@ namespace PdfBookReader.Utils
             }
         }
 
+        public static void FilenameCharsValid(String filename, String argName = null)
+        {
+            foreach (char c in Path.GetInvalidFileNameChars())
+            {
+                if (filename.Contains(c)) { throw new ArgumentException("Invalid filename character in: " + filename, argName); }
+            }
+        }
 
         // Specific types
         public static void InRange(int arg, int minInclusive, int maxInclusive, String argName = null)
@@ -73,6 +80,14 @@ namespace PdfBookReader.Utils
         public static void NotEmpty(Size s, String argName = null)
         {
             if (s.IsEmpty) { throw new ArgumentException(argName + " is empty."); }
+        }
+
+        internal static void NotEmpty(string name, string argName = null)
+        {
+            if (name == null || String.IsNullOrEmpty(name.Trim()))
+            {
+                throw new ArgumentException("Empty arg " + argName);
+            }
         }
     }
 

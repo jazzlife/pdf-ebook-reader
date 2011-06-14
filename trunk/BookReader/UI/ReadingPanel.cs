@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using PdfBookReader.Metadata;
 using PdfBookReader.Render;
 using PdfBookReader.Utils;
+using PdfBookReader.Render.Cache;
 
 namespace PdfBookReader.UI
 {
@@ -19,18 +20,17 @@ namespace PdfBookReader.UI
         IPhysicalPageProvider _physicalPageProvider;
         ScreenPageProvider _screenPageProvider;
 
-        PageContentCache _pageCache;
         PrefetchManager _prefetchManager;
 
         Bitmap _currentScreenImage;
+        PageContentCache _pageCache;
 
         public ReadingPanel()
         {
             InitializeComponent();
 
-            _pageCache = PageContentCache.Load();
-            _pageCache.PageCached += OnPageCached;
-
+            _pageCache = new PageContentCache();
+            //_pageCache.PageCached += OnPageCached;
 
             _prefetchManager = new PrefetchManager(null, _pageCache);
             _prefetchManager.Start();
@@ -81,20 +81,10 @@ namespace PdfBookReader.UI
             UpdateUIState();
         }
 
-        // Display progress of caching
-        void OnPageCached(object sender, PageCachedEventArgs e)
-        {
-            if (this.InvokeIfRequired(OnPageCached, sender, e)) { return; }
-
-            // Main thead stuff
-            if (e.FullPath != PhysicalPageProvider.FullPath) { return; }
-            if (e.Width != ScreenProvider.ScreenSize.Width) { return; }
-            bookProgressBar.AddLoadedPage(e.PageNum);
-        }
-
         // Display progress at start
         void FillProgressBarWithCacheInfo()
         {
+            /*
             if (PhysicalPageProvider == null || _pageCache == null) { return; }
 
             bookProgressBar.ClearLoadedPages();
@@ -109,6 +99,7 @@ namespace PdfBookReader.UI
                 }
             }
             bookProgressBar.AddLoadedPages(cachedPages);
+             */
         }
 
         #endregion
