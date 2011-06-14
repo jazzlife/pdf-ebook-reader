@@ -76,7 +76,10 @@ namespace PdfBookReader.Render.Cache
                 if (item == null)
                 {
                     item = _diskCache.Get(key);
-                    _memoryCache.Add(key, item);
+                    if (item != null)
+                    {
+                        _memoryCache.Add(key, item);
+                    }
                 }
                 return item;
             }
@@ -87,6 +90,23 @@ namespace PdfBookReader.Render.Cache
             lock (MyLock)
             {
                 return Get(GetKey(fullFilePath, pageNum, width));
+            }
+        }
+
+        public void UpdatePriority(string key, ItemRetainPriority newPriority)
+        {
+            lock (MyLock)
+            {
+                _memoryCache.UpdatePriority(key, newPriority);
+                _diskCache.UpdatePriority(key, newPriority);
+            }
+        }
+
+        public void UpdatePriority(String fullFilePath, int pageNum, int width, ItemRetainPriority newPriority)
+        {
+            lock (MyLock)
+            {
+                UpdatePriority(GetKey(fullFilePath, pageNum, width), newPriority);
             }
         }
 
@@ -125,7 +145,6 @@ namespace PdfBookReader.Render.Cache
             }
             return id;
         }
-
 
     }
 }
