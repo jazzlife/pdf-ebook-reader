@@ -13,5 +13,6 @@ namespace PdfBookReader.Render
     {
         IPageLayoutAnalyzer LayoutAnalyzer { get; set; }
         PageContent RenderPhysicalPage(int pageNum, Size screenSize, IPhysicalPageProvider physicalPageProvider);
+
     }
 }

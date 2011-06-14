@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;
+using System.Diagnostics;
 
 namespace PdfBookReader.Utils
 {
@@ -48,6 +49,31 @@ namespace PdfBookReader.Utils
                 }
             }
         }
+
+        /// <summary>
+        /// Deserialize an object from XML file or return a default object.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="filename"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns></returns>
+        public static T DeserializeOrDefault<T>(String filename, T defaultValue, bool ignoreErrors = true)
+        {
+            if (!File.Exists(filename)) { return defaultValue; }
+
+            try
+            {
+                return Deserialize<T>(filename);
+            }
+            catch (Exception e)
+            {
+                // TODO: proper logging
+                Trace.TraceError("DeserializeOrDefault: error reading " + filename + " e:" + e.Message);
+                if (!ignoreErrors) { throw; }
+                return defaultValue;
+            }
+        }
+
     }
 
     

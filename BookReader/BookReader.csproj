@@ -77,10 +77,14 @@
   <ItemGroup>
     <Compile Include="Metadata\Book.cs" />
     <Compile Include="Metadata\BookLibrary.cs" />
+    <Compile Include="Render\Cache\PageContentCache.cs" />
+    <Compile Include="Render\Cache\PageContentMemoryCache.cs" />
+    <Compile Include="Render\Cache\PageContentDiskCache.cs" />
+    <Compile Include="Render\Cache\IExpirationPolicy.cs" />
+    <Compile Include="Render\Cache\SimpleCache.cs" />
     <Compile Include="Render\DefaultPageContentProvider.cs" />
     <Compile Include="Render\IPageContentProvider.cs" />
     <Compile Include="Render\PdfRenderPerformanceInfo.cs" />
-    <Compile Include="Render\PageContentCache.cs" />
     <Compile Include="Render\PrefetchManager.cs" />
     <Compile Include="Render\TheadSafe.cs" />
     <Compile Include="UI\BookListViewItem.cs" />
@@ -122,6 +126,8 @@
     <Compile Include="Utils\ArgCheck.cs" />
     <Compile Include="Utils\EventHandling.cs" />
     <Compile Include="Utils\ExtensionMethods.cs" />
+    <Compile Include="Render\Cache\ICache.cs" />
+    <Compile Include="Render\Cache\ICachedDisposable.cs" />
     <Compile Include="Utils\PathX.cs" />
     <Compile Include="Utils\XmlHelper.cs" />
     <EmbeddedResource Include="UI\LibraryPanel.resx">

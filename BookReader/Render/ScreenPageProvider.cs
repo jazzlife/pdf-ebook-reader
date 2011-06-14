@@ -230,7 +230,7 @@ namespace PdfBookReader.Render
             set 
             {
                 Trace.WriteLine("TopPage set to: " + value);
-                value.AssignNewDisposeOld(ref _topPage, _bottomPage);
+                value.AssignNewReturnOld(ref _topPage, _bottomPage);
 
                 if (PositionChanged != null)
                 {
@@ -249,7 +249,7 @@ namespace PdfBookReader.Render
             set 
             {
                 Trace.WriteLine("BottomPage set to: " + value);
-                value.AssignNewDisposeOld(ref _bottomPage, _topPage);
+                value.AssignNewReturnOld(ref _bottomPage, _topPage);
             }
         }
 
