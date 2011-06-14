@@ -201,17 +201,16 @@ namespace PdfBookReader.Render.Cache
         }
 
         #endregion
-    }
 
-    /// <summary>
-    /// Cached item info, used by expiration algorithm.
-    /// Should be lightweight -- for disk-based cache items 
-    /// it may be kept in memory for speed.
-    /// </summary>
-    public struct CachedItemInfo
-    {
-        public DateTime LastAccessTime;
+        public void UpdatePriority(TKey key, ItemRetainPriority newPriority)
+        {
+            CachedItemInfo info;
+            if (_cacheInfos.TryGetValue(key, out info))
+            {
+                info.Priority = newPriority;
+                _cacheInfos[key] = info;                
+            }
+        }
     }
-
 
 }

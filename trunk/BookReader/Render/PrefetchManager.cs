@@ -100,18 +100,18 @@ namespace PdfBookReader.Render
             Size currentScreenSize = CurrentBook.ScreenSize;
 
             // Next page until end
-            for (int pageNume = currentPageNum; pageNume <= pageCount; pageNume++)
+            for (int pageNum = currentPageNum; pageNum <= pageCount; pageNum++)
             {
-                PrefetchPage(currentBook, pageNume);
+                PrefetchPage(currentBook, pageNum);
 
                 // Quite if current page changed
                 if (ShouldRestartFetch(currentBook, currentPageNum, currentScreenSize)) { return false; }
             }
 
             // Fill back from start
-            for (int pageNume = 1; pageNume <= currentPageNum; pageNume++)
+            for (int pageNum = 1; pageNum < currentPageNum; pageNum++)
             {
-                PrefetchPage(currentBook, pageNume);
+                PrefetchPage(currentBook, pageNum);
 
                 // Quite if current page changed
                 if (ShouldRestartFetch(currentBook, currentPageNum, currentScreenSize)) { return false; }
@@ -155,27 +155,41 @@ namespace PdfBookReader.Render
             }
         }
 
-        void PrefetchPage(ScreenPageProvider screenProvider, int physicalPageNum)
+        void PrefetchPage(ScreenPageProvider screenProvider, int pageNum)
         {
             lock (MyLock)
             {
-                if (physicalPageNum < 1 || physicalPageNum > screenProvider.PhysicalPageProvider.PageCount)
+                if (pageNum < 1 || pageNum > screenProvider.PhysicalPageProvider.PageCount)
                 {
                     return;
                 }
 
-                if (Cache.Contains(
+                if (!Cache.Contains(
                         CurrentBook.PhysicalPageProvider.FullPath,
-                        physicalPageNum,
+                        pageNum,
                         CurrentBook.ScreenSize.Width))
                 {
-                    return;
+                    CurrentBook.ContentProvider.RenderPhysicalPage(
+                        pageNum,
+                        CurrentBook.ScreenSize,
+                        CurrentBook.PhysicalPageProvider);
                 }
 
-                CurrentBook.ContentProvider.RenderPhysicalPage(
-                    physicalPageNum,
-                    CurrentBook.ScreenSize,
-                    CurrentBook.PhysicalPageProvider);
+                // set priority
+                ItemRetainPriority priority = ItemRetainPriority.Normal;
+                int currentPageNum = PhysicalPageNum;
+                if (pageNum < 5 || 
+                    (pageNum - 3 < pageNum && pageNum < currentPageNum + 5))
+                { 
+                    priority = ItemRetainPriority.AlwaysRetain; 
+                }
+
+                Cache.UpdatePriority(
+                        CurrentBook.PhysicalPageProvider.FullPath,
+                        pageNum,
+                        CurrentBook.ScreenSize.Width, priority);
+
+
             }
         }
 

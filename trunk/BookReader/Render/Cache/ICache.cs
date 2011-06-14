@@ -35,6 +35,16 @@ namespace PdfBookReader.Render.Cache
         /// (e.g. last usage times).
         /// </summary>
         void SaveCache();
+
+        // Optional methods
+
+        /// <summary>
+        /// Update item priority, if possible. 
+        /// If item is not present in cache, does nothing (does not fetch it).
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="newPriority"></param>
+        void UpdatePriority(TKey key, ItemRetainPriority newPriority);
     }
 
     public static class CacheUtils

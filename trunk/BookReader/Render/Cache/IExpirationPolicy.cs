@@ -56,6 +56,7 @@ namespace PdfBookReader.Render.Cache
             // Order by last use date
             // Take items over the optimal count
             var keysToRemove = cache
+                .Where(x => x.Value.Priority != ItemRetainPriority.AlwaysRetain)
                 .OrderBy(x => x.Value.LastAccessTime)
                 .Select(x => x.Key)
                 .Take(cache.Count - _optimalItemCount);
@@ -63,5 +64,23 @@ namespace PdfBookReader.Render.Cache
             return keysToRemove;
         }
     }
+
+    /// <summary>
+    /// Cached item info, used by expiration algorithm.
+    /// Should be lightweight -- for disk-based cache items 
+    /// it may be kept in memory for speed.
+    /// </summary>
+    public struct CachedItemInfo
+    {
+        public DateTime LastAccessTime;
+        public ItemRetainPriority Priority;
+    }
+
+    public enum ItemRetainPriority
+    {
+        Normal = 0,
+        AlwaysRetain,
+    }
+
 
 }
