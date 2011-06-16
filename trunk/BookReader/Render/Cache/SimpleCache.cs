@@ -119,7 +119,7 @@ namespace PdfBookReader.Render.Cache
         }
         protected virtual void SaveItems()
         {
-            XmlHelper.Serialize(_cache, CacheInfosFileName);
+            XmlHelper.Serialize(_cache, ItemsFileName);
         }
 
         #endregion
@@ -210,6 +210,24 @@ namespace PdfBookReader.Render.Cache
                 info.Priority = newPriority;
                 _cacheInfos[key] = info;                
             }
+        }
+
+        public IEnumerable<TKey> GetAllKeys()
+        {
+            return new List<TKey>(_cache.Keys);
+        }
+
+        public void Dispose()
+        {
+            if (_cache == null) { return; }
+
+            foreach(TValue val in _cache.Values)
+            {
+                if (val is IDisposable) { ((IDisposable)val).Dispose(); }
+            }
+
+            _cache = null;
+            _cacheInfos = null;
         }
     }
 

@@ -14,6 +14,7 @@
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -26,7 +27,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -57,6 +57,10 @@
     <Reference Include="AForge.Imaging, Version=2.1.5.0, Culture=neutral, PublicKeyToken=ba8ddea9676ca48b, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\AForge.Imaging.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>External\log4net.dll</HintPath>
     </Reference>
     <Reference Include="PDFLibNet, Version=1.0.6.8, Culture=neutral, PublicKeyToken=26d87f7d66fb2aee, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -128,6 +132,7 @@
     <Compile Include="Utils\ExtensionMethods.cs" />
     <Compile Include="Render\Cache\ICache.cs" />
     <Compile Include="Render\Cache\ICachedDisposable.cs" />
+    <Compile Include="Utils\LogUtils.cs" />
     <Compile Include="Utils\PathX.cs" />
     <Compile Include="Utils\XmlHelper.cs" />
     <EmbeddedResource Include="UI\LibraryPanel.resx">
@@ -162,6 +167,8 @@
   <ItemGroup>
     <Content Include="External\AForge.dll" />
     <Content Include="External\AForge.Imaging.dll" />
+    <Content Include="External\log4net.dll" />
+    <Content Include="External\log4net.xml" />
     <Content Include="External\PDFLibNet.dll" />
   </ItemGroup>
   <ItemGroup>

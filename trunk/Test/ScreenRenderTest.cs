@@ -60,7 +60,7 @@ namespace PdfBookReader.Test
             ScreenPageProvider screenPageProvider =
                 new ScreenPageProvider(pdfReader, contentProvider, screenPageSize);
 
-            PerfTimer timer = new PerfTimer("Screen Page Load {0}x{1} '{2}'", 
+            PTimer timer = new PTimer("Screen Page Load {0}x{1} '{2}'", 
                 screenPageSize.Width, screenPageSize.Height, Path.GetFileName(file));
 
             for (int pageNum = 0; pageNum < maxPages; pageNum++)

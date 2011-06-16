@@ -21,9 +21,12 @@ namespace PdfBookReader.Render
 
         object MyLock = new object();
 
-        public DefaultPageContentProvider(PageContentCache cache)
+        public DefaultPageContentProvider(PageContentCache cache, 
+            IPageLayoutAnalyzer layoutAnalyzer = null)
         {
-            LayoutAnalyzer = new DefaultPageLayoutAnalyzer();
+            if (layoutAnalyzer == null) { layoutAnalyzer = new DefaultPageLayoutAnalyzer(); }
+            LayoutAnalyzer = layoutAnalyzer;
+
             Cache = cache;
         }
 

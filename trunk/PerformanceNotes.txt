@@ -1,0 +1,28 @@
+
+Just loading a PDF page
+
+478
+163
+237
+
+Load with render
+976
+817
+1272
+
+// Why the huge numbers? Double is expected (first case), but not so much in later case
+  971 ms/run
+  789 ms/run
+ 1318 ms/run
+ 
+  959 ms/run
+  776 ms/run
+ 1268 ms/run
+ 
+// Disk caching actually works (!)
+// Why is the last one so large?
+    15 ms/run 1.7m	 8.8  <-- why is this so much better?
+    79 ms/run 4.2m	18.8
+   121 ms/run 6.5m	18.6  <-- no significant difference
+   
+   

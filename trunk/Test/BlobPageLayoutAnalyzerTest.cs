@@ -22,12 +22,12 @@ namespace PdfBookReader.Test
             return Directory.GetFiles(path, "*.png");
         }
 
-        PerfTimer _timer;
+        PTimer _timer;
 
         [Test]
         public void All_DetectPageContentBounds()
         {
-            _timer = new PerfTimer("Blob page layout analysis");
+            _timer = new PTimer("Blob page layout analysis");
             ProcesAllImages();
 
             Console.WriteLine();
