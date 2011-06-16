@@ -25,4 +25,16 @@ Load with render
     79 ms/run 4.2m	18.8
    121 ms/run 6.5m	18.6  <-- no significant difference
    
-   
+Note: reading disk cache is a *lot* faster (order of magnitude).
+While 100ms seems fast, need to double it for page compositioning.
+
+Try:
+ - Measure gains from memory cache (if any)?
+ - See whether items are disposed properly.
+ - See if cutting out the content part of the bitmap helps. May reduce load time, at cost of increased save time (?). Save time is already intolerably bad, how much more would it be (perhaps not much, memory > disk).
+ - Improve load times.
+	- Avoid double rendering.
+	- Check how expensive detection layout algorithm is (substitute a dummy).
+	- Check why the 237 ms simple render goes to 1272 ms with content load (and 163->817).
+ 
+=== Another run

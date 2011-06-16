@@ -38,7 +38,7 @@ namespace PdfBookReader.Render.Cache
             base.Add(key, value);
 
             String filename = GetFullPath(key);
-            value.Image.Save(filename);
+            value.Image.o.Save(filename);
         }
 
         protected override void RemoveItem(string key)
@@ -59,7 +59,7 @@ namespace PdfBookReader.Render.Cache
 
             // TODO: try/catch around file access
             String filename = GetFullPath(key);
-            Bitmap b = new Bitmap(filename);
+            DW<Bitmap> b = DW.Wrap(new Bitmap(filename));
 
             return new PageContent(tempPc.PageNum, b, tempPc.Layout);
         }

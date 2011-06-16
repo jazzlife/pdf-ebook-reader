@@ -112,7 +112,7 @@ namespace PdfBookReader.Render
         /// </summary>
         /// <param name="positionInBook"></param>
         /// <returns></returns>
-        public Bitmap RenderPage(float positionInBook)
+        public DW<Bitmap> RenderPage(float positionInBook)
         {
             ArgCheck.IsRatio(positionInBook, "positionInBook");
 
@@ -143,7 +143,7 @@ namespace PdfBookReader.Render
         /// Render the first screen page, and set it as current page
         /// </summary>
         /// <returns></returns>
-        public Bitmap RenderFirstPage() 
+        public DW<Bitmap> RenderFirstPage() 
         {
             TopPage = null;
             BottomPage = null;
@@ -154,7 +154,7 @@ namespace PdfBookReader.Render
         /// Render the last screen page, and set it as current page
         /// </summary>
         /// <returns></returns>
-        public Bitmap RenderLastPage()
+        public DW<Bitmap> RenderLastPage()
         {
             TopPage = null;
             BottomPage = null;
@@ -166,7 +166,7 @@ namespace PdfBookReader.Render
         /// </summary>
         /// <param name="newScreenPageSize"></param>
         /// <returns></returns>
-        public Bitmap RenderCurrentPage(Size newScreenPageSize)
+        public DW<Bitmap> RenderCurrentPage(Size newScreenPageSize)
         {
             Size oldSize = ScreenSize;
             ScreenSize = newScreenPageSize;
@@ -180,7 +180,7 @@ namespace PdfBookReader.Render
         /// If currently at last page, returns null.
         /// </summary>
         /// <returns></returns>
-        public Bitmap RenderNextPage()
+        public DW<Bitmap> RenderNextPage()
         {
             RenderDown r = new RenderDown(this);
             return r.Run();
@@ -202,7 +202,7 @@ namespace PdfBookReader.Render
         /// If currently at first page, returns null.
         /// </summary>
         /// <returns></returns>
-        public Bitmap RenderPreviousPage()
+        public DW<Bitmap> RenderPreviousPage()
         {
             RenderUp r = new RenderUp(this);
             return r.Run();
@@ -278,7 +278,7 @@ namespace PdfBookReader.Render
                     curPage.Layout.Bounds.Width, curPage.Layout.Bounds.Height);
             Rectangle srcRect = curPage.Layout.Bounds;
 
-            g.DrawImage(curPage.Image, destRect, srcRect, GraphicsUnit.Pixel);
+            g.DrawImage(curPage.Image.o, destRect, srcRect, GraphicsUnit.Pixel);
 
             // Debug drawing
             if (DrawDebugMarks)

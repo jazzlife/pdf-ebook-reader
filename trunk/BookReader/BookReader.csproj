@@ -58,9 +58,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\AForge.Imaging.dll</HintPath>
     </Reference>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+    <Reference Include="NDesk.Options, Version=0.2.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>External\log4net.dll</HintPath>
+      <HintPath>External\NDesk.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>External\NLog.dll</HintPath>
     </Reference>
     <Reference Include="PDFLibNet, Version=1.0.6.8, Culture=neutral, PublicKeyToken=26d87f7d66fb2aee, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -117,7 +121,7 @@
       <DependentUpon>ReadingPanel.cs</DependentUpon>
     </Compile>
     <Compile Include="Render\BlankPageLayoutAnalyzer.cs" />
-    <Compile Include="Render\DefaultPageLayoutAnalyzer.cs" />
+    <Compile Include="Render\BlobPageLayoutAnalyzer.cs" />
     <Compile Include="Utils\DebugOnlyAttribute.cs" />
     <Compile Include="Render\IPageLayoutAnalyzer.cs" />
     <Compile Include="Render\IPhysicalPageProvider.cs" />
@@ -128,6 +132,7 @@
     <Compile Include="Render\ScreenPageProvider.cs" />
     <Compile Include="Render\ScreenRenderAlgorithm.cs" />
     <Compile Include="Utils\ArgCheck.cs" />
+    <Compile Include="Utils\DisposableWrapper.cs" />
     <Compile Include="Utils\EventHandling.cs" />
     <Compile Include="Utils\ExtensionMethods.cs" />
     <Compile Include="Render\Cache\ICache.cs" />
@@ -154,6 +159,7 @@
     <EmbeddedResource Include="UI\ReadingPanel.resx">
       <DependentUpon>ReadingPanel.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="NLog.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -167,8 +173,9 @@
   <ItemGroup>
     <Content Include="External\AForge.dll" />
     <Content Include="External\AForge.Imaging.dll" />
-    <Content Include="External\log4net.dll" />
-    <Content Include="External\log4net.xml" />
+    <Content Include="External\NDesk.Options.dll" />
+    <Content Include="External\NLog.dll" />
+    <Content Include="External\NLog.xml" />
     <Content Include="External\PDFLibNet.dll" />
   </ItemGroup>
   <ItemGroup>

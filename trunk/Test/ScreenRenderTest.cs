@@ -40,7 +40,7 @@ namespace PdfBookReader.Test
         [Test]
         public void One_RenderDown_ExtraLongPage()
         {
-            IPageLayoutAnalyzer analyzer = new DefaultPageLayoutAnalyzer();
+            IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
             Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, new Size(440, 1680));
         }
 
@@ -83,8 +83,8 @@ namespace PdfBookReader.Test
 
         Bitmap RenderFollowing(ScreenPageProvider provider, bool renderUp)
         {
-            if (renderUp) { return provider.RenderPreviousPage(); }
-            else { return provider.RenderNextPage(); }
+            if (renderUp) { return provider.RenderPreviousPage().o; }
+            else { return provider.RenderNextPage().o; }
         }
 
     }

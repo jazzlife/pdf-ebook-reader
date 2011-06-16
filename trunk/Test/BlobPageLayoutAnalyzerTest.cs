@@ -10,6 +10,7 @@ using PdfBookReader.Utils;
 using System.Drawing.Imaging;
 using PdfBookReader;
 using PdfBookReader.Render;
+using PdfBookReader.Render.Cache;
 
 namespace PdfBookReader.Test
 {
@@ -18,52 +19,51 @@ namespace PdfBookReader.Test
     {
         IEnumerable<String> GetPageImageFiles()
         {
-            const String path = @"..\..\PageImages";
-            return Directory.GetFiles(path, "*.png");
+            String path = CacheUtils.CacheFolderPath;
+            return Directory.GetFiles(path, "*.png"); //.Take(30);
         }
-
-        PTimer _timer;
 
         [Test]
         public void All_DetectPageContentBounds()
         {
-            _timer = new PTimer("Blob page layout analysis");
-            ProcesAllImages();
-
-            Console.WriteLine();
-            Console.WriteLine(_timer);
-            _timer = null;
+            using (PTimer timer = new PTimer("Layout Analysis: blob page layout"))
+            {
+                ProcesAllImages(timer);
+            }
         }
 
-        void ProcesAllImages(int numFiles = -1)
+        void ProcesAllImages(PTimer timer)
         {
             var files = GetPageImageFiles().Select(x => x);
-            if (numFiles > 0) { files = files.Take(numFiles); }
 
             int i = 0;
             foreach (String file in files)
             {
-                ProcessImage(file, i++);
+                ProcessImage(timer, file, i++);
             }
         }
 
-        void ProcessImage(String file, int index = 0)
+        void ProcessImage(PTimer timer, String file, int index = 0)
         {
-            DefaultPageLayoutAnalyzer detector = new DefaultPageLayoutAnalyzer();
+            BlobPageLayoutAnalyzer detector = new BlobPageLayoutAnalyzer();
             PageLayoutInfo layout;
 
             // Convert format
             using (Bitmap inBmp = LoadAndConvert(file, PixelFormat.Format24bppRgb))
             {
-                using (_timer.NewRun)
+                using (timer.NewRun)
                 {
-                    layout = detector.DetectPageLayout(inBmp);
+                    layout = detector.DetectPageLayout(DW.Wrap(inBmp));
                 }
+
+                String path = Path.Combine(CacheUtils.CacheFolderPath, "layout");
+                if (Directory.Exists(path)) { Directory.Delete(path); }
+                Directory.CreateDirectory(path);
 
                 // Save for inspection
                 using (Bitmap debugOut = layout.Debug_RenderLayout(inBmp))
                 {
-                    debugOut.Save(String.Format(@"C:\temp\out{0:000}.png", index), ImageFormat.Png);
+                    debugOut.Save(Path.Combine(path, Path.GetFileName(file)), ImageFormat.Png);
                 }
             }
         }

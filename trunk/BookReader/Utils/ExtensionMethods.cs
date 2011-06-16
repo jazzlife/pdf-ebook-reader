@@ -99,6 +99,20 @@ namespace PdfBookReader.Utils
             targetField = value;
         }
 
+        public static void AssignNewDisposeOld<T>(this DW<T> value, ref DW<T> targetField)
+            where T : class, IDisposable
+        {
+            if (value == targetField) { return; }
+
+            // Dispose the old value
+            if (targetField != null)
+            {
+                targetField.Dispose();
+            }
+
+            targetField = value;
+        }
+
         public static void AssignNewReturnOld<T>(this T value, ref T targetField, params T[] otherFieldValues)
             where T : class, ICachedDisposable
         {

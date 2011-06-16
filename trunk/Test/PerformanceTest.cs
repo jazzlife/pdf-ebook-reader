@@ -11,6 +11,7 @@ using PdfBookReader.Render.Cache;
 using System.IO;
 using PdfBookReader.Utils;
 using System.Windows.Forms;
+using Utils;
 
 namespace PdfBookReader.Test
 {
@@ -34,7 +35,7 @@ namespace PdfBookReader.Test
                 yield return pageNum;
             }
         }
-        const int Start = 1;
+        const int Start = 10;
         const int Count = 15;
 
         [Test, Explicit]
@@ -75,7 +76,7 @@ namespace PdfBookReader.Test
             {
                 foreach (int pageNum in PageNums(r.PageCount))
                 {
-                    Bitmap bmp;
+                    DW<Bitmap> bmp;
 
                     // Only time the render method
                     using (IDisposable d1 = localTimer.NewRun, d2 = sumTimer.NewRun)
@@ -129,25 +130,25 @@ namespace PdfBookReader.Test
             if (!Directory.Exists(CacheUtils.CacheFolderPath)) { t2b_BaselinePageReadNoAnalysis(); }
 
             // Disk cache
-            PageContentCache cache = new PageContentCache();
-            using (PTimer sumTimer = new PTimer("Cached retrieval"))
+            using(PageContentCache cache = new PageContentCache())
             {
-                foreach (String file in Files)
+                using (PTimer sumTimer = new PTimer("Cached retrieval"))
                 {
-                    RenderAndAnalyzePages(sumTimer, file, cache: cache);
+                    foreach (String file in Files)
+                    {
+                        RenderAndAnalyzePages(sumTimer, file, cache: cache);
+                    }
+                }
+
+                // Memory cache
+                using (PTimer sumTimer = new PTimer("Memory cache"))
+                {
+                    foreach (String file in Files)
+                    {
+                        RenderAndAnalyzePages(sumTimer, file, cache: cache);
+                    }
                 }
             }
-
-            // Memory cache
-            using (PTimer sumTimer = new PTimer("Memory cache"))
-            {
-                foreach (String file in Files)
-                {
-                    RenderAndAnalyzePages(sumTimer, file, cache: cache);
-                }
-            }
-
-            cache.Dispose();
         }
 
         void RenderAndAnalyzePages(PTimer sumTimer, String file, RenderQuality quality = RenderQuality.Optimal,
@@ -160,7 +161,7 @@ namespace PdfBookReader.Test
                 disposeCache = true;
             }
 
-            DefaultPageContentProvider pcp = new DefaultPageContentProvider(cache, analyzer);
+            DefaultPageContentProvider pcp = new DefaultPageContentProvider(DW.Wrap(cache), analyzer);
             PdfPhysicalPageProvider pageProvider = new PdfPhysicalPageProvider(file);
 
             using (PTimer localTimer = new PTimer(">>{0}: {1}".F(sumTimer.Name, Path.GetFileNameWithoutExtension(file))))

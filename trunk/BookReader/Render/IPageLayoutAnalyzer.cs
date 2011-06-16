@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using PdfBookReader.Utils;
 
 namespace PdfBookReader.Render
 {
@@ -11,7 +12,7 @@ namespace PdfBookReader.Render
     /// </summary>
     interface IPageLayoutAnalyzer
     {
-        PageLayoutInfo DetectPageLayout(Bitmap physicalPage);
+        PageLayoutInfo DetectPageLayout(DW<Bitmap> physicalPage);
     }
 
 
