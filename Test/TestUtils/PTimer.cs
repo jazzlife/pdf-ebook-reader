@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using PdfBookReader.Utils;
+using NLog;
 
 namespace PdfBookReader.Test.TestUtils
 {
     public class PTimer : IDisposable
     {
-        static readonly log4net.ILog Log = LogUtils.GetLogger("Performance");
+        static readonly Logger Log = LogManager.GetLogger("Simple.Performance");
 
         public readonly String Name;
 
@@ -34,6 +35,7 @@ namespace PdfBookReader.Test.TestUtils
         { 
             get 
             {
+                if (RunTimes.Count == 0) { return 0; }
                 return RunTimes.OrderBy(x => x).ElementAt(RunTimes.Count / 2); 
             } 
         }
@@ -59,6 +61,7 @@ namespace PdfBookReader.Test.TestUtils
             string msg = "{2,5} ms avg; {3,5} ms median; {1} runs; {0}".F(Name, RunCount, (int)AverageTime, (int)MedianTime);
 
             Log.Debug(msg);
+
             Console.WriteLine(msg);
             Console.WriteLine();
         }

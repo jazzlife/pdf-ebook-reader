@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using System.Reflection;
+using NLog;
+using PdfBookReader.Test.TestUtils;
 
 namespace Test
 {
@@ -14,6 +16,8 @@ namespace Test
         [STAThread]
         static void Main()
         {
+            LogManager.GetLogger("Simple.Test").Debug("=== Session start at: " + DateTime.Now + " ===");
+
             NUnit.Gui.AppEntry.Main(new string[]
             {
                 Assembly.GetExecutingAssembly().Location, 

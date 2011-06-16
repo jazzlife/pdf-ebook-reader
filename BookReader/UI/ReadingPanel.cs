@@ -18,21 +18,21 @@ namespace PdfBookReader.UI
         Book _book;
 
         IPhysicalPageProvider _physicalPageProvider;
-        ScreenPageProvider _screenPageProvider;
+        DW<ScreenPageProvider> _screenPageProvider;
 
         PrefetchManager _prefetchManager;
 
-        Bitmap _currentScreenImage;
-        PageContentCache _pageCache;
+        DW<Bitmap> _currentScreenImage;
+        DW<PageContentCache> _pageCache;
 
         public ReadingPanel()
         {
             InitializeComponent();
 
-            _pageCache = new PageContentCache();
+            _pageCache = DW.Wrap(new PageContentCache());
             //_pageCache.PageCached += OnPageCached;
 
-            _prefetchManager = new PrefetchManager(null, _pageCache);
+            _prefetchManager = new PrefetchManager(_pageCache);
             _prefetchManager.Start();
         }
 
@@ -49,16 +49,18 @@ namespace PdfBookReader.UI
 
                 _book = value;
 
+                _prefetchManager.CurrentBook = null;
+
                 // Rendering components
                 PhysicalPageProvider = new PdfPhysicalPageProvider(_book.Filename);
                 IPageContentProvider contentProvider = new DefaultPageContentProvider(_pageCache); // not disposable
-                ScreenProvider = new ScreenPageProvider(PhysicalPageProvider, contentProvider, pbContent.Size);
+                ScreenProvider = DW.Wrap(new ScreenPageProvider(PhysicalPageProvider, contentProvider, pbContent.Size));
 
                 _prefetchManager.CurrentBook = ScreenProvider;
 
                 // TODO: render page at stored position in the book
                 // (no the first "current" page).
-                CurrentPageImage = ScreenProvider.RenderCurrentPage(pbContent.Size);
+                CurrentPageImage = ScreenProvider.o.RenderCurrentPage(pbContent.Size);
                 UpdateUIState();
 
                 bookProgressBar.PageIncrementSize = 1.0f / PhysicalPageProvider.PageCount;
@@ -75,13 +77,13 @@ namespace PdfBookReader.UI
             if (pos > 1) { pos = 1; }
             if (pos < 0) { pos = 0; }
 
-            CurrentPageImage = ScreenProvider.RenderPage(pos);
+            CurrentPageImage = ScreenProvider.o.RenderPage(pos);
             UpdateUIState();
         }
 
         #endregion
 
-        private Bitmap CurrentPageImage
+        private DW<Bitmap> CurrentPageImage
         {
             get { return _currentScreenImage; }
             set
@@ -90,11 +92,11 @@ namespace PdfBookReader.UI
                 
                 pbContent.Image = null;
                 value.AssignNewDisposeOld(ref _currentScreenImage);
-                pbContent.Image = _currentScreenImage;
+                pbContent.Image = _currentScreenImage.o;
             }
         }
 
-        private ScreenPageProvider ScreenProvider
+        private DW<ScreenPageProvider> ScreenProvider
         {
             get { return _screenPageProvider; }
             set { value.AssignNewDisposeOld(ref _screenPageProvider); }
@@ -125,7 +127,7 @@ namespace PdfBookReader.UI
             timerResize.Stop();
             if (ScreenProvider == null) { return; }
 
-            CurrentPageImage = ScreenProvider.RenderCurrentPage(pbContent.Size);
+            CurrentPageImage = ScreenProvider.o.RenderCurrentPage(pbContent.Size);
 
             UpdateUIState();
         }
@@ -135,16 +137,16 @@ namespace PdfBookReader.UI
         {
             if (ScreenProvider == null) { return; }
 
-            bNextPage.Enabled = ScreenProvider.HasNextPage();
-            bPrevPage.Enabled = ScreenProvider.HasPreviousPage();
+            bNextPage.Enabled = ScreenProvider.o.HasNextPage();
+            bPrevPage.Enabled = ScreenProvider.o.HasPreviousPage();
 
             UpdateBookProgressBar();
         }
 
         void UpdateBookProgressBar()
         {
-            float posF = ScreenProvider.Position;
-            int pageCount = ScreenProvider.PhysicalPageProvider.PageCount;
+            float posF = ScreenProvider.o.Position;
+            int pageCount = ScreenProvider.o.PhysicalPageProvider.PageCount;
             bookProgressBar.Value = posF;
             lbPageNum.Text = String.Format("{0:0.0}/{1}", 1 + (posF * pageCount), pageCount);
         }
@@ -158,14 +160,14 @@ namespace PdfBookReader.UI
 
         private void bNextPage_Click(object sender, EventArgs e)
         {
-            CurrentPageImage = ScreenProvider.RenderNextPage();
+            CurrentPageImage = ScreenProvider.o.RenderNextPage();
             
             UpdateUIState();
         }
 
         private void bPrevPage_Click(object sender, EventArgs e)
         {
-            CurrentPageImage = ScreenProvider.RenderPreviousPage();            
+            CurrentPageImage = ScreenProvider.o.RenderPreviousPage();            
 
             UpdateUIState();
         }
@@ -195,8 +197,8 @@ namespace PdfBookReader.UI
                 }
                 else
                 {
-                    var memPages = _pageCache.GetMemoryPageNums(Book.Filename, ScreenProvider.ScreenSize.Width);
-                    var diskPages = _pageCache.GetDiskPageNums(Book.Filename, ScreenProvider.ScreenSize.Width);
+                    var memPages = _pageCache.o.GetMemoryPageNums(Book.Filename, ScreenProvider.o.ScreenSize.Width);
+                    var diskPages = _pageCache.o.GetDiskPageNums(Book.Filename, ScreenProvider.o.ScreenSize.Width);
                     bookProgressBar.SetLoadedPages(memPages, diskPages);
                 }
 

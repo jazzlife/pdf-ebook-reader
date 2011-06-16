@@ -5,6 +5,7 @@ using System.Text;
 using System.Drawing;
 using System.Threading;
 using PdfBookReader.Render.Cache;
+using PdfBookReader.Utils;
 
 namespace PdfBookReader.Render
 {
@@ -12,21 +13,21 @@ namespace PdfBookReader.Render
     class PrefetchManager
     {
         // TODO: should be a singleton
-        readonly PageContentCache Cache;
+        readonly DW<PageContentCache> Cache;
 
-        ScreenPageProvider _currentBook;
+        DW<ScreenPageProvider> _currentBook;
 
         Thread _prefetchThread;
         bool _stopLoop = false;
 
         readonly object MyLock = new object();
 
-        public PrefetchManager(ScreenPageProvider book, PageContentCache cache)
+        public PrefetchManager(DW<PageContentCache> cache)
         {
             Cache = cache;
         }
 
-        public ScreenPageProvider CurrentBook
+        public DW<ScreenPageProvider> CurrentBook
         {
             get { return _currentBook; }
             set
@@ -37,14 +38,14 @@ namespace PdfBookReader.Render
 
                     if (_currentBook != null)
                     {
-                        _currentBook.PositionChanged -= OnPositionChanged;
+                        _currentBook.o.PositionChanged -= OnPositionChanged;
                     }
 
                     _currentBook = value;
 
                     if (_currentBook != null)
                     {
-                        _currentBook.PositionChanged += OnPositionChanged;
+                        _currentBook.o.PositionChanged += OnPositionChanged;
                         OnPositionChanged(this, EventArgs.Empty);
                     }
                 }
@@ -64,7 +65,7 @@ namespace PdfBookReader.Render
             {
                 lock (MyLock)
                 {
-                    return (int)(CurrentBook.Position * CurrentBook.PhysicalPageProvider.PageCount) + 1;
+                    return (int)(CurrentBook.o.Position * CurrentBook.o.PhysicalPageProvider.PageCount) + 1;
                 }
             }
         }
@@ -92,12 +93,12 @@ namespace PdfBookReader.Render
         // Returns true if all pages done, false otherwise
         bool PrefetchStartingAtCurrentPage()
         {
-            ScreenPageProvider currentBook = CurrentBook;
+            DW<ScreenPageProvider> currentBook = CurrentBook;
             if (currentBook == null) { return true; }
 
             int currentPageNum = PhysicalPageNum;
-            int pageCount = CurrentBook.PhysicalPageProvider.PageCount;
-            Size currentScreenSize = CurrentBook.ScreenSize;
+            int pageCount = CurrentBook.o.PhysicalPageProvider.PageCount;
+            Size currentScreenSize = CurrentBook.o.ScreenSize;
 
             // Next page until end
             for (int pageNum = currentPageNum; pageNum <= pageCount; pageNum++)
@@ -122,12 +123,12 @@ namespace PdfBookReader.Render
             return true;
         }
 
-        bool ShouldRestartFetch(ScreenPageProvider currentBook, int currentPageNum, Size currentSize)
+        bool ShouldRestartFetch(DW<ScreenPageProvider> currentBook, int currentPageNum, Size currentSize)
         {
             if (_stopLoop) { return true; }
             if (currentBook != CurrentBook) { return true; }
             if (currentPageNum != PhysicalPageNum) { return true; }
-            if (currentSize.Width != CurrentBook.ScreenSize.Width) { return true; }
+            if (currentSize.Width != CurrentBook.o.ScreenSize.Width) { return true; }
 
             return false;
 
@@ -155,24 +156,26 @@ namespace PdfBookReader.Render
             }
         }
 
-        void PrefetchPage(ScreenPageProvider screenProvider, int pageNum)
+        void PrefetchPage(DW<ScreenPageProvider> screenProvider, int pageNum)
         {
             lock (MyLock)
             {
-                if (pageNum < 1 || pageNum > screenProvider.PhysicalPageProvider.PageCount)
+                if (pageNum < 1 || 
+                    pageNum > screenProvider.o.PhysicalPageProvider.PageCount ||
+                    screenProvider.IsDisposed)
                 {
                     return;
                 }
 
-                if (!Cache.Contains(
-                        CurrentBook.PhysicalPageProvider.FullPath,
+                if (!Cache.o.Contains(
+                        CurrentBook.o.PhysicalPageProvider.FullPath,
                         pageNum,
-                        CurrentBook.ScreenSize.Width))
+                        CurrentBook.o.ScreenSize.Width))
                 {
-                    CurrentBook.ContentProvider.RenderPhysicalPage(
+                    CurrentBook.o.ContentProvider.RenderPhysicalPage(
                         pageNum,
-                        CurrentBook.ScreenSize,
-                        CurrentBook.PhysicalPageProvider);
+                        CurrentBook.o.ScreenSize,
+                        CurrentBook.o.PhysicalPageProvider);
                 }
 
                 // set priority
@@ -184,10 +187,10 @@ namespace PdfBookReader.Render
                     priority = ItemRetainPriority.AlwaysRetain; 
                 }
 
-                Cache.UpdatePriority(
-                        CurrentBook.PhysicalPageProvider.FullPath,
+                Cache.o.UpdatePriority(
+                        CurrentBook.o.PhysicalPageProvider.FullPath,
                         pageNum,
-                        CurrentBook.ScreenSize.Width, priority);
+                        CurrentBook.o.ScreenSize.Width, priority);
 
 
             }

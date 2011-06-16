@@ -50,8 +50,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net">
-      <HintPath>..\BookReader\External\log4net.dll</HintPath>
+    <Reference Include="NLog">
+      <HintPath>..\BookReader\External\NLog.dll</HintPath>
     </Reference>
     <Reference Include="nunit-gui-runner, Version=2.4.7.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -73,6 +73,7 @@
     <Compile Include="PerformanceTest.cs" />
     <Compile Include="ScreenRenderPerformanceTest.cs" />
     <Compile Include="Utils\ArgCheckTest.cs" />
+    <Compile Include="Utils\DisposableWrapperTest.cs" />
     <Compile Include="Utils\ExtensionMethodsTest.cs" />
     <Compile Include="Utils\SizeScaleTest.cs" />
     <Compile Include="ScreenRenderTest.cs" />
@@ -90,6 +91,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="NLog.config">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

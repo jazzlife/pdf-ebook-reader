@@ -16,7 +16,7 @@
             // Save the cache
             if (_pageCache != null)
             {
-                _pageCache.SaveCache();
+                _pageCache.o.SaveCache();
             }
 
             // Stop prefetch manager, it may be using other parts

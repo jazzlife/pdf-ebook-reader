@@ -12,10 +12,9 @@ using PdfBookReader.Render;
 
 namespace PdfBookReader.Render
 {
-
     public class PdfPhysicalPageProvider : IPhysicalPageProvider
     {
-        PDFWrapper _pdfDoc;
+        DW<PDFWrapper> _pdfDoc;
         String _fullPath;
 
         // Performance tuning
@@ -47,7 +46,7 @@ namespace PdfBookReader.Render
 
         #region PdfDoc properties
 
-        public int PageCount { get { return _pdfDoc.PageCount; } }
+        public int PageCount { get { return _pdfDoc.o.PageCount; } }
 
         #endregion
 
@@ -58,7 +57,7 @@ namespace PdfBookReader.Render
         /// </summary>
         public bool PdfDocLoaded
         {
-            get { return _pdfDoc != null && _pdfDoc.PageCount > 0; }
+            get { return _pdfDoc != null && _pdfDoc.o.PageCount > 0; }
         }
 
         void AssertPdfDocLoaded()
@@ -71,7 +70,7 @@ namespace PdfBookReader.Render
         {
             try 
             {
-                _pdfDoc = new PDFWrapper();
+                _pdfDoc = DW.Wrap(new PDFWrapper());
                 //_pdfDoc.PDFLoadCompeted += new PDFLoadCompletedHandler(_pdfDoc_PDFLoadCompeted);
                 //_pdfDoc.PDFLoadBegin += new PDFLoadBeginHandler(_pdfDoc_PDFLoadBegin);
                 //_pdfDoc.UseMuPDF = true;
@@ -95,14 +94,14 @@ namespace PdfBookReader.Render
             PerfInfo = new PdfRenderPerformanceInfo();
         }
 
-        static bool LoadFile(string filename, PDFWrapper pdfDoc)
+        static bool LoadFile(string filename, DW<PDFWrapper> pdfDoc)
         {
             try
             {
                 // Not supported by MuPDF: 
                 // pdfDoc.LoadPDF(fileStream);
 
-                bool loaded = pdfDoc.LoadPDF(filename);
+                bool loaded = pdfDoc.o.LoadPDF(filename);
                 return loaded;
             }
             catch (System.Security.SecurityException)
@@ -166,7 +165,7 @@ namespace PdfBookReader.Render
         const double ZoomConst = 72.0;
 
 
-        public Bitmap RenderPage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.Optimal)
+        public DW<Bitmap> RenderPage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.Optimal)
         {
             if (pageNum < 1) { throw new ArgumentException("pageNum < 1. Should start at 1"); }
             AssertPdfDocLoaded();
@@ -178,7 +177,7 @@ namespace PdfBookReader.Render
             }
 
             DateTime startTime = DateTime.Now;
-            Bitmap image = RenderPageCore(pageNum, maxSize, quality);
+            DW<Bitmap> image = RenderPageCore(pageNum, maxSize, quality);
 
             double time = (DateTime.Now - startTime).TotalMilliseconds;
             PerfInfo.SaveTime(time, quality);
@@ -186,45 +185,45 @@ namespace PdfBookReader.Render
             return image;
         }
 
-        Bitmap RenderPageCore(int pageNum, Size maxSize, RenderQuality quality)
+        DW<Bitmap> RenderPageCore(int pageNum, Size maxSize, RenderQuality quality)
         {
-            if (pageNum < 1 || pageNum > _pdfDoc.PageCount) { return null; }
+            if (pageNum < 1 || pageNum > _pdfDoc.o.PageCount) { return null; }
 
-            _pdfDoc.CurrentPage = pageNum;
+            _pdfDoc.o.CurrentPage = pageNum;
 
-            _pdfDoc.UseMuPDF = false;
-            if (_pdfDoc.SupportsMuPDF && quality == RenderQuality.HighQuality) 
+            _pdfDoc.o.UseMuPDF = false;
+            if (_pdfDoc.o.SupportsMuPDF && quality == RenderQuality.HighQuality) 
             { 
-                _pdfDoc.UseMuPDF = true; 
+                _pdfDoc.o.UseMuPDF = true; 
             }
 
             // Scale            
-            Size pageSize = new Size(_pdfDoc.PageWidth, _pdfDoc.PageHeight);
+            Size pageSize = new Size(_pdfDoc.o.PageWidth, _pdfDoc.o.PageHeight);
             Size size = pageSize.ScaleToFitBounds(maxSize);
 
             // 24bpp format for compatibility with AForge
-            Bitmap bitmap = new Bitmap(size.Width, size.Height, PixelFormat.Format24bppRgb);
+            DW<Bitmap> bitmap = DW.Wrap(new Bitmap(size.Width, size.Height, PixelFormat.Format24bppRgb));
 
-            using (Graphics g = Graphics.FromImage(bitmap))
+            using (Graphics g = Graphics.FromImage(bitmap.o))
             {
-                _pdfDoc.Zoom = ZoomConst * (double)bitmap.Width / _pdfDoc.PageWidth;
+                _pdfDoc.o.Zoom = ZoomConst * (double)bitmap.o.Width / _pdfDoc.o.PageWidth;
                 try
                 {
                     // Note: not certain what the params mean.
                     // Simple RenderPage sometimes does not zoom properly
-                    _pdfDoc.RenderPage(g.GetHdc(), true, false);
+                    _pdfDoc.o.RenderPage(g.GetHdc(), true, false);
                     g.ReleaseHdc();
                 }
                 finally
                 {
-                    _pdfDoc.Zoom = ZoomConst;
+                    _pdfDoc.o.Zoom = ZoomConst;
                 }
 
-                Rectangle bounds = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+                Rectangle bounds = new Rectangle(0, 0, bitmap.o.Width, bitmap.o.Height);
                 g.FillRectangle(Brushes.White, bounds);
 
-                _pdfDoc.ClientBounds = bounds;
-                _pdfDoc.DrawPageHDC(g.GetHdc());
+                _pdfDoc.o.ClientBounds = bounds;
+                _pdfDoc.o.DrawPageHDC(g.GetHdc());
                 g.ReleaseHdc();
             }
 

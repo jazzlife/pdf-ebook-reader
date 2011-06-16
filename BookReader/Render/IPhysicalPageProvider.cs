@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using PdfBookReader.Utils;
 
 namespace PdfBookReader.Render
 {
@@ -31,7 +32,7 @@ namespace PdfBookReader.Render
         /// <param name="maxSize">Maximum size to fit the page within (preserving aspect ratio)</param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        Bitmap RenderPage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality);
+        DW<Bitmap> RenderPage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality);
     }
 
     public enum RenderQuality

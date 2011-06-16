@@ -13,14 +13,14 @@ namespace PdfBookReader.Render
     /// <summary>
     /// Analyzes the page layout based on connected blobs contained within it.
     /// </summary>
-    class DefaultPageLayoutAnalyzer : IPageLayoutAnalyzer
+    class BlobPageLayoutAnalyzer : IPageLayoutAnalyzer
     {
 
-        public PageLayoutInfo DetectPageLayout(Bitmap bmp)
+        public PageLayoutInfo DetectPageLayout(DW<Bitmap> bmp)
         {
             ArgCheck.NotNull(bmp, "bmp");
 
-            PageLayoutInfo layout = new PageLayoutInfo(bmp.Size);
+            PageLayoutInfo layout = new PageLayoutInfo(bmp.o.Size);
 
             DetectBlobs(ref layout, bmp);
             layout.Bounds = BoundsAroundBlobs(layout.Blobs);
@@ -29,18 +29,21 @@ namespace PdfBookReader.Render
             return layout;
         }
 
-        void DetectBlobs(ref PageLayoutInfo cbi, Bitmap bmp)
+        void DetectBlobs(ref PageLayoutInfo cbi, DW<Bitmap> bmp)
         {
             Invert filter = new Invert();
-            filter.ApplyInPlace(bmp);
+            filter.ApplyInPlace(bmp.o);
 
             BlobCounter bc = new BlobCounter();
             bc.BackgroundThreshold = Color.FromArgb(8, 8, 8);
 
-            bc.BlobsFilter = new BlobsFilter(bmp.Size);
+            bc.BlobsFilter = new BlobsFilter(bmp.o.Size);
             bc.FilterBlobs = true;
 
-            bc.ProcessImage(bmp);
+            bc.ProcessImage(bmp.o);
+
+            // Revert back
+            filter.ApplyInPlace(bmp.o);
 
             cbi.Blobs.AddRange(bc.GetObjectsInformation());
         }

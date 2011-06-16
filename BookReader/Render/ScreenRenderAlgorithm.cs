@@ -5,6 +5,7 @@ using System.Text;
 using System.Drawing;
 using System.Diagnostics;
 using System.Drawing.Imaging;
+using PdfBookReader.Utils;
 
 namespace PdfBookReader.Render
 {
@@ -21,7 +22,7 @@ namespace PdfBookReader.Render
             protected ScreenPageProvider p;
             public RenderBase(ScreenPageProvider provider) { p = provider; }
 
-            public Bitmap Run()
+            public DW<Bitmap> Run()
             {
                 // Use bottom page from previous screen, or get an appropriate one
                 PageContent curPage = GetStartingPage();
@@ -32,8 +33,8 @@ namespace PdfBookReader.Render
                     curPage.TopOnScreen >= p.ScreenSize.Height) { return null; }
 
                 // 24bpp format for compatibility with AForge
-                Bitmap screenBmp = new Bitmap(p.ScreenSize.Width, p.ScreenSize.Height, PixelFormat.Format24bppRgb);
-                using (Graphics g = Graphics.FromImage(screenBmp))
+                DW<Bitmap> screenBmp = DW.Wrap(new Bitmap(p.ScreenSize.Width, p.ScreenSize.Height, PixelFormat.Format24bppRgb));
+                using (Graphics g = Graphics.FromImage(screenBmp.o))
                 {
                     p.DrawScreenBefore(g);
 

@@ -23,7 +23,7 @@ namespace PdfBookReader.Render
         PageLayoutInfo _layout; // content layout
 
         // Serialized separately
-        Bitmap _image; // physical page image
+        DW<Bitmap> _image; // physical page image
 
         // Not serialized
         /// <summary>
@@ -32,7 +32,7 @@ namespace PdfBookReader.Render
         /// </summary>
         public int TopOnScreen = 0;
 
-        public PageContent(int pageNum, Bitmap image, PageLayoutInfo layout)
+        public PageContent(int pageNum, DW<Bitmap> image, PageLayoutInfo layout)
         {
             ArgCheck.GreaterThanOrEqual(pageNum, 1, "pageNum");
             //ArgCheck.NotNull(image);
@@ -42,7 +42,7 @@ namespace PdfBookReader.Render
             _layout = layout;
         }
 
-        public Bitmap Image { get { return _image; } }
+        public DW<Bitmap> Image { get { return _image; } }
         public PageLayoutInfo Layout { get { return _layout; } }
 
         // For convenience

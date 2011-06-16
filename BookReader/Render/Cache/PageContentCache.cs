@@ -5,6 +5,7 @@ using System.Text;
 using PdfBookReader.Utils;
 using System.Drawing;
 using System.IO;
+using NLog;
 
 namespace PdfBookReader.Render.Cache
 {
@@ -13,6 +14,8 @@ namespace PdfBookReader.Render.Cache
     /// </summary>
     class PageContentCache : ICache<string, PageContent>
     {
+        readonly static Logger Log = LogManager.GetCurrentClassLogger();
+
         readonly object MyLock = new object();
 
         PageContentDiskCache _diskCache;
@@ -72,15 +75,21 @@ namespace PdfBookReader.Render.Cache
             lock (MyLock)
             {
                 PageContent item = _memoryCache.Get(key);
-                if (item == null)
+                if (item != null)
                 {
-                    item = _diskCache.Get(key);
-                    if (item != null)
-                    {
-                        _memoryCache.Add(key, item);
-                    }
+                    Log.Debug("Get: Page in memory cache: " + key);
+                    return item;
                 }
-                return item;
+
+                item = _diskCache.Get(key);
+                if (item != null)
+                {
+                    Log.Debug("Get: Page in disk cache: " + key);
+                    _memoryCache.Add(key, item);
+                    return item;
+                }
+
+                return null;
             }
         }
 
