@@ -56,7 +56,7 @@ namespace PdfBookReader.Render.Cache
             // Order by last use date
             // Take items over the optimal count
             var keysToRemove = cache
-                .Where(x => x.Value.Priority != ItemRetainPriority.AlwaysRetain)
+                //.Where(x => x.Value.Priority != ItemRetainPriority.AlwaysRetain)
                 .OrderBy(x => x.Value.LastAccessTime)
                 .Select(x => x.Key)
                 .Take(cache.Count - _optimalItemCount);

@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.ComponentModel;
 using System.Drawing;
 using PdfBookReader.Utils;
+using PdfBookReader.Render.Cache;
 
 namespace PdfBookReader.UI
 {
@@ -13,17 +14,9 @@ namespace PdfBookReader.UI
     {
         float _value = 0;
 
-        // Page numbers
-        float _incrementSize = 0;
-        HashSet<int> _loadedPageNumbers = new HashSet<int>();
 
         Brush _bBlank = new SolidBrush(SystemColors.ControlDarkDark);
-        //Brush _bBlankLoaded = new SolidBrush(SystemColors.ControlDarkDark.NewShade(1.1, 1.1, 1.3));
-        Brush _bBlankLoaded = Brushes.DarkCyan;
-
         Brush _bFull = new SolidBrush(SystemColors.ControlDark);
-        //Brush _bFullLoaded = new SolidBrush(SystemColors.ControlDark.NewShade(0.9, 0.9, 1.1));
-        Brush _bFullLoaded = Brushes.Cyan;
 
 
         public float Value
@@ -50,23 +43,42 @@ namespace PdfBookReader.UI
             e.Graphics.FillRectangle(_bFull, 0, 0, Value * Width, Height);
 
             // Loaded pages (if any)
-            if (PageIncrementSize > 0 && _loadedPageNumbers.Count > 0)
-            {
-                foreach(int pageNum in _loadedPageNumbers)
-                {
-                    float pos = (pageNum - 1) * PageIncrementSize;
-                    Brush b = (pos <= Value) ? _bFullLoaded : _bBlankLoaded;
-                    
-                    // Draw *before* current page
-                    e.Graphics.FillRectangle(b, (pos - PageIncrementSize) * Width, 0, PageIncrementSize * Width, Height);
-                }
-            }
+            PaintCacheState(e);
 
             // Border, position
             e.Graphics.DrawLineVertical(Pens.White, (int)(Value * Width));
             e.Graphics.DrawRectangle(Pens.DarkGray, bounds);
 
             base.OnPaint(e);
+        }
+
+        // DEBUG
+
+        #region Cache painting
+        // Page numbers
+        float _incrementSize = 0;
+        IEnumerable<int> _memoryPages;
+        IEnumerable<int> _diskPages;
+
+        private void PaintCacheState(PaintEventArgs e)
+        {
+            if (PageIncrementSize == 0 ||
+                _diskPages == null ||
+                _memoryPages == null) { return; }
+
+            foreach (int pageNum in _diskPages)
+            {
+                float pos = (pageNum - 1) * PageIncrementSize;
+
+                e.Graphics.FillRectangle(Brushes.Blue, (pos - PageIncrementSize) * Width, Height / 3, PageIncrementSize * Width, Height);
+            }
+
+            foreach (int pageNum in _memoryPages)
+            {
+                float pos = (pageNum - 1) * PageIncrementSize;
+
+                e.Graphics.FillRectangle(Brushes.Orange, (pos - PageIncrementSize) * Width, 2 * Height / 3, PageIncrementSize * Width, Height);
+            }
         }
 
         public float PageIncrementSize
@@ -81,24 +93,17 @@ namespace PdfBookReader.UI
             }
         }
 
-        public void AddLoadedPage(int pageNumber)
+        public void SetLoadedPages(IEnumerable<int> memoryPages, IEnumerable<int> diskPages)
         {
-            _loadedPageNumbers.Add(pageNumber);
+            if (memoryPages == _memoryPages &&
+                diskPages == _diskPages) { return; }
+
+            _memoryPages = memoryPages;
+            _diskPages = diskPages;
             Invalidate();
         }
 
-        public void AddLoadedPages(IEnumerable<int> pageNumbers)
-        {
-            pageNumbers.ForEach(x=> _loadedPageNumbers.Add(x));
-            Invalidate();
-        }
-
-        public void ClearLoadedPages()
-        {
-            _loadedPageNumbers.Clear();
-            Invalidate();
-        }
-
+        #endregion
 
     }
 }

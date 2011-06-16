@@ -47,9 +47,9 @@
             this.pMargins = new System.Windows.Forms.Panel();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.bLibrary = new System.Windows.Forms.ToolStripButton();
-            this.lbPageNum = new System.Windows.Forms.ToolStripLabel();
             this.bPrevPage = new System.Windows.Forms.ToolStripButton();
             this.bNextPage = new System.Windows.Forms.ToolStripButton();
+            this.lbPageNum = new System.Windows.Forms.ToolStripLabel();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -58,6 +58,7 @@
             this.bWidthMinus = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.timerResize = new System.Windows.Forms.Timer(this.components);
+            this.timerCacheDisplay = new System.Windows.Forms.Timer(this.components);
             this.bookProgressBar = new PdfBookReader.UI.BookProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.pbContent)).BeginInit();
             this.pMargins.SuspendLayout();
@@ -72,7 +73,7 @@
             this.pbContent.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
             this.pbContent.Location = new System.Drawing.Point(20, 20);
             this.pbContent.Name = "pbContent";
-            this.pbContent.Size = new System.Drawing.Size(560, 560);
+            this.pbContent.Size = new System.Drawing.Size(560, 538);
             this.pbContent.TabIndex = 1;
             this.pbContent.TabStop = false;
             this.pbContent.Resize += new System.EventHandler(this.pbContent_Resize);
@@ -84,7 +85,7 @@
             this.pMargins.Controls.Add(this.pbContent);
             this.pMargins.Location = new System.Drawing.Point(130, 0);
             this.pMargins.Name = "pMargins";
-            this.pMargins.Size = new System.Drawing.Size(600, 600);
+            this.pMargins.Size = new System.Drawing.Size(600, 578);
             this.pMargins.TabIndex = 2;
             // 
             // toolStrip
@@ -121,14 +122,6 @@
             this.bLibrary.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
             this.bLibrary.Click += new System.EventHandler(this.bLibrary_Click);
             // 
-            // lbPageNum
-            // 
-            this.lbPageNum.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.lbPageNum.ForeColor = System.Drawing.Color.White;
-            this.lbPageNum.Name = "lbPageNum";
-            this.lbPageNum.Size = new System.Drawing.Size(58, 15);
-            this.lbPageNum.Text = "1/100";
-            // 
             // bPrevPage
             // 
             this.bPrevPage.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
@@ -150,6 +143,14 @@
             this.bNextPage.Text = "Next";
             this.bNextPage.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
             this.bNextPage.Click += new System.EventHandler(this.bNextPage_Click);
+            // 
+            // lbPageNum
+            // 
+            this.lbPageNum.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.lbPageNum.ForeColor = System.Drawing.Color.White;
+            this.lbPageNum.Name = "lbPageNum";
+            this.lbPageNum.Size = new System.Drawing.Size(58, 15);
+            this.lbPageNum.Text = "1/100";
             // 
             // toolStripLabel2
             // 
@@ -208,12 +209,19 @@
             // 
             this.timerResize.Tick += new System.EventHandler(this.timerResize_Tick);
             // 
+            // timerCacheDisplay
+            // 
+            this.timerCacheDisplay.Enabled = true;
+            this.timerCacheDisplay.Interval = 2000;
+            this.timerCacheDisplay.Tick += new System.EventHandler(this.timerCacheDisplay_Tick);
+            // 
             // bookProgressBar
             // 
             this.bookProgressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.bookProgressBar.Location = new System.Drawing.Point(60, 590);
+            this.bookProgressBar.Location = new System.Drawing.Point(60, 578);
             this.bookProgressBar.Name = "bookProgressBar";
-            this.bookProgressBar.Size = new System.Drawing.Size(740, 10);
+            this.bookProgressBar.PageIncrementSize = 0F;
+            this.bookProgressBar.Size = new System.Drawing.Size(740, 22);
             this.bookProgressBar.TabIndex = 4;
             this.bookProgressBar.Text = "bookProgressBar";
             this.bookProgressBar.Value = 0F;
@@ -255,5 +263,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripLabel toolStripLabel2;
         private BookProgressBar bookProgressBar;
+        private System.Windows.Forms.Timer timerCacheDisplay;
     }
 }

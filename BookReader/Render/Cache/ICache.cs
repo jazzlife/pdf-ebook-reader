@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace PdfBookReader.Render.Cache
 {
-    public interface ICache<TKey, TValue>
+    public interface ICache<TKey, TValue> : IDisposable
     {
         /// <summary>
         /// True if cache contains the item.
@@ -45,6 +45,11 @@ namespace PdfBookReader.Render.Cache
         /// <param name="key"></param>
         /// <param name="newPriority"></param>
         void UpdatePriority(TKey key, ItemRetainPriority newPriority);
+
+        /// <summary>
+        /// For testing purposes. Returns a copy, may be slow.
+        /// </summary>
+        IEnumerable<TKey> GetAllKeys();
     }
 
     public static class CacheUtils
@@ -65,7 +70,7 @@ namespace PdfBookReader.Render.Cache
                         String basePath = @"E:\temp";
                         if (!Directory.Exists(basePath)) 
                         {
-                            basePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                            basePath = Path.GetTempPath();
                         }
 
                         String dirName = Path.GetFileNameWithoutExtension(Application.ExecutablePath) + "-cache";

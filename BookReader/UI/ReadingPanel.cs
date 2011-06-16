@@ -60,7 +60,8 @@ namespace PdfBookReader.UI
                 // (no the first "current" page).
                 CurrentPageImage = ScreenProvider.RenderCurrentPage(pbContent.Size);
                 UpdateUIState();
-                FillProgressBarWithCacheInfo();
+
+                bookProgressBar.PageIncrementSize = 1.0f / PhysicalPageProvider.PageCount;
             }
         }
 
@@ -75,31 +76,7 @@ namespace PdfBookReader.UI
             if (pos < 0) { pos = 0; }
 
             CurrentPageImage = ScreenProvider.RenderPage(pos);
-
-            FillProgressBarWithCacheInfo();
-
             UpdateUIState();
-        }
-
-        // Display progress at start
-        void FillProgressBarWithCacheInfo()
-        {
-            /*
-            if (PhysicalPageProvider == null || _pageCache == null) { return; }
-
-            bookProgressBar.ClearLoadedPages();
-            bookProgressBar.PageIncrementSize = 1.0f / PhysicalPageProvider.PageCount;
-
-            List<int> cachedPages = new List<int>();
-            for(int pageCount = 0; pageCount <= PhysicalPageProvider.PageCount; pageCount++)
-            {
-                if (_pageCache.ContainsPage(PhysicalPageProvider.FullPath, pageCount, ScreenProvider.ScreenSize.Width))
-                {
-                    cachedPages.Add(pageCount);
-                }
-            }
-            bookProgressBar.AddLoadedPages(cachedPages);
-             */
         }
 
         #endregion
@@ -150,7 +127,6 @@ namespace PdfBookReader.UI
 
             CurrentPageImage = ScreenProvider.RenderCurrentPage(pbContent.Size);
 
-            FillProgressBarWithCacheInfo();
             UpdateUIState();
         }
 
@@ -205,6 +181,26 @@ namespace PdfBookReader.UI
         {
             pMargins.Width -= WidthIncrement;
             pMargins.Left += WidthIncrement / 2;            
+        }
+
+        private void timerCacheDisplay_Tick(object sender, EventArgs e)
+        {
+            // NOTE: remarkably inefficient, for debugging only
+
+            if (_pageCache != null)
+            {
+                if (Book == null)
+                {
+                    bookProgressBar.SetLoadedPages(null, null);
+                }
+                else
+                {
+                    var memPages = _pageCache.GetMemoryPageNums(Book.Filename, ScreenProvider.ScreenSize.Width);
+                    var diskPages = _pageCache.GetDiskPageNums(Book.Filename, ScreenProvider.ScreenSize.Width);
+                    bookProgressBar.SetLoadedPages(memPages, diskPages);
+                }
+
+            }
         }
 
 

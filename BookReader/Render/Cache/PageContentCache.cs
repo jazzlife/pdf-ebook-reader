@@ -27,7 +27,6 @@ namespace PdfBookReader.Render.Cache
             _bookIds = XmlHelper.DeserializeOrDefault(BookIdsFilename, new Dictionary<string, Guid>());
         }
 
-
         public bool Contains(string key)
         {
             lock (MyLock)
@@ -146,5 +145,51 @@ namespace PdfBookReader.Render.Cache
             return id;
         }
 
+        // Test
+        #region Debug / Test
+
+        public IEnumerable<string> GetAllKeys() { throw new NotImplementedException("Not implemented"); }
+
+        int GetPageNum(String key) 
+        { 
+            return int.Parse(key.Substring(key.LastIndexOf("_p") + 2)); 
+        }
+        
+        public IEnumerable<int> GetMemoryPageNums(String fullFilePath, int width)
+        {
+            lock (MyLock)
+            {
+                String item = width + "_" + GetBookId(fullFilePath);
+
+                return _memoryCache.GetAllKeys()
+                    .Where(x => x.StartsWith(item))
+                    .Select(x => GetPageNum(x)); 
+            }
+        }
+        public IEnumerable<int> GetDiskPageNums(String fullFilePath, int width)
+        {
+            lock (MyLock)
+            {
+                String item = width + "_" + GetBookId(fullFilePath);
+
+                return _diskCache.GetAllKeys()
+                    .Where(x => x.StartsWith(item))
+                    .Select(x => GetPageNum(x));
+            }
+        }
+
+        #endregion
+
+
+        public void Dispose()
+        {
+            if (_memoryCache == null) { return; }
+
+            _memoryCache.Dispose();
+            _diskCache.Dispose();
+
+            _memoryCache = null;
+            _diskCache = null;
+        }
     }
 }

@@ -21,20 +21,18 @@ namespace PdfBookReader.Test
         [Test]
         public void RenderNormalFileNoCache()
         {
-            RenderOneFile(new PerfTimer("Render"), 
+            RenderOneFile(new PTimer("Render"), 
                 Path.Combine(TestConst.PdfFilePath, @"Clean Margins Pictures - Balasevic.pdf"));
         }
 
         [Test]
         public void RenderBigSlowFileNoCache()
         {
-            RenderOneFile(new PerfTimer("Render"),
+            RenderOneFile(new PTimer("Render"),
                 Path.Combine(TestConst.PdfFilePath, @"Bad Scan Tilted Facing Pages Big - Solzhenitsyn.pdf"));
         }
 
-
-
-        void RenderOneFile(PerfTimer timer, String file)
+        void RenderOneFile(PTimer timer, String file)
         {
             DefaultPageContentProvider dpcp = new DefaultPageContentProvider(null);
 
@@ -48,7 +46,7 @@ namespace PdfBookReader.Test
             const int RenderPreviousRepeats = 5;
 
 
-            PerfTimer fileTimer = new PerfTimer("{0} file: {1}", timer.Name, Path.GetFileName(file));
+            PTimer fileTimer = new PTimer("{0} file: {1}", timer.Name, Path.GetFileName(file));
 
             // Render first, forward
             using(IDisposable a = timer.NewRun, b = fileTimer.NewRun)
