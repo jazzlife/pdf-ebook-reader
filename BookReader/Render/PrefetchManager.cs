@@ -27,6 +27,8 @@ namespace PdfBookReader.Render
             Cache = cache;
         }
 
+        AutoResetEvent _currentBookDoneWait = new AutoResetEvent(false);
+
         public DW<ScreenPageProvider> CurrentBook
         {
             get { return _currentBook; }
@@ -54,8 +56,7 @@ namespace PdfBookReader.Render
 
         void OnPositionChanged(object sender, EventArgs e)
         {
-            // TODO -- what exactly?
-            // throw new NotImplementedException();
+            _currentBookDoneWait.Set();
         }
 
         // Must be notified of changes in ScreenPageProvider...
@@ -80,12 +81,7 @@ namespace PdfBookReader.Render
 
                 if (PrefetchStartingAtCurrentPage())
                 {
-                    // TODO: something more sensible than just sleeping.
-                    // e.g. Wait and pulse when book changes
-                    Thread.Sleep(1000);
-
-                    // TODO: render the start of other books if this one
-                    // is done
+                    _currentBookDoneWait.WaitOne();
                 }
             }
         }
