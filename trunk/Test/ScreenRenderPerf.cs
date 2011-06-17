@@ -11,7 +11,7 @@ using System.Drawing;
 namespace PdfBookReader.Test
 {
     [TestFixture]
-    class ScreenRenderPerformanceTest
+    class ScreenRenderPerf
     {
         Size ScreenSize = new Size(800, 600);
 
