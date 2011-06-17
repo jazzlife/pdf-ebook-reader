@@ -55,7 +55,7 @@ namespace PdfBookReader.Render
         void OnPositionChanged(object sender, EventArgs e)
         {
             // TODO -- what exactly?
-            //throw new NotImplementedException();
+            // throw new NotImplementedException();
         }
 
         // Must be notified of changes in ScreenPageProvider...
@@ -65,7 +65,7 @@ namespace PdfBookReader.Render
             {
                 lock (MyLock)
                 {
-                    return (int)(CurrentBook.o.Position * CurrentBook.o.PhysicalPageProvider.PageCount) + 1;
+                    return (int)(CurrentBook.o.PhysicalPagePosition);
                 }
             }
         }
@@ -100,27 +100,48 @@ namespace PdfBookReader.Render
             int pageCount = CurrentBook.o.PhysicalPageProvider.PageCount;
             Size currentScreenSize = CurrentBook.o.ScreenSize;
 
-            // Next page until end
-            for (int pageNum = currentPageNum; pageNum <= pageCount; pageNum++)
+            foreach(int pageNum in GetPrefretchPageNumbers(currentPageNum, pageCount))
             {
-                PrefetchPage(currentBook, pageNum);
-
-                // Quite if current page changed
+                // Quit if current page changed
                 if (ShouldRestartFetch(currentBook, currentPageNum, currentScreenSize)) { return false; }
-            }
 
-            // Fill back from start
-            for (int pageNum = 1; pageNum < currentPageNum; pageNum++)
-            {
                 PrefetchPage(currentBook, pageNum);
-
-                // Quite if current page changed
-                if (ShouldRestartFetch(currentBook, currentPageNum, currentScreenSize)) { return false; }
             }
-
-            // TODO: maybe fill a bit backwards from current (after filling sufficiently forward).
-
             return true;
+        }
+
+        /// <summary>
+        /// Get the order in which to prefetch
+        /// </summary>
+        /// <param name="currentPageNum"></param>
+        /// <param name="pageCount"></param>
+        /// <returns></returns>
+        IEnumerable<int> GetPrefretchPageNumbers(int currentPageNum, int pageCount)
+        {
+            // current page is fetched by normal channels
+
+            const int PrefetchForward = 30;
+            const int PrefetchBack = 10;
+
+            int forwardMax = Math.Min(currentPageNum + PrefetchForward, pageCount);
+            int backwardMin = Math.Max(currentPageNum - PrefetchBack, 1);
+
+            int forwardNum = currentPageNum + 1;
+            int backwardNum = currentPageNum - 1;
+
+            // Two steps forward, one step back
+            while (true)
+            {
+                if (forwardNum <= forwardMax) { yield return forwardNum; }
+                ++forwardNum;
+                if (forwardNum <= forwardMax) { yield return forwardNum; }
+                ++forwardNum;
+
+                if (backwardNum >= backwardMin) { yield return backwardNum; }
+                --backwardNum;
+
+                if (backwardMin > backwardNum && forwardNum > forwardMax) { break; }
+            }
         }
 
         bool ShouldRestartFetch(DW<ScreenPageProvider> currentBook, int currentPageNum, Size currentSize)
@@ -131,7 +152,6 @@ namespace PdfBookReader.Render
             if (currentSize.Width != CurrentBook.o.ScreenSize.Width) { return true; }
 
             return false;
-
         }
 
         public void Start()
@@ -167,18 +187,20 @@ namespace PdfBookReader.Render
                     return;
                 }
 
-                if (!Cache.o.Contains(
+                if (!Cache.o.MemoryCacheContains(
                         CurrentBook.o.PhysicalPageProvider.FullPath,
                         pageNum,
                         CurrentBook.o.ScreenSize.Width))
                 {
-                    CurrentBook.o.ContentProvider.RenderPhysicalPage(
+                    PageContent pc = CurrentBook.o.ContentProvider.RenderPhysicalPage(
                         pageNum,
                         CurrentBook.o.ScreenSize,
                         CurrentBook.o.PhysicalPageProvider);
+                    pc.Return();
                 }
 
                 // set priority
+                /*
                 ItemRetainPriority priority = ItemRetainPriority.Normal;
                 int currentPageNum = PhysicalPageNum;
                 if (pageNum < 5 || 
@@ -191,6 +213,7 @@ namespace PdfBookReader.Render
                         CurrentBook.o.PhysicalPageProvider.FullPath,
                         pageNum,
                         CurrentBook.o.ScreenSize.Width, priority);
+                */
 
 
             }

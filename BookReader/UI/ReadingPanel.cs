@@ -145,10 +145,13 @@ namespace PdfBookReader.UI
 
         void UpdateBookProgressBar()
         {
-            float posF = ScreenProvider.o.Position;
-            int pageCount = ScreenProvider.o.PhysicalPageProvider.PageCount;
-            bookProgressBar.Value = posF;
-            lbPageNum.Text = String.Format("{0:0.0}/{1}", 1 + (posF * pageCount), pageCount);
+            // TODO: shift progress so it's full at last page
+            bookProgressBar.Value = ScreenProvider.o.Position;
+
+            int pageCount = ScreenProvider.o.PhysicalPageCount;
+            lbPageNum.Text = String.Format("{0:0.0}/{1}", 
+                ScreenProvider.o.PhysicalPagePosition, 
+                ScreenProvider.o.PhysicalPageCount);
         }
         #endregion
 

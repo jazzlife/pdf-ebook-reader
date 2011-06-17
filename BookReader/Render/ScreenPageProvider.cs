@@ -83,7 +83,20 @@ namespace PdfBookReader.Render
         {
             get
             {
-                float pageIndex = (TopPage == null) ? 0 : TopPage.PageNum - 1;
+                float pageNum = PhysicalPagePosition;
+                float position = (pageNum - 1) / PhysicalPageCount;
+                return position;
+            }
+        }
+
+        /// <summary>
+        /// Position in terms of physical pages. Ranges between 1 and PhysicalPageCount, inclusive
+        /// </summary>
+        public float PhysicalPagePosition
+        {
+            get
+            {
+                float pageNum = (TopPage == null) ? 1 : TopPage.PageNum;
 
                 // Position within physical page (since screen breaks != physical page breaks)
                 float positionWithinPage = 0;
@@ -94,17 +107,21 @@ namespace PdfBookReader.Render
                     positionWithinPage = -(float)TopPage.TopOnScreen / TopPage.Layout.Bounds.Height;
                 }
 
-                pageIndex += positionWithinPage;
+                pageNum += positionWithinPage;
 
-                float position = pageIndex / PhysicalPageProvider.PageCount;
+                // Slight overflow can happen withn rendering forward/backward
+                // (e.g. when rendering backwards, first page starting in the middle)
+                if (pageNum < 1) { pageNum = 1; }
+                if (pageNum > PhysicalPageCount) { pageNum = PhysicalPageCount; }
 
-                // This can happen (e.g. when page top is positive 
-                // on first page after iterating backwards)
-                if (position < 0) { position = 0; }
-                if (position > 1) { position = 1; }
-
-                return position;
+                return pageNum;
             }
+        }
+
+        public int PhysicalPageCount
+        {
+            get { return PhysicalPageProvider.PageCount; }
+
         }
 
         /// <summary>

@@ -48,6 +48,21 @@ namespace PdfBookReader.Render.Cache
             }
         }
 
+        public bool MemoryCacheContains(string key)
+        {
+            lock (MyLock)
+            {
+                return _memoryCache.Contains(key);
+            }
+        }
+        public bool MemoryCacheContains(String fullFilePath, int pageNum, int width)
+        {
+            lock (MyLock)
+            {
+                return MemoryCacheContains(GetKey(fullFilePath, pageNum, width));
+            }
+        }
+
         public void Add(string key, PageContent value)
         {
             lock (MyLock)

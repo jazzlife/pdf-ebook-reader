@@ -57,8 +57,10 @@ namespace PdfBookReader.Render.Cache
             PageContent tempPc = base.Get(key); // temporary value, no image
             if (tempPc == null) { return null; }
 
-            // TODO: try/catch around file access
             String filename = GetFullPath(key);
+            if (!File.Exists(filename)) { return null; }
+
+            // TODO: try/catch around file access
             DW<Bitmap> b = DW.Wrap(new Bitmap(filename));
 
             return new PageContent(tempPc.PageNum, b, tempPc.Layout);
