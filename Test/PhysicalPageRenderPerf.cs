@@ -16,7 +16,7 @@ using Utils;
 namespace PdfBookReader.Test
 {
     [TestFixture]
-    class PerformanceTest
+    class PhysicalPageRenderPerf
     {
         Size PageSize = new Size(1000, int.MaxValue);
 

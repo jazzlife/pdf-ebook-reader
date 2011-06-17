@@ -15,7 +15,7 @@ using PdfBookReader.Render.Cache;
 namespace PdfBookReader.Test
 {
     [TestFixture]
-    public class BlobPageLayoutAnalyzerTest
+    public class BlobPageLayoutAnalyzerPerf
     {
         IEnumerable<String> GetPageImageFiles()
         {
