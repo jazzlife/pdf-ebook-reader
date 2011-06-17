@@ -212,7 +212,7 @@
             // timerCacheDisplay
             // 
             this.timerCacheDisplay.Enabled = true;
-            this.timerCacheDisplay.Interval = 2000;
+            this.timerCacheDisplay.Interval = 1000;
             this.timerCacheDisplay.Tick += new System.EventHandler(this.timerCacheDisplay_Tick);
             // 
             // bookProgressBar
