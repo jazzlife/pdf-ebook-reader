@@ -86,15 +86,18 @@
     <Compile Include="Metadata\Book.cs" />
     <Compile Include="Metadata\BookLibrary.cs" />
     <Compile Include="Metadata\PositionInfo.cs" />
+    <Compile Include="Render\Cache\CachePrefetchPolicy.cs" />
     <Compile Include="Render\Cache\PageContentCache.cs" />
+    <Compile Include="Render\Cache\PageContentPrefetchPolicy.cs" />
     <Compile Include="Render\Cache\PageContentMemoryCache.cs" />
     <Compile Include="Render\Cache\PageContentDiskCache.cs" />
     <Compile Include="Render\Cache\IExpirationPolicy.cs" />
+    <Compile Include="Render\Cache\PageKey.cs" />
     <Compile Include="Render\Cache\SimpleCache.cs" />
     <Compile Include="Render\DefaultPageContentProvider.cs" />
     <Compile Include="Render\IPageContentProvider.cs" />
     <Compile Include="Render\PdfRenderPerformanceInfo.cs" />
-    <Compile Include="Render\PrefetchManager.cs" />
+    <Compile Include="Render\Cache\PrefetchManager.cs" />
     <Compile Include="Render\TheadSafe.cs" />
     <Compile Include="UI\BookListViewItem.cs" />
     <Compile Include="UI\BookProgressBar.cs">
@@ -124,7 +127,7 @@
     <Compile Include="Render\BlobPageLayoutAnalyzer.cs" />
     <Compile Include="Utils\DebugOnlyAttribute.cs" />
     <Compile Include="Render\IPageLayoutAnalyzer.cs" />
-    <Compile Include="Render\IPhysicalPageProvider.cs" />
+    <Compile Include="Render\IBookPageProvider.cs" />
     <Compile Include="Render\LayoutInfo.cs" />
     <Compile Include="Render\PageLayoutInfo.cs" />
     <Compile Include="Render\PdfBookPageProvider.cs" />
@@ -137,6 +140,7 @@
     <Compile Include="Utils\ExtensionMethods.cs" />
     <Compile Include="Render\Cache\ICache.cs" />
     <Compile Include="Render\Cache\ICachedDisposable.cs" />
+    <Compile Include="Utils\LinqExtensions.cs" />
     <Compile Include="Utils\LogUtils.cs" />
     <Compile Include="Utils\PathX.cs" />
     <Compile Include="Utils\XmlHelper.cs" />

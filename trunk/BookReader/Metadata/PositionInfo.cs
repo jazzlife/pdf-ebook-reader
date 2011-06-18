@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using PdfBookReader.Utils;
+using System.Runtime.Serialization;
 
 namespace PdfBookReader.Metadata
 {
@@ -14,7 +15,8 @@ namespace PdfBookReader.Metadata
     /// Exact position (in terms of total height of all pages) is unknwon, since page 
     /// heights can vary and are not all known. 
     /// </remarks>
-    public struct PositionInfo
+    [DataContract]
+    public class PositionInfo
     {
         /// <summary>
         /// Position of the top of the current screen in terms of physical pages.
@@ -25,12 +27,14 @@ namespace PdfBookReader.Metadata
         /// Special range (PageCount - 1, PageCount) 
         /// means screen top is below last page top (rendering forward).
         /// </summary>
-        public readonly float Position;
+        [DataMember]
+        public float Position { get; private set; }
        
         /// <summary>
         /// Total number of physical pages.
         /// </summary>
-        public readonly int PageCount;
+        [DataMember]
+        public int PageCount { get; private set; }
 
         private PositionInfo(float position, int pageCount)
         {

@@ -5,7 +5,7 @@ using System.Text;
 using NUnit.Framework;
 using PdfBookReader.Utils;
 
-namespace PdfBookReader.Test.Utils
+namespace PdfBookReaderTest.Utils
 {
     [TestFixture]
     public class ExtensionMethodsTest

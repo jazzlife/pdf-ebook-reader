@@ -7,11 +7,11 @@ using System.Drawing;
 using PdfBookReader.Utils;
 using PdfBookReader;
 using System.Drawing.Imaging;
-using PdfBookReader.Test.TestUtils;
+using PdfBookReaderTest.TestUtils;
 using System.IO;
 using PdfBookReader.Render;
 
-namespace PdfBookReader.Test
+namespace PdfBookReaderTest
 {
     [TestFixture]
     public class ScreenRenderTest

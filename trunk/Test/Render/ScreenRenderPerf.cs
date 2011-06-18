@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using PdfBookReader.Render;
-using PdfBookReader.Test.TestUtils;
+using PdfBookReaderTest.TestUtils;
 using System.IO;
 using System.Drawing;
 using PdfBookReader.Metadata;
 
-namespace PdfBookReader.Test
+namespace PdfBookReaderTest.Render
 {
     [TestFixture]
     class ScreenRenderPerf

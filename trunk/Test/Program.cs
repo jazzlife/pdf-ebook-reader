@@ -4,7 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Reflection;
 using NLog;
-using PdfBookReader.Test.TestUtils;
+using PdfBookReaderTest.TestUtils;
 
 namespace Test
 {

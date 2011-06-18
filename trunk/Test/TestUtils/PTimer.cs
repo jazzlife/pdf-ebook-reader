@@ -6,7 +6,7 @@ using System.Diagnostics;
 using PdfBookReader.Utils;
 using NLog;
 
-namespace PdfBookReader.Test.TestUtils
+namespace PdfBookReaderTest.TestUtils
 {
     public class PTimer : IDisposable
     {

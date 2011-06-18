@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using PdfBookReader.Render;
-using PdfBookReader.Test.TestUtils;
+using PdfBookReaderTest.TestUtils;
 using System.Drawing;
 using System.Drawing.Imaging;
 using PdfBookReader.Render.Cache;
@@ -13,7 +13,7 @@ using PdfBookReader.Utils;
 using System.Windows.Forms;
 using Utils;
 
-namespace PdfBookReader.Test
+namespace PdfBookReaderTest.Render
 {
     [TestFixture]
     class PhysicalPageRenderPerf

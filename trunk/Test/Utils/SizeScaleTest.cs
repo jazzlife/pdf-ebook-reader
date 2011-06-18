@@ -6,7 +6,7 @@ using NUnit.Framework;
 using System.Drawing;
 using PdfBookReader.Utils;
 
-namespace PdfBookReader.Test.Utils
+namespace PdfBookReaderTest.Utils
 {
     [TestFixture]
     public class SizeScaleTest
