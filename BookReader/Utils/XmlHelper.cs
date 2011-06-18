@@ -6,11 +6,14 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;
 using System.Diagnostics;
+using NLog;
 
 namespace PdfBookReader.Utils
 {
     public static class XmlHelper
     {
+        static readonly Logger log = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// Serialize an object to XML file
         /// </summary>
@@ -57,7 +60,7 @@ namespace PdfBookReader.Utils
         /// <param name="filename"></param>
         /// <param name="defaultValue"></param>
         /// <returns></returns>
-        public static T DeserializeOrDefault<T>(String filename, T defaultValue, bool ignoreErrors = true)
+        public static T DeserializeOrDefault<T>(String filename, T defaultValue = default(T), bool ignoreErrors = true)
         {
             if (!File.Exists(filename)) { return defaultValue; }
 
@@ -67,8 +70,7 @@ namespace PdfBookReader.Utils
             }
             catch (Exception e)
             {
-                // TODO: proper logging
-                Trace.TraceError("DeserializeOrDefault: error reading " + filename + " e:" + e.Message);
+                log.ErrorException("DeseializeOrDefault failed reading: " + filename, e);
                 if (!ignoreErrors) { throw; }
                 return defaultValue;
             }

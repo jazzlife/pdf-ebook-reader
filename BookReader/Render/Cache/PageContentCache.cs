@@ -20,6 +20,9 @@ namespace PdfBookReader.Render.Cache
 
         PageContentDiskCache _diskCache;
         PageContentMemoryCache _memoryCache;
+
+        // Unnecessary, saved within the book
+        [Obsolete]
         Dictionary<string, Guid> _bookIds = new Dictionary<string,Guid>();
 
         public PageContentCache(string filePrefix = "page-", string fileExtension = "png")

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using System.IO;
-using PdfBookReader.Test.TestUtils;
+using PdfBookReaderTest.TestUtils;
 using System.Drawing;
 using PdfBookReader.Utils;
 using System.Drawing.Imaging;
@@ -12,7 +12,7 @@ using PdfBookReader;
 using PdfBookReader.Render;
 using PdfBookReader.Render.Cache;
 
-namespace PdfBookReader.Test
+namespace PdfBookReaderTest.Render
 {
     [TestFixture]
     public class BlobPageLayoutAnalyzerPerf

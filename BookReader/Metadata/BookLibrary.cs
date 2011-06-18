@@ -17,6 +17,9 @@ namespace PdfBookReader.Metadata
         [DataMember(Name = "Books")]
         List<Book> _books;
 
+        [DataMember(Name = "CurrentBookId")]
+        Guid _currentBookId;
+
         // NOTE: in data contract serialization, ctor never runs
         public BookLibrary() 
         {
@@ -44,6 +47,29 @@ namespace PdfBookReader.Metadata
         }
 
 
+        // for performance only, ID must be updated / saved
+        Book _currentBook = null;
+        public Book CurrentBook
+        {
+            get
+            {
+                if (_currentBook == null)
+                {
+                    _currentBook = Books.FirstOrDefault(x => x.Id == _currentBookId);
+                }
+                return _currentBook;
+            }
+            set
+            {
+                _currentBook = value;
+
+                if (_currentBook == null) { _currentBookId = Guid.Empty; }
+                else { _currentBookId = _currentBook.Id; }
+
+                Save();
+            }
+        }
+
         public void AddFiles(IEnumerable<String> files)
         {
             foreach (String file in files) 
@@ -64,7 +90,7 @@ namespace PdfBookReader.Metadata
         /// <returns></returns>
         public static BookLibrary Load(String filename, bool removeMissingBooks = true)
         {
-            BookLibrary library = XmlHelper.Deserialize<BookLibrary>(filename);
+            BookLibrary library = XmlHelper.DeserializeOrDefault(filename, new BookLibrary());
             library.Filename = filename;
 
             if (removeMissingBooks)

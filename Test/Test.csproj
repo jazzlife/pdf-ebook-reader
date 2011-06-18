@@ -8,8 +8,8 @@
     <ProjectGuid>{E8298BB1-7939-4CCF-B1F0-B467E000F827}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PdfBookReader.Test</RootNamespace>
-    <AssemblyName>PdfBookReader.Test</AssemblyName>
+    <RootNamespace>PdfBookReaderTest</RootNamespace>
+    <AssemblyName>PdfBookReaderTest</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -70,9 +70,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BlobPageLayoutAnalyzerPerf.cs" />
-    <Compile Include="PhysicalPageRenderPerf.cs" />
-    <Compile Include="ScreenRenderPerf.cs" />
+    <Compile Include="Render\BlobPageLayoutAnalyzerPerf.cs" />
+    <Compile Include="Render\PhysicalPageRenderPerf.cs" />
+    <Compile Include="Render\ScreenRenderPerf.cs" />
     <Compile Include="TestUtilsTest\PerformanceMeasureTest.cs" />
     <Compile Include="TestUtils\DataContract.cs" />
     <Compile Include="TestUtils\IPerformanceNode.cs" />
@@ -82,7 +82,7 @@
     <Compile Include="Utils\DisposableWrapperTest.cs" />
     <Compile Include="Utils\ExtensionMethodsTest.cs" />
     <Compile Include="Utils\SizeScaleTest.cs" />
-    <Compile Include="ScreenRenderTest.cs" />
+    <Compile Include="Render\ScreenRenderTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestUtils\PTimer.cs" />
@@ -133,6 +133,9 @@
       <Project>{41DD63C7-4D65-4BD8-9BF3-C6C6ABDD7E78}</Project>
       <Name>BookReader</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Render\Cache\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

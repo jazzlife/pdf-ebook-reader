@@ -16,7 +16,7 @@ namespace PdfBookReader.Metadata
         /// <summary>
         /// Unique ID, used for caching. 
         /// </summary>
-        public Guid ID 
+        public Guid Id
         {
             get
             {
@@ -31,12 +31,16 @@ namespace PdfBookReader.Metadata
         [DataMember]
         public String Title { get; private set; }
 
+        [DataMember]
+        public PositionInfo CurrentPosition { get; set; }
+
         // TODO: add thumbnail etc.
         public Book(String filename)
         {
             Filename = filename;
             Title = Path.GetFileNameWithoutExtension(filename);
-            _id = ID; // make sure it gets generated
+            
+            _id = Guid.NewGuid(); // make sure it gets generated
         }
     }
 }

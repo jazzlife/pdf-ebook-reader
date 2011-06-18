@@ -210,46 +210,5 @@ namespace PdfBookReader.Utils
             return new Size(width, height);
         }
         #endregion
-
-        #region LINQ-like
-        // LINQ-like
-        public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T> action)
-        {
-            foreach (T item in enumeration)
-            {
-                action(item);
-            }
-        }
-
-        public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T, int> action)
-        {
-            int index = 0;
-            foreach (T item in enumeration)
-            {
-                action(item, index++);
-            }
-        }
-
-        public static bool TrueForAny<T>(this IEnumerable<T> enumeration, Func<T, bool> predicate)
-        {
-            foreach (T item in enumeration)
-            {
-                if (predicate(item)) { return true; }
-            }
-            return false;
-        }
-
-        public static bool TrueForAll<T>(this IEnumerable<T> enumeration, Func<T, bool> predicate)
-        {
-            foreach (T item in enumeration)
-            {
-                if (!predicate(item)) { return false; }
-            }
-            return true;
-        }
-
-        #endregion
-
-
     }
 }
