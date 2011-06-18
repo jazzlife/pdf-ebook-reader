@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using PdfBookReader.Render.Cache;
-using PdfBookReader.Metadata;
+using PdfBookReader.Model;
 using System.IO;
 using PdfBookReader.Utils;
 
@@ -282,7 +282,7 @@ namespace PdfBookReaderTest.Render.Cache
             Assert.AreEqual(BaseTime + TimeSpan.FromDays(1), dict[keysToRemove.ElementAt(1)].LastAccessTime);
             Assert.AreEqual(BaseTime + TimeSpan.FromDays(2), dict[keysToRemove.ElementAt(2)].LastAccessTime);
 
-            // Ww must NOT retain those keys
+            // Must NOT retain those keys
             foreach (var key in keysToRemove)
             {
                 Assert.IsFalse(policy.MustRetain(key, context));

@@ -83,9 +83,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Metadata\Book.cs" />
-    <Compile Include="Metadata\BookLibrary.cs" />
-    <Compile Include="Metadata\PositionInBook.cs" />
+    <Compile Include="Model\Book.cs" />
+    <Compile Include="Model\BookLibrary.cs" />
+    <Compile Include="Model\PositionInBook.cs" />
     <Compile Include="Render\Cache\CachePrefetchPolicy.cs" />
     <Compile Include="Render\Cache\PageContentCache.cs" />
     <Compile Include="Render\Cache\PageContentPrefetchPolicy.cs" />

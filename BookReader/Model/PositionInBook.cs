@@ -5,7 +5,7 @@ using System.Text;
 using PdfBookReader.Utils;
 using System.Runtime.Serialization;
 
-namespace PdfBookReader.Metadata
+namespace PdfBookReader.Model
 {
     /// <summary>
     /// Current position wihtin the book. Expressed in terms of physical pages.

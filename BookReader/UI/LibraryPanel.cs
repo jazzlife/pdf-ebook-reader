@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Linq;
 using PdfBookReader.Utils;
-using PdfBookReader.Metadata;
+using PdfBookReader.Model;
 using PdfBookReader.Properties;
 
 namespace PdfBookReader.UI
@@ -20,31 +20,19 @@ namespace PdfBookReader.UI
         public LibraryPanel()
         {
             InitializeComponent();
-
-            LoadBookLibrary();
         }
 
-        void LoadBookLibrary()
+        public void Initialize(BookLibrary library)
         {
-            if (File.Exists(BookLibrary.DefaultFilename))
-            {
-                try
-                {
-                    _library = BookLibrary.Load(BookLibrary.DefaultFilename);
-                }
-                catch (Exception e)
-                {
-                    System.Diagnostics.Trace.TraceError("Failed loading library file. " + e);
-                    // TODO: tracing
+            ArgCheck.NotNull(library, "library");
+            _library = library;
 
-                    _library = new BookLibrary();
-                }
-            }
-            else
-            {
-                _library = new BookLibrary();
-            }
+            _library.BooksChanged += _library_BooksChanged;
+            UpdateListViewItems();
+        }
 
+        void _library_BooksChanged(object sender, EventArgs e)
+        {
             UpdateListViewItems();
         }
 
@@ -80,7 +68,6 @@ namespace PdfBookReader.UI
 
             _library.AddFiles(files);
             _library.Save();
-            UpdateListViewItems();
         }
 
         void UpdateListViewItems()
@@ -102,8 +89,7 @@ namespace PdfBookReader.UI
             {
                 foreach (BookListViewItem bookItem in lbBooks.SelectedItems)
                 {
-                    _library.Books.Remove(bookItem.Book);
-                    lbBooks.Items.Remove(bookItem);
+                    _library.RemoveBook(bookItem.Book);
                 }
                 _library.Save();
             }

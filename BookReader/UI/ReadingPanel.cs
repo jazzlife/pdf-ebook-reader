@@ -6,7 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using PdfBookReader.Metadata;
+using PdfBookReader.Model;
 using PdfBookReader.Render;
 using PdfBookReader.Utils;
 using PdfBookReader.Render.Cache;
@@ -15,6 +15,7 @@ namespace PdfBookReader.UI
 {
     public partial class ReadingPanel : UserControl
     {
+        BookLibrary _library;
         Book _book;
 
         IBookPageProvider _bookPageProvider;
@@ -34,6 +35,12 @@ namespace PdfBookReader.UI
 
             _prefetchManager = new PrefetchManager(_pageCache);
             _prefetchManager.Start();
+        }
+
+        public void Initialize(BookLibrary library)
+        {
+            ArgCheck.NotNull(library, "library");
+            _library = library;
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -207,7 +214,5 @@ namespace PdfBookReader.UI
 
             }
         }
-
-
     }
 }

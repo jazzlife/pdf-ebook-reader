@@ -7,24 +7,33 @@ using PdfBookReader.Utils;
 using System.ComponentModel;
 using System.Linq;
 
-namespace PdfBookReader.Metadata
+namespace PdfBookReader.Model
 {
     [DataContract]
     public class BookLibrary
     {
-        String _filename;
-
         [DataMember(Name = "CurrentBookId")]
         Guid _currentBookId;
 
         [DataMember(Name = "Books")]
         List<Book> _books;
 
+        String _filename;
+
         // NOTE: in data contract serialization, ctor never runs
         public BookLibrary() 
         {
             Filename = DefaultFilename;
+            _books = new List<Book>();
         }
+
+        public event EventHandler CurrentBookChanged;
+        public event EventHandler BooksChanged;
+
+        /// <summary>
+        /// Current book changed, or the page position within the current book changed.
+        /// </summary>
+        public event EventHandler CurrentBookPositionChanged;
 
         public String Filename
         {
@@ -36,16 +45,14 @@ namespace PdfBookReader.Metadata
             private set { _filename = value; }
         }
 
-        public List<Book> Books
+        public IList<Book> Books
         {
             get
             {
                 if (_books == null) { _books = new List<Book>(); }
-                return _books;
+                return _books.AsReadOnly();
             }
-            private set { _books = value; }
         }
-
 
         // for performance only, ID must be updated / saved
         Book _currentBook = null;
@@ -55,19 +62,42 @@ namespace PdfBookReader.Metadata
             {
                 if (_currentBook == null)
                 {
+                    // If ID is empty, it won't find the book, so it remains null
                     _currentBook = Books.FirstOrDefault(x => x.Id == _currentBookId);
                 }
                 return _currentBook;
             }
             set
             {
+                if (_currentBook == value) { return; }
+
+                // Unsubscribe
+                if (_currentBook != null)
+                {
+                    _currentBook.CurrentPositionChanged -= OnCurrentBookPositionChanged;
+                }
+
                 _currentBook = value;
 
                 if (_currentBook == null) { _currentBookId = Guid.Empty; }
                 else { _currentBookId = _currentBook.Id; }
 
-                Save();
+                // Subscribe
+                if (_currentBook != null)
+                {
+                    _currentBook.CurrentPositionChanged += OnCurrentBookPositionChanged;
+                }
+
+                // Fire events
+                if (CurrentBookChanged != null) { CurrentBookChanged(this, EventArgs.Empty); }
+                if (CurrentBookPositionChanged != null) { CurrentBookPositionChanged(this, EventArgs.Empty); }
             }
+        }
+
+        // For convenience, re-fire the book position changed event
+        void OnCurrentBookPositionChanged(object sender, EventArgs e)
+        {
+            if (CurrentBookPositionChanged != null) { CurrentBookPositionChanged(this, EventArgs.Empty); }
         }
 
         public void AddFiles(IEnumerable<String> files)
@@ -75,10 +105,40 @@ namespace PdfBookReader.Metadata
             foreach (String file in files) 
             {
                 // Skip duplicates
-                if (Books.FirstOrDefault(x => x.Filename.EqualsIC(file)) == null)
+                if (_books.FirstOrDefault(x => x.Filename.EqualsIC(file)) == null)
                 {
-                    Books.Add(new Book(file)); 
+                    _books.Add(new Book(file)); 
                 }
+            }
+
+            if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }
+        }
+
+        public void AddBook(Book book)
+        {
+            _books.Add(book);
+            if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }
+        }
+
+        /// <summary>
+        /// Remove books that no longer exist on disk.
+        /// </summary>
+        public void RemoveMissingBooks()
+        {
+            var toRemove = Books.Where(x => !File.Exists(x.Filename)).ToArray();
+            toRemove.ForEach(x => Books.Remove(x));
+
+            if (toRemove.Any())
+            {
+                if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }
+            }
+        }
+
+        public void RemoveBook(Book book)
+        {
+            if (_books.Remove(book))
+            {
+                if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }
             }
         }
 
@@ -93,6 +153,9 @@ namespace PdfBookReader.Metadata
             BookLibrary library = XmlHelper.DeserializeOrDefault(filename, new BookLibrary());
             library.Filename = filename;
 
+            // ctor not called by serializer, must initialize
+            if (library._books == null) { library._books = new List<Book>(); }
+
             if (removeMissingBooks)
             {
                 library.RemoveMissingBooks();
@@ -100,15 +163,6 @@ namespace PdfBookReader.Metadata
             }
 
             return library;
-        }
-
-        /// <summary>
-        /// Remove books that no longer exist on disk.
-        /// </summary>
-        public void RemoveMissingBooks()
-        {
-            var toRemove = Books.Where(x => !File.Exists(x.Filename)).ToArray();
-            toRemove.ForEach(x => Books.Remove(x));
         }
 
         public void Save()

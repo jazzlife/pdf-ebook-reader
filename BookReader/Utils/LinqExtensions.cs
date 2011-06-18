@@ -53,6 +53,10 @@ namespace PdfBookReader.Utils
             }
         }
 
+        public static bool IsEmpty<T>(this IEnumerable<T> list)
+        {
+            return !list.Any();
+        }
 
         public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T> action)
         {
