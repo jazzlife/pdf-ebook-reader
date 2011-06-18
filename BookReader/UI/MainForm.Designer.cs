@@ -59,8 +59,8 @@
             this.Controls.Add(this.pReading);
             this.Controls.Add(this.pLibrary);
             this.Name = "MainForm";
-            this.Text = "MainForm";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Text = "PDF eBook Reader";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.ResumeLayout(false);
 
         }

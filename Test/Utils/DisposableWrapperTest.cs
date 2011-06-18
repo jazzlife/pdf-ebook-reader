@@ -25,8 +25,8 @@ namespace PdfBookReaderTest.Utils
             DW.GetAllActiveWrappers().ForEach( x => Console.Write(x + "\r\n"));
             Console.WriteLine();
 
-            d1.Dispose();
-            d2.Dispose();
+            d1.DisposeItem();
+            d2.DisposeItem();
 
             Assert.AreEqual(3, DW.Created);
             Assert.AreEqual(2, DW.Disposed);
@@ -36,7 +36,7 @@ namespace PdfBookReaderTest.Utils
             DW.GetAllActiveWrappers().ForEach(x => Console.Write(x + "\r\n"));
             Console.WriteLine();
 
-            d1.Dispose();
+            d1.DisposeItem();
             Console.WriteLine(DW.GetDebugInfo());
             DW.GetAllActiveWrappers().ForEach(x => Console.Write(x + "\r\n"));
             Console.WriteLine();
@@ -47,7 +47,7 @@ namespace PdfBookReaderTest.Utils
         public void DisposedObjectAccessThrows()
         {
             var d1 = DW.Wrap(new Dummy());
-            d1.Dispose();
+            d1.DisposeItem();
 
             d1.o.Method(); // must throw
         }

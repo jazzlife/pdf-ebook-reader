@@ -164,13 +164,14 @@ namespace PdfBookReader.Render
             {
                 if (pageNum < 1 || 
                     pageNum > screenProvider.o.PageProvider.PageCount ||
-                    screenProvider.IsDisposed)
+                    ScreenProvider == null || 
+                    ScreenProvider.IsDisposed)
                 {
                     return;
                 }
 
                 if (!Cache.o.MemoryCacheContains(
-                        ScreenProvider.o.PageProvider.FullPath,
+                        ScreenProvider.o.PageProvider.BookFilename,
                         pageNum,
                         ScreenProvider.o.ScreenSize.Width))
                 {
@@ -185,22 +186,6 @@ namespace PdfBookReader.Render
 
                     // Major architectural change is necessary to fix this in a nice way
                 }
-
-                // set priority
-                /*
-                ItemRetainPriority priority = ItemRetainPriority.Normal;
-                int currentPageNum = PhysicalPageNum;
-                if (pageNum < 5 || 
-                    (pageNum - 3 < pageNum && pageNum < currentPageNum + 5))
-                { 
-                    priority = ItemRetainPriority.AlwaysRetain; 
-                }
-
-                Cache.o.UpdatePriority(
-                        CurrentBook.o.PhysicalPageProvider.FullPath,
-                        pageNum,
-                        CurrentBook.o.ScreenSize.Width, priority);
-                */
 
 
             }

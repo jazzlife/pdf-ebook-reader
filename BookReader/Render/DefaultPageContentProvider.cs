@@ -36,7 +36,7 @@ namespace PdfBookReader.Render
             PageContent pageInfo;
             if (Cache != null)
             {
-                pageInfo = Cache.o.Get(pageProvider.FullPath, pageNum, screenSize.Width);
+                pageInfo = Cache.o.Get(pageProvider.BookFilename, pageNum, screenSize.Width);
                 if (pageInfo != null)
                 {
                     return pageInfo;
@@ -48,7 +48,7 @@ namespace PdfBookReader.Render
             // Save to cache
             if (Cache != null)
             {
-                Cache.o.Add(pageProvider.FullPath, pageNum, screenSize.Width, pageInfo);
+                Cache.o.Add(pageProvider.BookFilename, pageNum, screenSize.Width, pageInfo);
             }
 
             return pageInfo;
@@ -76,7 +76,7 @@ namespace PdfBookReader.Render
                 // Special case - empty page
                 if (layout.Bounds.IsEmpty)
                 {
-                    layoutPage.Dispose();
+                    layoutPage.DisposeItem();
 
                     // Dummy layout -- screenWidth x 100
                     layout.Bounds = new Rectangle(0, 0, screenSize.Width, 100);
@@ -95,7 +95,7 @@ namespace PdfBookReader.Render
                 }
                 else
                 {
-                    layoutPage.Dispose();
+                    layoutPage.DisposeItem();
 
                     // render a new image
                     Log.Debug("Slow: rendering second page for display. old:{0} - new:{1} = {2}", 
