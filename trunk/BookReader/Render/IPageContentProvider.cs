@@ -12,7 +12,14 @@ namespace PdfBookReader.Render
     interface IPageContentProvider
     {
         IPageLayoutAnalyzer LayoutAnalyzer { get; set; }
-        PageContent RenderPhysicalPage(int pageNum, Size screenSize, IPhysicalPageProvider physicalPageProvider);
 
+        /// <summary>
+        /// Get the given physical page (render or fetch from cache).
+        /// </summary>
+        /// <param name="pageNum"></param>
+        /// <param name="screenSize"></param>
+        /// <param name="physicalPageProvider"></param>
+        /// <returns></returns>
+        PageContent GetPage(int pageNum, Size screenSize, IBookPageProvider physicalPageProvider);
     }
 }

@@ -81,13 +81,8 @@ namespace PdfBookReader.Metadata
         /// </summary>
         public void RemoveMissingBooks()
         {
-            foreach (Book b in Books)
-            {
-                if (!File.Exists(b.Filename))
-                {
-                    Books.Remove(b);
-                }
-            }
+            var toRemove = Books.Where(x => !File.Exists(x.Filename)).ToArray();
+            toRemove.ForEach(x => Books.Remove(x));
         }
 
         public void Save()

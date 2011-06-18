@@ -30,25 +30,25 @@ namespace PdfBookReader.Render
             Cache = cache;
         }
 
-        public PageContent RenderPhysicalPage(int pageNum, Size screenSize, IPhysicalPageProvider physicalPageProvider) 
+        public PageContent GetPage(int pageNum, Size screenSize, IBookPageProvider pageProvider) 
         {
             // Try to get from cache
             PageContent pageInfo;
             if (Cache != null)
             {
-                pageInfo = Cache.o.Get(physicalPageProvider.FullPath, pageNum, screenSize.Width);
+                pageInfo = Cache.o.Get(pageProvider.FullPath, pageNum, screenSize.Width);
                 if (pageInfo != null)
                 {
                     return pageInfo;
                 }
             }
 
-            pageInfo = RenderPhysicalPageCore(pageNum, screenSize, physicalPageProvider);
+            pageInfo = RenderPhysicalPage(pageNum, screenSize, pageProvider);
 
             // Save to cache
             if (Cache != null)
             {
-                Cache.o.Add(physicalPageProvider.FullPath, pageNum, screenSize.Width, pageInfo);
+                Cache.o.Add(pageProvider.FullPath, pageNum, screenSize.Width, pageInfo);
             }
 
             return pageInfo;
@@ -57,7 +57,7 @@ namespace PdfBookReader.Render
         // Simple optimization -- try to render in appropriate size
         int lastPageWidth = 1000; // for first page
 
-        PageContent RenderPhysicalPageCore(int pageNum, Size screenSize, IPhysicalPageProvider physicalPageProvider)
+        PageContent RenderPhysicalPage(int pageNum, Size screenSize, IBookPageProvider pageProvider)
         {
             Log.Debug("Rendering: #{0} w={1}", pageNum, screenSize.Width);
 
@@ -70,7 +70,7 @@ namespace PdfBookReader.Render
                 
                 PageLayoutInfo layout;
                 Size layoutRenderSize = new Size(lastPageWidth, int.MaxValue); 
-                DW<Bitmap> layoutPage = physicalPageProvider.RenderPage(pageNum, layoutRenderSize, RenderQuality.Optimal);
+                DW<Bitmap> layoutPage = pageProvider.RenderPage(pageNum, layoutRenderSize, RenderQuality.Optimal);
                 layout = LayoutAnalyzer.DetectPageLayout(layoutPage);
 
                 // Special case - empty page
@@ -85,7 +85,7 @@ namespace PdfBookReader.Render
                 }
 
                 // Render actual page. Bounded by width, but not height.
-                int pageWidth = (int)((float)screenSize.Width / layout.BoundsRelative.Width);
+                int pageWidth = (int)((float)screenSize.Width / layout.BoundsUnit.Width);
 
                 DW<Bitmap> displayPage;
                 if (lastPageWidth - 10 < pageWidth && pageWidth < lastPageWidth + 2)
@@ -102,7 +102,7 @@ namespace PdfBookReader.Render
                         lastPageWidth, pageWidth, lastPageWidth - pageWidth);
 
                     Size displayPageMaxSize = new Size(pageWidth, int.MaxValue);
-                    displayPage = physicalPageProvider.RenderPage(pageNum, displayPageMaxSize, RenderQuality.Optimal);
+                    displayPage = pageProvider.RenderPage(pageNum, displayPageMaxSize, RenderQuality.Optimal);
                     layout.ScaleBounds(displayPage.o.Size);
                 }
 

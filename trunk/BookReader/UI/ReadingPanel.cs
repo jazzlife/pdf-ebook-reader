@@ -17,8 +17,8 @@ namespace PdfBookReader.UI
     {
         Book _book;
 
-        IPhysicalPageProvider _physicalPageProvider;
-        DW<ScreenPageProvider> _screenPageProvider;
+        IBookPageProvider _bookPageProvider;
+        DW<ScreenProvider> _screenPageProvider;
 
         PrefetchManager _prefetchManager;
 
@@ -49,21 +49,21 @@ namespace PdfBookReader.UI
 
                 _book = value;
 
-                _prefetchManager.CurrentBook = null;
+                _prefetchManager.ScreenProvider = null;
 
                 // Rendering components
-                PhysicalPageProvider = new PdfPhysicalPageProvider(_book.Filename);
+                BookPageProvider = new PdfBookPageProvider(_book.Filename);
                 IPageContentProvider contentProvider = new DefaultPageContentProvider(_pageCache); // not disposable
-                ScreenProvider = DW.Wrap(new ScreenPageProvider(PhysicalPageProvider, contentProvider, pbContent.Size));
+                ScreenProvider = DW.Wrap(new ScreenProvider(BookPageProvider, contentProvider, pbContent.Size));
 
-                _prefetchManager.CurrentBook = ScreenProvider;
+                _prefetchManager.ScreenProvider = ScreenProvider;
 
                 // TODO: render page at stored position in the book
                 // (no the first "current" page).
                 CurrentPageImage = ScreenProvider.o.RenderCurrentPage(pbContent.Size);
-                UpdateUIState();
 
-                bookProgressBar.PageIncrementSize = 1.0f / PhysicalPageProvider.PageCount;
+                bookProgressBar.PageIncrementSize = ScreenProvider.o.CurrentPosition.UnitSize;
+                UpdateUIState();
             }
         }
 
@@ -77,7 +77,8 @@ namespace PdfBookReader.UI
             if (pos > 1) { pos = 1; }
             if (pos < 0) { pos = 0; }
 
-            CurrentPageImage = ScreenProvider.o.RenderPage(pos);
+            PositionInfo pi = PositionInfo.FromPositionUnit(pos, ScreenProvider.o.PageProvider.PageCount);
+            CurrentPageImage = ScreenProvider.o.RenderPage(pi);
             UpdateUIState();
         }
 
@@ -96,16 +97,16 @@ namespace PdfBookReader.UI
             }
         }
 
-        private DW<ScreenPageProvider> ScreenProvider
+        private DW<ScreenProvider> ScreenProvider
         {
             get { return _screenPageProvider; }
             set { value.AssignNewDisposeOld(ref _screenPageProvider); }
         }
 
-        private IPhysicalPageProvider PhysicalPageProvider
+        private IBookPageProvider BookPageProvider
         {
-            get { return _physicalPageProvider; }
-            set { value.AssignNewDisposeOld(ref _physicalPageProvider); }
+            get { return _bookPageProvider; }
+            set { value.AssignNewDisposeOld(ref _bookPageProvider); }
         }
 
         public event EventHandler GoToLibrary;
@@ -146,12 +147,11 @@ namespace PdfBookReader.UI
         void UpdateBookProgressBar()
         {
             // TODO: shift progress so it's full at last page
-            bookProgressBar.Value = ScreenProvider.o.Position;
+            PositionInfo pos = ScreenProvider.o.CurrentPosition;
+            bookProgressBar.Value = pos.PositionUnit;
 
-            int pageCount = ScreenProvider.o.PhysicalPageCount;
             lbPageNum.Text = String.Format("{0:0.0}/{1}", 
-                ScreenProvider.o.PhysicalPagePosition, 
-                ScreenProvider.o.PhysicalPageCount);
+                pos.Position, pos.PageCount);
         }
         #endregion
 

@@ -54,11 +54,11 @@ namespace PdfBookReader.Test
 
         void Render(String file, int maxPages, Size screenPageSize, bool renderUp = false)
         {
-            IPhysicalPageProvider pdfReader = new PdfPhysicalPageProvider(file);
+            IBookPageProvider pdfReader = new PdfBookPageProvider(file);
             IPageContentProvider contentProvider = new DefaultPageContentProvider(null);
 
-            ScreenPageProvider screenPageProvider =
-                new ScreenPageProvider(pdfReader, contentProvider, screenPageSize);
+            ScreenProvider screenPageProvider =
+                new ScreenProvider(pdfReader, contentProvider, screenPageSize);
 
             PTimer timer = new PTimer("Screen Page Load {0}x{1} '{2}'", 
                 screenPageSize.Width, screenPageSize.Height, Path.GetFileName(file));
@@ -81,7 +81,7 @@ namespace PdfBookReader.Test
             Console.WriteLine(timer);
         }
 
-        Bitmap RenderFollowing(ScreenPageProvider provider, bool renderUp)
+        Bitmap RenderFollowing(ScreenProvider provider, bool renderUp)
         {
             if (renderUp) { return provider.RenderPreviousPage().o; }
             else { return provider.RenderNextPage().o; }

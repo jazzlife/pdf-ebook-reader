@@ -70,7 +70,7 @@ namespace PdfBookReader.Test
 
         void RenderPDFPages(PTimer sumTimer, String file, RenderQuality quality)
         {
-            PdfPhysicalPageProvider r = new PdfPhysicalPageProvider(file);
+            PdfBookPageProvider r = new PdfBookPageProvider(file);
 
             using (PTimer localTimer = new PTimer(">>{0}: {1}".F(sumTimer.Name, Path.GetFileNameWithoutExtension(file))))
             {
@@ -162,7 +162,7 @@ namespace PdfBookReader.Test
             }
 
             DefaultPageContentProvider pcp = new DefaultPageContentProvider(DW.Wrap(cache), analyzer);
-            PdfPhysicalPageProvider pageProvider = new PdfPhysicalPageProvider(file);
+            PdfBookPageProvider pageProvider = new PdfBookPageProvider(file);
 
             using (PTimer localTimer = new PTimer(">>{0}: {1}".F(sumTimer.Name, Path.GetFileNameWithoutExtension(file))))
             {
@@ -173,7 +173,7 @@ namespace PdfBookReader.Test
                     // Only time the render method
                     using (IDisposable d1 = localTimer.NewRun, d2 = sumTimer.NewRun)
                     {
-                        pc = pcp.RenderPhysicalPage(pageNum, PageSize, pageProvider);
+                        pc = pcp.GetPage(pageNum, PageSize, pageProvider);
                     }
                 }
             }
