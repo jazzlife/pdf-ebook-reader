@@ -7,7 +7,7 @@ using PdfBookReader.Render;
 using PdfBookReaderTest.TestUtils;
 using System.IO;
 using System.Drawing;
-using PdfBookReader.Metadata;
+using PdfBookReader.Model;
 
 namespace PdfBookReaderTest.Render
 {

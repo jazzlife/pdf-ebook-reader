@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using PdfBookReader.Utils;
 using System.Diagnostics;
-using PdfBookReader.Metadata;
+using PdfBookReader.Model;
 
 namespace PdfBookReader.Render
 {

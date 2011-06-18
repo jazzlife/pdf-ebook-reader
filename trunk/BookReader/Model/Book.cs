@@ -5,17 +5,18 @@ using System.Text;
 using System.Runtime.Serialization;
 using System.IO;
 
-namespace PdfBookReader.Metadata
+namespace PdfBookReader.Model
 {
     [DataContract]
     public class Book
     {
-        [DataMember(Name = "ID")]
-        Guid _id = Guid.NewGuid();
+        Guid _id;
+        PositionInBook _currentPosition;
 
         /// <summary>
         /// Unique ID, used for caching. 
         /// </summary>
+        [DataMember(Name = "ID")]
         public Guid Id
         {
             get
@@ -23,6 +24,7 @@ namespace PdfBookReader.Metadata
                 if (_id == Guid.Empty) { _id = Guid.NewGuid(); }
                 return _id;
             }
+            private set { _id = value; }
         }
 
         [DataMember]
@@ -31,8 +33,19 @@ namespace PdfBookReader.Metadata
         [DataMember]
         public String Title { get; private set; }
 
-        [DataMember]
-        public PositionInBook CurrentPosition { get; set; }
+        [DataMember(Name = "CurrentPosition")]
+        public PositionInBook CurrentPosition 
+        {
+            get { return _currentPosition; }
+            set
+            {
+                _currentPosition = value;
+
+                if (CurrentPositionChanged != null) { CurrentPositionChanged(this, EventArgs.Empty); }
+            }
+        }
+
+        public event EventHandler CurrentPositionChanged;
 
         // TODO: add thumbnail etc.
         public Book(String filename)

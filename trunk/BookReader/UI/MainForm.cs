@@ -5,16 +5,22 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using PdfBookReader.Model;
 
 namespace PdfBookReader.UI
 {
     public partial class MainForm : Form
     {
-
+        BookLibrary _library;
 
         public MainForm()
         {
             InitializeComponent();
+
+            _library = BookLibrary.Load(BookLibrary.DefaultFilename);
+
+            pLibrary.Initialize(_library);
+            pReading.Initialize(_library);
 
             pLibrary.Dock = DockStyle.Fill;
             pReading.Dock = DockStyle.Fill;
@@ -24,6 +30,9 @@ namespace PdfBookReader.UI
         private void pLibrary_OpenBook(object sender, OpenBookEventArgs e)
         {
             this.Text = "eBook - " + e.Book.Title;
+
+            _library.CurrentBook = e.Book;
+
             pReading.Book = e.Book;
             pReading.Visible = true;
             pLibrary.Visible = false;
@@ -34,6 +43,11 @@ namespace PdfBookReader.UI
             this.Text = "eBook - Library";
             pLibrary.Visible = true;
             pReading.Visible = false;
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _library.Save();
         }
     }
 }
