@@ -85,7 +85,7 @@
   <ItemGroup>
     <Compile Include="Metadata\Book.cs" />
     <Compile Include="Metadata\BookLibrary.cs" />
-    <Compile Include="Metadata\PositionInfo.cs" />
+    <Compile Include="Metadata\PositionInBook.cs" />
     <Compile Include="Render\Cache\CachePrefetchPolicy.cs" />
     <Compile Include="Render\Cache\PageContentCache.cs" />
     <Compile Include="Render\Cache\PageContentPrefetchPolicy.cs" />

@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Render\BlobPageLayoutAnalyzerPerf.cs" />
+    <Compile Include="Render\Cache\PageContentPrefetchPolicyTest.cs" />
     <Compile Include="Render\PhysicalPageRenderPerf.cs" />
     <Compile Include="Render\ScreenRenderPerf.cs" />
     <Compile Include="TestUtilsTest\PerformanceMeasureTest.cs" />
@@ -134,9 +135,7 @@
       <Name>BookReader</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Render\Cache\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

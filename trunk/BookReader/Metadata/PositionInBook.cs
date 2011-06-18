@@ -16,7 +16,7 @@ namespace PdfBookReader.Metadata
     /// heights can vary and are not all known. 
     /// </remarks>
     [DataContract]
-    public class PositionInfo
+    public class PositionInBook
     {
         /// <summary>
         /// Position of the top of the current screen in terms of physical pages.
@@ -36,7 +36,7 @@ namespace PdfBookReader.Metadata
         [DataMember]
         public int PageCount { get; private set; }
 
-        private PositionInfo(float position, int pageCount)
+        private PositionInBook(float position, int pageCount)
         {
             ArgCheck.GreaterThan(pageCount, 0, "pageCount");
             ArgCheck.InRange(position, 0, pageCount, "position");
@@ -51,13 +51,13 @@ namespace PdfBookReader.Metadata
         /// <param name="positionUnit"></param>
         /// <param name="pageCount"></param>
         /// <returns></returns>
-        public static PositionInfo FromPositionUnit(float positionUnit, int pageCount)
+        public static PositionInBook FromPositionUnit(float positionUnit, int pageCount)
         {
             ArgCheck.GreaterThan(pageCount, 0, "pageCount");
             ArgCheck.IsUnit(positionUnit, "positionUnit");
 
             float position = positionUnit * pageCount;
-            return new PositionInfo(position, pageCount);
+            return new PositionInBook(position, pageCount);
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace PdfBookReader.Metadata
         /// <param name="topOnScreen"></param>
         /// <param name="pageHeight"></param>
         /// <returns></returns>
-        public static PositionInfo FromPhysicalPage(int pageNum, int pageCount, 
+        public static PositionInBook FromPhysicalPage(int pageNum, int pageCount, 
             int topOnScreen = 0, int pageHeight = 1)
         {
             ArgCheck.GreaterThan(pageCount, 0, "pageCount");
@@ -81,7 +81,7 @@ namespace PdfBookReader.Metadata
             if (positionWithinPage < 0) { positionWithinPage = 0; }
 
             float position = (pageNum - 1) + positionWithinPage;
-            return new PositionInfo(position, pageCount);
+            return new PositionInBook(position, pageCount);
         }
 
         /// <summary>
@@ -124,6 +124,11 @@ namespace PdfBookReader.Metadata
             float positionWithinPage = (Position + 1) - PageNum;
             int topOnScreen = -(int)(positionWithinPage * pageHeight);
             return topOnScreen;
+        }
+
+        public override string ToString()
+        {
+            return "Position: {0:0.0}/{1} pageNum={2}".F(Position, PageCount, PageNum);
         }
     }
 }

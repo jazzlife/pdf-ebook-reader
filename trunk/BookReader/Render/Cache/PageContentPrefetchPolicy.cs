@@ -34,7 +34,6 @@ namespace PdfBookReader.Render.Cache
         static PageContentPrefetchPolicy _memoryPolicy;
         public static PageContentPrefetchPolicy GetMemoryPolicy()
         {
-
             if (_memoryPolicy == null)
             {
                 _memoryPolicy = new PageContentPrefetchPolicy()
@@ -144,7 +143,6 @@ namespace PdfBookReader.Render.Cache
                         .OrderBy(x => cacheInfos[x.Key].LastAccessTime)
                         .Take(toRemoveCount);
                 }
-
             }
 
             return toRemove.Select(x => x.Key);
@@ -202,7 +200,7 @@ namespace PdfBookReader.Render.Cache
 
                 yield return currentPage;
 
-                int beforeMin = currentPage + keepBefore;
+                int beforeMin = currentPage - keepBefore;
                 int afterMax = currentPage + keepAfter;
 
                 int beforeNum = currentPage;
@@ -217,7 +215,7 @@ namespace PdfBookReader.Render.Cache
                     ++afterNum;
                     if (afterNum <= afterMax) { yield return afterNum; }
 
-                    ++beforeNum;
+                    --beforeNum;
                     if (beforeNum >= beforeMin) { yield return beforeNum; }
 
                     if (beforeMin > beforeNum && afterNum > afterMax) { break; }
