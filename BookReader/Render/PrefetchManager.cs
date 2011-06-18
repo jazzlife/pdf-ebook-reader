@@ -15,7 +15,7 @@ namespace PdfBookReader.Render
         // TODO: should be a singleton
         readonly DW<PageContentCache> Cache;
 
-        DW<ScreenPageProvider> _currentBook;
+        DW<ScreenProvider> _screenProvider;
 
         Thread _prefetchThread;
         bool _stopLoop = false;
@@ -29,25 +29,25 @@ namespace PdfBookReader.Render
 
         AutoResetEvent _currentBookDoneWait = new AutoResetEvent(false);
 
-        public DW<ScreenPageProvider> CurrentBook
+        public DW<ScreenProvider> ScreenProvider
         {
-            get { return _currentBook; }
+            get { return _screenProvider; }
             set
             {
                 lock (MyLock)
                 {
-                    if (_currentBook == value) { return; }
+                    if (_screenProvider == value) { return; }
 
-                    if (_currentBook != null)
+                    if (_screenProvider != null)
                     {
-                        _currentBook.o.PositionChanged -= OnPositionChanged;
+                        _screenProvider.o.PositionChanged -= OnPositionChanged;
                     }
 
-                    _currentBook = value;
+                    _screenProvider = value;
 
-                    if (_currentBook != null)
+                    if (_screenProvider != null)
                     {
-                        _currentBook.o.PositionChanged += OnPositionChanged;
+                        _screenProvider.o.PositionChanged += OnPositionChanged;
                         OnPositionChanged(this, EventArgs.Empty);
                     }
                 }
@@ -58,21 +58,6 @@ namespace PdfBookReader.Render
         {
             _currentBookDoneWait.Set();
         }
-
-        // Must be notified of changes in ScreenPageProvider...
-        int PhysicalPageNum
-        {
-            get
-            {
-                lock (MyLock)
-                {
-                    return (int)(CurrentBook.o.PhysicalPagePosition);
-                }
-            }
-        }
-
-        const int FetchForward = 20;
-        const int FetchBack = 5;
 
         void DoLoop()
         {
@@ -89,12 +74,12 @@ namespace PdfBookReader.Render
         // Returns true if all pages done, false otherwise
         bool PrefetchStartingAtCurrentPage()
         {
-            DW<ScreenPageProvider> currentBook = CurrentBook;
+            DW<ScreenProvider> currentBook = ScreenProvider;
             if (currentBook == null) { return true; }
 
-            int currentPageNum = PhysicalPageNum;
-            int pageCount = CurrentBook.o.PhysicalPageProvider.PageCount;
-            Size currentScreenSize = CurrentBook.o.ScreenSize;
+            int currentPageNum = ScreenProvider.o.CurrentPosition.PageNum;
+            int pageCount = ScreenProvider.o.PageProvider.PageCount;
+            Size currentScreenSize = ScreenProvider.o.ScreenSize;
 
             foreach(int pageNum in GetPrefretchPageNumbers(currentPageNum, pageCount))
             {
@@ -140,12 +125,12 @@ namespace PdfBookReader.Render
             }
         }
 
-        bool ShouldRestartFetch(DW<ScreenPageProvider> currentBook, int currentPageNum, Size currentSize)
+        bool ShouldRestartFetch(DW<ScreenProvider> currentBook, int currentPageNum, Size currentSize)
         {
             if (_stopLoop) { return true; }
-            if (currentBook != CurrentBook) { return true; }
-            if (currentPageNum != PhysicalPageNum) { return true; }
-            if (currentSize.Width != CurrentBook.o.ScreenSize.Width) { return true; }
+            if (currentBook != ScreenProvider) { return true; }
+            if (currentPageNum != ScreenProvider.o.CurrentPosition.PageNum) { return true; }
+            if (currentSize.Width != ScreenProvider.o.ScreenSize.Width) { return true; }
 
             return false;
         }
@@ -164,7 +149,8 @@ namespace PdfBookReader.Render
         public void Stop()
         {
             _stopLoop = true;
-            
+            _currentBookDoneWait.Set();
+
             // Wait until done working with all relevant objects
             if (_prefetchThread != null) 
             { 
@@ -172,27 +158,32 @@ namespace PdfBookReader.Render
             }
         }
 
-        void PrefetchPage(DW<ScreenPageProvider> screenProvider, int pageNum)
+        void PrefetchPage(DW<ScreenProvider> screenProvider, int pageNum)
         {
             lock (MyLock)
             {
                 if (pageNum < 1 || 
-                    pageNum > screenProvider.o.PhysicalPageProvider.PageCount ||
+                    pageNum > screenProvider.o.PageProvider.PageCount ||
                     screenProvider.IsDisposed)
                 {
                     return;
                 }
 
                 if (!Cache.o.MemoryCacheContains(
-                        CurrentBook.o.PhysicalPageProvider.FullPath,
+                        ScreenProvider.o.PageProvider.FullPath,
                         pageNum,
-                        CurrentBook.o.ScreenSize.Width))
+                        ScreenProvider.o.ScreenSize.Width))
                 {
-                    PageContent pc = CurrentBook.o.ContentProvider.RenderPhysicalPage(
+                    PageContent pc = ScreenProvider.o.ContentProvider.GetPage(
                         pageNum,
-                        CurrentBook.o.ScreenSize,
-                        CurrentBook.o.PhysicalPageProvider);
-                    pc.Return();
+                        ScreenProvider.o.ScreenSize,
+                        ScreenProvider.o.PageProvider);
+                    
+                    // BUG: leaking memory since PC is not set to InUse
+                    // and would never be disposed. Cannot return it here,
+                    // as the main thead could still have this item. 
+
+                    // Major architectural change is necessary to fix this in a nice way
                 }
 
                 // set priority

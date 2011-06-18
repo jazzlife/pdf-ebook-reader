@@ -9,7 +9,7 @@ using PdfBookReader.Utils;
 
 namespace PdfBookReader.Render
 {
-    partial class ScreenPageProvider
+    partial class ScreenProvider
     {
         #region Render Down / Up
 
@@ -19,8 +19,8 @@ namespace PdfBookReader.Render
         /// </summary>
         abstract class RenderBase
         {
-            protected ScreenPageProvider p;
-            public RenderBase(ScreenPageProvider provider) { p = provider; }
+            protected ScreenProvider p;
+            public RenderBase(ScreenProvider provider) { p = provider; }
 
             public DW<Bitmap> Run()
             {
@@ -101,7 +101,7 @@ namespace PdfBookReader.Render
         /// </summary>
         class RenderDown : RenderBase
         {
-            public RenderDown(ScreenPageProvider parent) : base(parent) { }
+            public RenderDown(ScreenProvider parent) : base(parent) { }
 
             protected override PageContent GetStartingPage()
             {
@@ -136,7 +136,7 @@ namespace PdfBookReader.Render
             protected override bool ShouldTerminate(PageContent curPage)
             {
                 // Final page (no spill over necessary, may terminate early)
-                if (curPage.PageNum == p.PhysicalPageProvider.PageCount)
+                if (curPage.PageNum == p.PageProvider.PageCount)
                 {
                     p.BottomPage = curPage;
                     return true;
@@ -169,7 +169,7 @@ namespace PdfBookReader.Render
         {
             readonly Size OldScreenSize;
 
-            public RenderCurrent(ScreenPageProvider parent, Size oldScreenSize)
+            public RenderCurrent(ScreenProvider parent, Size oldScreenSize)
                 : base(parent)
             {
                 OldScreenSize = oldScreenSize;
@@ -183,8 +183,11 @@ namespace PdfBookReader.Render
                     Trace.WriteLine("RenderCurrent_GetStarting: no top page, getting first page in doc");
                     curPage = p.GetPhysicalPage(1);
                 }
-                else if (p.TopPage.BottomOnScreen > 0)
+                else 
                 {
+                    // BUGFIX: render some content, even if bottom is above
+                    if (p.TopPage.BottomOnScreen <= 20) { p.TopPage.BottomOnScreen = 20; }
+
                     // Top page included on screen. 
                     Trace.WriteLine("RenderCurrent_GetStarting: using TopPage");
                     
@@ -209,10 +212,6 @@ namespace PdfBookReader.Render
                     curPage = p.TopPage;
                     // TopOnScreen -- retain same relative position as before
                 }
-                else
-                {
-                    throw new InvalidOperationException("Unexpected: top page not on screen: " + p.TopPage);
-                }
                 return curPage;
             }
 
@@ -223,7 +222,7 @@ namespace PdfBookReader.Render
         /// </summary>
         class RenderUp : RenderBase
         {
-            public RenderUp(ScreenPageProvider parent) : base(parent) { }
+            public RenderUp(ScreenProvider parent) : base(parent) { }
 
             protected override PageContent GetStartingPage()
             {
@@ -231,7 +230,7 @@ namespace PdfBookReader.Render
                 if (p.TopPage == null)
                 {
                     Trace.WriteLine("RenderUp.GetStarting: no TopPage, getting last page in doc (and setting bounds)");
-                    curPage = p.GetPhysicalPage(p.PhysicalPageProvider.PageCount);
+                    curPage = p.GetPhysicalPage(p.PageProvider.PageCount);
                     curPage.BottomOnScreen = p.ScreenSize.Height;
                 }
                 else if (p.TopPage.BottomOnScreen > 0)

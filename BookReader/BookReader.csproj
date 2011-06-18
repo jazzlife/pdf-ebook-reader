@@ -85,6 +85,7 @@
   <ItemGroup>
     <Compile Include="Metadata\Book.cs" />
     <Compile Include="Metadata\BookLibrary.cs" />
+    <Compile Include="Metadata\PositionInfo.cs" />
     <Compile Include="Render\Cache\PageContentCache.cs" />
     <Compile Include="Render\Cache\PageContentMemoryCache.cs" />
     <Compile Include="Render\Cache\PageContentDiskCache.cs" />
@@ -99,7 +100,6 @@
     <Compile Include="UI\BookProgressBar.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UI\EHandler.cs" />
     <Compile Include="UI\LibraryPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -127,7 +127,7 @@
     <Compile Include="Render\IPhysicalPageProvider.cs" />
     <Compile Include="Render\LayoutInfo.cs" />
     <Compile Include="Render\PageLayoutInfo.cs" />
-    <Compile Include="Render\PdfPhysicalPageProvider.cs" />
+    <Compile Include="Render\PdfBookPageProvider.cs" />
     <Compile Include="Render\PageContent.cs" />
     <Compile Include="Render\ScreenPageProvider.cs" />
     <Compile Include="Render\ScreenRenderAlgorithm.cs" />

@@ -13,7 +13,7 @@ namespace PdfBookReader.Render
     /// 
     /// Disposable since it may contain large in-memory objects.
     /// </summary>
-    public interface IPhysicalPageProvider : IDisposable
+    public interface IBookPageProvider : IDisposable
     {
         /// <summary>
         /// Total number of pages in the book.

@@ -27,7 +27,7 @@ namespace PdfBookReader.Render
 
         // Not serialized
         /// <summary>
-        /// Distance between content bounds top and creen page top 
+        /// Distance between content bounds top and screen page top 
         /// screen.Top - countentBounds.Top
         /// </summary>
         public int TopOnScreen = 0;

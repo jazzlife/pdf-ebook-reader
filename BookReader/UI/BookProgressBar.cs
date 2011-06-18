@@ -70,6 +70,7 @@ namespace PdfBookReader.UI
             {
                 float pos = (pageNum - 1) * PageIncrementSize;
 
+                Brush b = (pos % 2 == 0) ? Brushes.Blue : Brushes.LightBlue;
                 e.Graphics.FillRectangle(Brushes.Blue, (pos - PageIncrementSize) * Width, Height / 3, PageIncrementSize * Width, Height);
             }
 
@@ -77,6 +78,7 @@ namespace PdfBookReader.UI
             {
                 float pos = (pageNum - 1) * PageIncrementSize;
 
+                Brush b = (pos % 2 == 0) ? Brushes.DarkOrange : Brushes.Orange;
                 e.Graphics.FillRectangle(Brushes.Orange, (pos - PageIncrementSize) * Width, 2 * Height / 3, PageIncrementSize * Width, Height);
             }
         }
@@ -86,7 +88,7 @@ namespace PdfBookReader.UI
             get { return _incrementSize; }
             set 
             {
-                ArgCheck.IsRatio(value);
+                ArgCheck.IsUnit(value);
 
                 _incrementSize = value;
                 Invalidate();

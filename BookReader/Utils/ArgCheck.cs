@@ -50,6 +50,14 @@ namespace PdfBookReader.Utils
                     String.Format("{0}: {1}, not in range [{2}-{3}]", argName, arg, minInclusive, maxInclusive));
             }
         }
+        public static void InRange(float arg, float minInclusive, float maxInclusive, String argName = null)
+        {
+            if (arg < minInclusive || arg > maxInclusive)
+            {
+                throw new ArgumentOutOfRangeException(
+                    String.Format("{0}: {1}, not in range [{2}-{3}]", argName, arg, minInclusive, maxInclusive));
+            }
+        }
 
         public static void GreaterThan(int arg, int val, String argName)
         {
@@ -68,7 +76,7 @@ namespace PdfBookReader.Utils
             if (!(arg <= val)) { throw new ArgumentOutOfRangeException(String.Format("{0}: {1} not <= {2}", argName, arg, val)); }
         }
 
-        public static void IsRatio(float arg, String argName = null)
+        public static void IsUnit(float arg, String argName = null)
         {
             if (arg < 0 || arg > 1)
             {

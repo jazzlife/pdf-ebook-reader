@@ -33,8 +33,6 @@ namespace PdfBookReader.Render
             }
         }
 
-
-
         public Size PageSize { get; private set; }
 
         /// <summary>
@@ -53,7 +51,7 @@ namespace PdfBookReader.Render
         /// <param name="newPageSize"></param>
         public virtual void ScaleBounds(Size newPageSize)
         {
-            RectangleF relBounds = BoundsRelative;
+            RectangleF relBounds = BoundsUnit;
 
             Bounds = new Rectangle(
                 (int)(relBounds.X * newPageSize.Width),
@@ -67,9 +65,9 @@ namespace PdfBookReader.Render
         public bool IsEmpty { get { return Bounds.IsEmpty; } }
 
         /// <summary>
-        /// Bounds in relative 0-1 coordinates
+        /// Bounds in unit interval [0, 1] coordinates 
         /// </summary>
-        public RectangleF BoundsRelative
+        public RectangleF BoundsUnit
         {
             get
             {

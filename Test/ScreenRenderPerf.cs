@@ -7,6 +7,7 @@ using PdfBookReader.Render;
 using PdfBookReader.Test.TestUtils;
 using System.IO;
 using System.Drawing;
+using PdfBookReader.Metadata;
 
 namespace PdfBookReader.Test
 {
@@ -36,15 +37,14 @@ namespace PdfBookReader.Test
         {
             DefaultPageContentProvider dpcp = new DefaultPageContentProvider(null);
 
-            ScreenPageProvider provider = new ScreenPageProvider(
-                new PdfPhysicalPageProvider(file),
+            ScreenProvider provider = new ScreenProvider(
+                new PdfBookPageProvider(file),
                 dpcp, ScreenSize);
 
             const int RenderNextRepeats = 10;
             const int RenderMiddleRepeats = 5;
             const int RenderResizeRepeats = 3;
             const int RenderPreviousRepeats = 5;
-
 
             PTimer fileTimer = new PTimer("{0} file: {1}", timer.Name, Path.GetFileName(file));
 
@@ -62,12 +62,13 @@ namespace PdfBookReader.Test
             }
 
             // Render middle and re-render
-            float part = 1.0f / (RenderMiddleRepeats + 2);
+            int middle = provider.PageProvider.PageCount / 2;            
             for (int i = 0; i < RenderMiddleRepeats; i++)
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    provider.RenderPage(part * (i+1));
+                    PositionInfo pos = PositionInfo.FromPositionUnit(middle, provider.PageProvider.PageCount);
+                    provider.RenderPage(pos);
                 }
             }
 

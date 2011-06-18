@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using PdfBookReader.Utils;
 using System.Diagnostics;
+using PdfBookReader.Metadata;
 
 namespace PdfBookReader.Render
 {
@@ -13,21 +14,21 @@ namespace PdfBookReader.Render
     /// Renders screen pages based on physical pages.
     /// Keeps track of current page with ability to request next/previous.
     /// </summary>
-    partial class ScreenPageProvider : IDisposable
+    partial class ScreenProvider : IDisposable
     {
         public bool DrawDebugMarks = true;
 
         Size _screenSize;
-        IPhysicalPageProvider _physicalPageProvider;
+        IBookPageProvider _pageProvider;
         IPageContentProvider _contentProvider;
 
-        public ScreenPageProvider(
-            IPhysicalPageProvider physicalPageProvider,
+        public ScreenProvider(
+            IBookPageProvider bookPageProvider,
             IPageContentProvider contentProvider,
             Size screenPageSize)
         {
             ScreenSize = screenPageSize;
-            PhysicalPageProvider = physicalPageProvider;
+            PageProvider = bookPageProvider;
             ContentProvider = contentProvider;
         }
 
@@ -44,13 +45,13 @@ namespace PdfBookReader.Render
             }
         }
 
-        public IPhysicalPageProvider PhysicalPageProvider 
+        public IBookPageProvider PageProvider 
         {
-            get { return _physicalPageProvider; }
+            get { return _pageProvider; }
             set
             {
                 ArgCheck.NotNull(value);
-                _physicalPageProvider = value;
+                _pageProvider = value;
             }
         }
 
@@ -72,56 +73,24 @@ namespace PdfBookReader.Render
         public event EventHandler PositionChanged;
 
         /// <summary>
-        /// Position of currnet screen within the book, 0-1
-        /// 
-        /// Notion of screen page number does not exist.
-        /// We do not render the whole document at once. Current 
-        /// page number depends on screen page size, whitespace 
-        /// in physical pages, etc.
+        /// Position of currnet screen within the book.
         /// </summary>
-        public float Position
+        public PositionInfo CurrentPosition
         {
             get
             {
-                float pageNum = PhysicalPagePosition;
-                float position = (pageNum - 1) / PhysicalPageCount;
-                return position;
-            }
-        }
+                if (PageProvider == null) { throw new InvalidOperationException(); }
 
-        /// <summary>
-        /// Position in terms of physical pages. Ranges between 1 and PhysicalPageCount, inclusive
-        /// </summary>
-        public float PhysicalPagePosition
-        {
-            get
-            {
-                float pageNum = (TopPage == null) ? 1 : TopPage.PageNum;
-
-                // Position within physical page (since screen breaks != physical page breaks)
-                float positionWithinPage = 0;
-                if (TopPage != null &&
-                    TopPage.BottomOnScreen > 0 &&
-                    TopPage.Layout.Bounds.Height > 0)
+                if (TopPage == null)
                 {
-                    positionWithinPage = -(float)TopPage.TopOnScreen / TopPage.Layout.Bounds.Height;
+                    return PositionInfo.FromPhysicalPage(1, PageProvider.PageCount);
                 }
 
-                pageNum += positionWithinPage;
-
-                // Slight overflow can happen withn rendering forward/backward
-                // (e.g. when rendering backwards, first page starting in the middle)
-                if (pageNum < 1) { pageNum = 1; }
-                if (pageNum > PhysicalPageCount) { pageNum = PhysicalPageCount; }
-
-                return pageNum;
+                return PositionInfo.FromPhysicalPage(
+                    TopPage.PageNum,
+                    PageProvider.PageCount,
+                    TopPage.TopOnScreen, TopPage.Layout.Bounds.Height);
             }
-        }
-
-        public int PhysicalPageCount
-        {
-            get { return PhysicalPageProvider.PageCount; }
-
         }
 
         /// <summary>
@@ -129,27 +98,14 @@ namespace PdfBookReader.Render
         /// </summary>
         /// <param name="positionInBook"></param>
         /// <returns></returns>
-        public DW<Bitmap> RenderPage(float positionInBook)
+        public DW<Bitmap> RenderPage(PositionInfo position)
         {
-            ArgCheck.IsRatio(positionInBook, "positionInBook");
+            ArgCheck.Equals(position.PageCount == PageProvider.PageCount, "position page count not same as current book");
 
             // Fix for showing the full last page
-            // 1.0 position corresponds to the END of last page, we want the start
-            float onePageIncrement = 1.0f / PhysicalPageProvider.PageCount;
-            if (positionInBook > 1 - onePageIncrement) { positionInBook = 1 - onePageIncrement; }
+            TopPage = GetPhysicalPage(position.PageNum);
 
-            // Find and set TopPage
-            float pageIndex = positionInBook * PhysicalPageProvider.PageCount;
-
-            int pageNum = (int)pageIndex + 1;
-            TopPage = GetPhysicalPage(pageNum);
-
-            if (TopPage.Layout.Bounds.Height > 0)
-            {
-                // Fractional part of pageIndex
-                float topOnScreenRelative = pageIndex - ((int)pageIndex);
-                TopPage.TopOnScreen = -(int)(topOnScreenRelative * TopPage.Layout.Bounds.Height);
-            }
+            TopPage.TopOnScreen = position.GetTopOnScreen(TopPage.Layout.Bounds.Height);
 
             // Render "current" page based on new TopPage. No change in size.
             RenderCurrent r = new RenderCurrent(this, ScreenSize);
@@ -209,8 +165,8 @@ namespace PdfBookReader.Render
         /// <returns></returns>
         public bool HasNextPage()
         {
-            float onePage = 1.0f / PhysicalPageProvider.PageCount;
-            return Position < (1 - onePage);
+            if (BottomPage == null) { return true; }
+            return (BottomPage.BottomOnScreen > ScreenSize.Height);
         }
 
         /// <summary>
@@ -227,7 +183,8 @@ namespace PdfBookReader.Render
 
         public bool HasPreviousPage()
         {
-            return Position > 0;
+            if (TopPage == null) { return true; }
+            return (TopPage.TopOnScreen < 0);
         }
 
         #region PhysicalPageInfo fields
@@ -324,7 +281,7 @@ namespace PdfBookReader.Render
         PageContent GetPhysicalPage(int pageNum)
         {
             // No physical page
-            if (pageNum < 1 || pageNum > PhysicalPageProvider.PageCount)
+            if (pageNum < 1 || pageNum > PageProvider.PageCount)
             {
                 Trace.WriteLine("GetPhysicalPage: null, pageNum out of range: " + pageNum);
                 return null;
@@ -333,7 +290,7 @@ namespace PdfBookReader.Render
             Trace.WriteLine("GetPhysicalPage: pageNum = " + pageNum);
 
             // Render actual page (may take long)
-            return ContentProvider.RenderPhysicalPage(pageNum, ScreenSize, PhysicalPageProvider);
+            return ContentProvider.GetPage(pageNum, ScreenSize, PageProvider);
         }        
 
 
