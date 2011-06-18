@@ -23,7 +23,7 @@ namespace PdfBookReader.Render
         /// <summary>
         /// Full path to document or folder or url containing the book.
         /// </summary>
-        string FullPath { get; }
+        string BookFilename { get; }
 
         /// <summary>
         /// Render and return the specific physical page.

@@ -21,26 +21,28 @@ namespace PdfBookReader.UI
         IBookPageProvider _bookPageProvider;
         DW<ScreenProvider> _screenPageProvider;
 
-        PrefetchManager _prefetchManager;
 
         DW<Bitmap> _currentScreenImage;
+
+        // read-only
         DW<PageContentCache> _pageCache;
+        PrefetchManager _prefetchManager;
 
         public ReadingPanel()
         {
             InitializeComponent();
-
-            _pageCache = DW.Wrap(new PageContentCache());
-            //_pageCache.PageCached += OnPageCached;
-
-            _prefetchManager = new PrefetchManager(_pageCache);
-            _prefetchManager.Start();
         }
 
         public void Initialize(BookLibrary library)
         {
             ArgCheck.NotNull(library, "library");
             _library = library;
+
+            _pageCache = DW.Wrap(new PageContentCache());
+            //_pageCache.PageCached += OnPageCached;
+
+            _prefetchManager = new PrefetchManager(_pageCache);
+            _prefetchManager.Start();
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -60,14 +62,17 @@ namespace PdfBookReader.UI
 
                 // Rendering components
                 BookPageProvider = new PdfBookPageProvider(_book.Filename);
+
                 IPageContentProvider contentProvider = new DefaultPageContentProvider(_pageCache); // not disposable
+
+                
                 ScreenProvider = DW.Wrap(new ScreenProvider(BookPageProvider, contentProvider, pbContent.Size));
 
                 _prefetchManager.ScreenProvider = ScreenProvider;
 
                 // TODO: render page at stored position in the book
                 // (no the first "current" page).
-                CurrentPageImage = ScreenProvider.o.RenderCurrentPage(pbContent.Size);
+                CurrentScreenImage = ScreenProvider.o.RenderCurrentPage(pbContent.Size);
 
                 bookProgressBar.PageIncrementSize = ScreenProvider.o.CurrentPosition.UnitSize;
                 UpdateUIState();
@@ -85,13 +90,13 @@ namespace PdfBookReader.UI
             if (pos < 0) { pos = 0; }
 
             PositionInBook pi = PositionInBook.FromPositionUnit(pos, ScreenProvider.o.PageProvider.PageCount);
-            CurrentPageImage = ScreenProvider.o.RenderPage(pi);
+            CurrentScreenImage = ScreenProvider.o.RenderPage(pi);
             UpdateUIState();
         }
 
         #endregion
 
-        private DW<Bitmap> CurrentPageImage
+        private DW<Bitmap> CurrentScreenImage
         {
             get { return _currentScreenImage; }
             set
@@ -99,7 +104,13 @@ namespace PdfBookReader.UI
                 if (value == null) { return; }
                 
                 pbContent.Image = null;
-                value.AssignNewDisposeOld(ref _currentScreenImage);
+                if (_currentScreenImage != null)
+                {
+                    _currentScreenImage.DisposeItem();
+                }
+
+                _currentScreenImage = value;
+
                 pbContent.Image = _currentScreenImage.o;
             }
         }
@@ -107,7 +118,32 @@ namespace PdfBookReader.UI
         private DW<ScreenProvider> ScreenProvider
         {
             get { return _screenPageProvider; }
-            set { value.AssignNewDisposeOld(ref _screenPageProvider); }
+            set 
+            {
+                if (_screenPageProvider != null)
+                {
+                    _screenPageProvider.o.PositionChanged -= o_PositionChanged;
+                    _screenPageProvider.DisposeItem();
+                }
+
+                _screenPageProvider = value;
+
+                if (_screenPageProvider != null)
+                {
+                    _screenPageProvider.o.PositionChanged += o_PositionChanged;
+                }
+            }
+        }
+
+        void o_PositionChanged(object sender, EventArgs e)
+        {
+            if (Book != null ||
+                Book.Filename != ScreenProvider.o.PageProvider.BookFilename)
+            {
+                return;
+            }
+
+            Book.CurrentPosition = ScreenProvider.o.CurrentPosition;
         }
 
         private IBookPageProvider BookPageProvider
@@ -135,7 +171,7 @@ namespace PdfBookReader.UI
             timerResize.Stop();
             if (ScreenProvider == null) { return; }
 
-            CurrentPageImage = ScreenProvider.o.RenderCurrentPage(pbContent.Size);
+            CurrentScreenImage = ScreenProvider.o.RenderCurrentPage(pbContent.Size);
 
             UpdateUIState();
         }
@@ -170,14 +206,14 @@ namespace PdfBookReader.UI
 
         private void bNextPage_Click(object sender, EventArgs e)
         {
-            CurrentPageImage = ScreenProvider.o.RenderNextPage();
+            CurrentScreenImage = ScreenProvider.o.RenderNextPage();
             
             UpdateUIState();
         }
 
         private void bPrevPage_Click(object sender, EventArgs e)
         {
-            CurrentPageImage = ScreenProvider.o.RenderPreviousPage();            
+            CurrentScreenImage = ScreenProvider.o.RenderPreviousPage();            
 
             UpdateUIState();
         }
@@ -214,5 +250,29 @@ namespace PdfBookReader.UI
 
             }
         }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            this.FindForm().FormClosed += OnUnload;
+        }
+
+        void OnUnload(object sender, FormClosedEventArgs e)
+        {
+            // Stop prefetch manager, it may be using other parts
+            if (_prefetchManager != null)
+            {
+                _prefetchManager.Stop();
+            }
+
+            // Save the cache
+            if (_pageCache != null)
+            {
+                _pageCache.o.SaveCache();
+                _pageCache.o.Dispose();
+            }
+
+        }
+
+
     }
 }

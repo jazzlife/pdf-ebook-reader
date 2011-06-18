@@ -88,7 +88,7 @@ namespace PdfBookReaderTest.Render
                     // String tempFile = Path.GetTempFileName();
                     // bmp.Save(tempFile, ImageFormat.Png);
 
-                    bmp.Dispose();
+                    bmp.DisposeItem();
                 }
             }
         }

@@ -50,7 +50,7 @@ namespace PdfBookReader.Render.Cache
             base.RemoveItem(key);
 
             // Dispose the bitmap
-            cdItem.Image.Dispose();
+            cdItem.Image.DisposeItem();
         }
     }
 }

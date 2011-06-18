@@ -37,7 +37,7 @@ namespace PdfBookReader.Render
             LoadPdf(file);
         }
 
-        public string FullPath
+        public string BookFilename
         {
             get { return _fullPath; }
         }
@@ -155,7 +155,7 @@ namespace PdfBookReader.Render
         {
             if (_pdfDoc != null)
             {
-                _pdfDoc.Dispose();
+                _pdfDoc.DisposeItem();
                 _pdfDoc = null;
             }
         }

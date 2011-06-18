@@ -112,7 +112,7 @@ namespace PdfBookReader.Utils
         /// <summary>
         /// Dispose the wrapped object.
         /// </summary>
-        public void Dispose()
+        public void DisposeItem()
         {
             if (_item == null) { return; }
 

@@ -107,7 +107,7 @@ namespace PdfBookReader.Utils
             // Dispose the old value
             if (targetField != null)
             {
-                targetField.Dispose();
+                targetField.DisposeItem();
             }
 
             targetField = value;
