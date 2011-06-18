@@ -41,6 +41,10 @@ namespace PdfBookReader.UI
         private void pReading_GoToLibrary(object sender, EventArgs e)
         {
             this.Text = "eBook - Library";
+
+            _library.CurrentBook = null;
+
+            pReading.Book = null;
             pLibrary.Visible = true;
             pReading.Visible = false;
         }

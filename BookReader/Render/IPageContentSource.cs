@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using PdfBookReader.Utils;
 
 namespace PdfBookReader.Render
 {
     /// <summary>
     /// Generates PageContent from a physical page image.
     /// </summary>
-    interface IPageContentProvider
+    interface IPageContentSource : IDisposable
     {
         IPageLayoutAnalyzer LayoutAnalyzer { get; set; }
 
@@ -20,6 +21,6 @@ namespace PdfBookReader.Render
         /// <param name="screenSize"></param>
         /// <param name="physicalPageProvider"></param>
         /// <returns></returns>
-        PageContent GetPage(int pageNum, Size screenSize, IBookPageProvider physicalPageProvider);
+        PageContent GetPage(int pageNum, Size screenSize, DW<IBookPageProvider> physicalPageProvider);
     }
 }

@@ -94,8 +94,8 @@
     <Compile Include="Render\Cache\IExpirationPolicy.cs" />
     <Compile Include="Render\Cache\PageKey.cs" />
     <Compile Include="Render\Cache\SimpleCache.cs" />
-    <Compile Include="Render\DefaultPageContentProvider.cs" />
-    <Compile Include="Render\IPageContentProvider.cs" />
+    <Compile Include="Render\CachedPageContentSource.cs" />
+    <Compile Include="Render\IPageContentSource.cs" />
     <Compile Include="Render\PdfRenderPerformanceInfo.cs" />
     <Compile Include="Render\Cache\PrefetchManager.cs" />
     <Compile Include="Render\TheadSafe.cs" />
@@ -132,7 +132,7 @@
     <Compile Include="Render\PageLayoutInfo.cs" />
     <Compile Include="Render\PdfBookPageProvider.cs" />
     <Compile Include="Render\PageContent.cs" />
-    <Compile Include="Render\ScreenPageProvider.cs" />
+    <Compile Include="Render\ScreenProvider.cs" />
     <Compile Include="Render\ScreenRenderAlgorithm.cs" />
     <Compile Include="Utils\ArgCheck.cs" />
     <Compile Include="Utils\DisposableWrapper.cs" />

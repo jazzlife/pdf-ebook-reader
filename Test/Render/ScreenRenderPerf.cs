@@ -8,6 +8,7 @@ using PdfBookReaderTest.TestUtils;
 using System.IO;
 using System.Drawing;
 using PdfBookReader.Model;
+using PdfBookReader.Utils;
 
 namespace PdfBookReaderTest.Render
 {
@@ -35,11 +36,10 @@ namespace PdfBookReaderTest.Render
 
         void RenderOneFile(PTimer timer, String file)
         {
-            DefaultPageContentProvider dpcp = new DefaultPageContentProvider(null);
-
             ScreenProvider provider = new ScreenProvider(
-                new PdfBookPageProvider(file),
-                dpcp, ScreenSize);
+                DW.Wrap<IBookPageProvider>(new PdfBookPageProvider(file)),
+                DW.Wrap<IPageContentSource>(new CachedPageContentSource()), 
+                ScreenSize);
 
             const int RenderNextRepeats = 10;
             const int RenderMiddleRepeats = 5;
@@ -57,17 +57,17 @@ namespace PdfBookReaderTest.Render
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    provider.RenderNextPage();
+                    provider.RenderNextScreen();
                 }
             }
 
             // Render middle and re-render
-            int middle = provider.PageProvider.PageCount / 2;            
+            int middle = provider.PageProvider.o.PageCount / 2;            
             for (int i = 0; i < RenderMiddleRepeats; i++)
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    PositionInBook pos = PositionInBook.FromPositionUnit(middle, provider.PageProvider.PageCount);
+                    PositionInBook pos = PositionInBook.FromPositionUnit(middle, provider.PageProvider.o.PageCount);
                     provider.RenderPage(pos);
                 }
             }
@@ -77,11 +77,11 @@ namespace PdfBookReaderTest.Render
             {
                 // Render at different size
                 Size newSize = new Size((int)(provider.ScreenSize.Width * 1.2), (int)(provider.ScreenSize.Height * 1.2));
-                provider.RenderCurrentPage(newSize);
+                provider.RenderCurrentScreen(newSize);
             }
             using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
             {
-                provider.RenderCurrentPage(ScreenSize); // back to normal
+                provider.RenderCurrentScreen(ScreenSize); // back to normal
             }
 
             // Render last, backward
@@ -93,7 +93,7 @@ namespace PdfBookReaderTest.Render
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    provider.RenderPreviousPage();
+                    provider.RenderPreviousScreen();
                 }
             }
 

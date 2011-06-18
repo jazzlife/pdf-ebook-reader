@@ -154,32 +154,24 @@ namespace PdfBookReaderTest.Render
         void RenderAndAnalyzePages(PTimer sumTimer, String file, RenderQuality quality = RenderQuality.Optimal,
             IPageLayoutAnalyzer analyzer = null, PageContentCache cache = null)
         {
-            bool disposeCache = false;
-            if (cache == null)
-            {
-                cache = new PageContentCache();
-                disposeCache = true;
-            }
-
-            DefaultPageContentProvider pcp = new DefaultPageContentProvider(DW.Wrap(cache), analyzer);
-            PdfBookPageProvider pageProvider = new PdfBookPageProvider(file);
+            var pcp = DW.Wrap(new CachedPageContentSource(analyzer));
+            var pageProvider = DW.Wrap<IBookPageProvider>(new PdfBookPageProvider(file));
 
             using (PTimer localTimer = new PTimer(">>{0}: {1}".F(sumTimer.Name, Path.GetFileNameWithoutExtension(file))))
             {
-                foreach(int pageNum in PageNums(pageProvider.PageCount))
+                foreach (int pageNum in PageNums(pageProvider.o.PageCount))
                 {
                     PageContent pc;
 
                     // Only time the render method
                     using (IDisposable d1 = localTimer.NewRun, d2 = sumTimer.NewRun)
                     {
-                        pc = pcp.GetPage(pageNum, PageSize, pageProvider);
+                        pc = pcp.o.GetPage(pageNum, PageSize, pageProvider);
                     }
                 }
             }
 
-            cache.SaveCache();
-            if (disposeCache) { cache.Dispose(); }
+            pcp.DisposeItem();
         }
     }
 }

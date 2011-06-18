@@ -78,7 +78,7 @@ namespace PdfBookReader.Render
             if (currentBook == null) { return true; }
 
             int currentPageNum = ScreenProvider.o.CurrentPosition.PageNum;
-            int pageCount = ScreenProvider.o.PageProvider.PageCount;
+            int pageCount = ScreenProvider.o.PageProvider.o.PageCount;
             Size currentScreenSize = ScreenProvider.o.ScreenSize;
 
             foreach(int pageNum in GetPrefretchPageNumbers(currentPageNum, pageCount))
@@ -163,7 +163,7 @@ namespace PdfBookReader.Render
             lock (MyLock)
             {
                 if (pageNum < 1 || 
-                    pageNum > screenProvider.o.PageProvider.PageCount ||
+                    pageNum > screenProvider.o.PageProvider.o.PageCount ||
                     ScreenProvider == null || 
                     ScreenProvider.IsDisposed)
                 {
@@ -171,11 +171,11 @@ namespace PdfBookReader.Render
                 }
 
                 if (!Cache.o.MemoryCacheContains(
-                        ScreenProvider.o.PageProvider.BookFilename,
+                        ScreenProvider.o.PageProvider.o.BookFilename,
                         pageNum,
                         ScreenProvider.o.ScreenSize.Width))
                 {
-                    PageContent pc = ScreenProvider.o.ContentProvider.GetPage(
+                    PageContent pc = ScreenProvider.o.ContentProvider.o.GetPage(
                         pageNum,
                         ScreenProvider.o.ScreenSize,
                         ScreenProvider.o.PageProvider);
