@@ -32,7 +32,7 @@ namespace PdfBookReader.Metadata
         public String Title { get; private set; }
 
         [DataMember]
-        public PositionInfo CurrentPosition { get; set; }
+        public PositionInBook CurrentPosition { get; set; }
 
         // TODO: add thumbnail etc.
         public Book(String filename)

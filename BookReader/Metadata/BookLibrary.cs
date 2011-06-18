@@ -14,11 +14,11 @@ namespace PdfBookReader.Metadata
     {
         String _filename;
 
-        [DataMember(Name = "Books")]
-        List<Book> _books;
-
         [DataMember(Name = "CurrentBookId")]
         Guid _currentBookId;
+
+        [DataMember(Name = "Books")]
+        List<Book> _books;
 
         // NOTE: in data contract serialization, ctor never runs
         public BookLibrary() 

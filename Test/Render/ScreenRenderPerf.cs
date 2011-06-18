@@ -67,7 +67,7 @@ namespace PdfBookReaderTest.Render
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    PositionInfo pos = PositionInfo.FromPositionUnit(middle, provider.PageProvider.PageCount);
+                    PositionInBook pos = PositionInBook.FromPositionUnit(middle, provider.PageProvider.PageCount);
                     provider.RenderPage(pos);
                 }
             }

@@ -48,7 +48,7 @@ namespace PdfBookReader.Render.Cache
 
         public override string ToString()
         {
-            return Rep;
+            return "PageKey: p={0} w={1} b={2}".F(PageNum, ScreenWidth, BookId);
         }
     }
 }

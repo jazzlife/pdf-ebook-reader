@@ -75,7 +75,7 @@ namespace PdfBookReader.Render
         /// <summary>
         /// Position of currnet screen within the book.
         /// </summary>
-        public PositionInfo CurrentPosition
+        public PositionInBook CurrentPosition
         {
             get
             {
@@ -83,10 +83,10 @@ namespace PdfBookReader.Render
 
                 if (TopPage == null)
                 {
-                    return PositionInfo.FromPhysicalPage(1, PageProvider.PageCount);
+                    return PositionInBook.FromPhysicalPage(1, PageProvider.PageCount);
                 }
 
-                return PositionInfo.FromPhysicalPage(
+                return PositionInBook.FromPhysicalPage(
                     TopPage.PageNum,
                     PageProvider.PageCount,
                     TopPage.TopOnScreen, TopPage.Layout.Bounds.Height);
@@ -98,7 +98,7 @@ namespace PdfBookReader.Render
         /// </summary>
         /// <param name="positionInBook"></param>
         /// <returns></returns>
-        public DW<Bitmap> RenderPage(PositionInfo position)
+        public DW<Bitmap> RenderPage(PositionInBook position)
         {
             ArgCheck.Equals(position.PageCount == PageProvider.PageCount, "position page count not same as current book");
 

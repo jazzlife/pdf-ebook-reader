@@ -77,7 +77,7 @@ namespace PdfBookReader.UI
             if (pos > 1) { pos = 1; }
             if (pos < 0) { pos = 0; }
 
-            PositionInfo pi = PositionInfo.FromPositionUnit(pos, ScreenProvider.o.PageProvider.PageCount);
+            PositionInBook pi = PositionInBook.FromPositionUnit(pos, ScreenProvider.o.PageProvider.PageCount);
             CurrentPageImage = ScreenProvider.o.RenderPage(pi);
             UpdateUIState();
         }
@@ -147,7 +147,7 @@ namespace PdfBookReader.UI
         void UpdateBookProgressBar()
         {
             // TODO: shift progress so it's full at last page
-            PositionInfo pos = ScreenProvider.o.CurrentPosition;
+            PositionInBook pos = ScreenProvider.o.CurrentPosition;
             bookProgressBar.Value = pos.PositionUnit;
 
             lbPageNum.Text = String.Format("{0:0.0}/{1}", 
