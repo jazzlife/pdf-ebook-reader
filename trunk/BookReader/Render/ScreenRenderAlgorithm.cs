@@ -32,6 +32,7 @@ namespace PdfBookReader.Render
                     curPage.BottomOnScreen <= 0 ||
                     curPage.TopOnScreen >= p.ScreenSize.Height) { return null; }
 
+
                 // 24bpp format for compatibility with AForge
                 DW<Bitmap> screenBmp = DW.Wrap(new Bitmap(p.ScreenSize.Width, p.ScreenSize.Height, PixelFormat.Format24bppRgb));
                 using (Graphics g = Graphics.FromImage(screenBmp.o))
@@ -50,6 +51,12 @@ namespace PdfBookReader.Render
                 Trace.WriteLine("Render done: TopPage = " + p.TopPage);
                 Trace.WriteLine("Render done: BottomPage = " + p.BottomPage);
                 Trace.WriteLine("");
+
+                // Update position
+                if (p.PositionChanged != null)
+                {
+                    p.PositionChanged(this, EventArgs.Empty);
+                }
 
                 return screenBmp;
             }
@@ -117,7 +124,7 @@ namespace PdfBookReader.Render
 
                     // Bottom page included on screen. Adjust offset for next screen.
                     curPage = p.BottomPage;
-                    if (p.BottomPage.BottomOnScreen > p.ScreenSize.Height)
+                    if (p.BottomPage.BottomOnScreen >= p.ScreenSize.Height)
                     {
                         curPage.TopOnScreen = p.BottomPage.TopOnScreen - p.ScreenSize.Height;
                     }
@@ -136,7 +143,7 @@ namespace PdfBookReader.Render
             protected override bool ShouldTerminate(PageContent curPage)
             {
                 // Final page (no spill over necessary, may terminate early)
-                if (curPage.PageNum == p.PageProvider.PageCount)
+                if (curPage.PageNum == p.PageProvider.o.PageCount)
                 {
                     p.BottomPage = curPage;
                     return true;
@@ -230,24 +237,29 @@ namespace PdfBookReader.Render
                 if (p.TopPage == null)
                 {
                     Trace.WriteLine("RenderUp.GetStarting: no TopPage, getting last page in doc (and setting bounds)");
-                    curPage = p.GetPhysicalPage(p.PageProvider.PageCount);
+                    curPage = p.GetPhysicalPage(p.PageProvider.o.PageCount);
                     curPage.BottomOnScreen = p.ScreenSize.Height;
                 }
-                else if (p.TopPage.BottomOnScreen > 0)
+                else if (p.TopPage.TopOnScreen < 0)
                 {
                     Trace.WriteLine("RenderUp_GetStarting: using TopPage");
 
                     // Bottom page included on screen. Adjust offset for next screen.
                     curPage = p.TopPage;
-                    curPage.TopOnScreen = p.ScreenSize.Height + p.TopPage.TopOnScreen; // ???
+                    curPage.TopOnScreen = p.ScreenSize.Height + p.TopPage.TopOnScreen; 
                 }
-                else
+                else if (p.TopPage.TopOnScreen == 0)
                 {
                     Trace.WriteLine("RenderUp_GetStarting: TopPage below screen, getting previous page");
 
                     // Render a new page
                     // NOTE: null if past-the-last page
                     curPage = p.GetPhysicalPage(p.TopPage.PageNum - 1);
+                    curPage.BottomOnScreen = p.ScreenSize.Height;
+                }
+                else
+                {
+                    return null;
                 }
                 return curPage;
             }

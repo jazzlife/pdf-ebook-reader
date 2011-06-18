@@ -10,7 +10,7 @@ using NLog;
 
 namespace PdfBookReader.Render
 {
-    class DefaultPageContentProvider : IPageContentProvider
+    class CachedPageContentSource : IPageContentSource
     {
         readonly static Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -18,25 +18,27 @@ namespace PdfBookReader.Render
 
         // Cache
         readonly DW<PageContentCache> Cache;
+        readonly PrefetchManager PrefetchManager;
 
         object MyLock = new object();
 
-        public DefaultPageContentProvider(DW<PageContentCache> cache, 
-            IPageLayoutAnalyzer layoutAnalyzer = null)
+        public CachedPageContentSource(IPageLayoutAnalyzer layoutAnalyzer = null)
         {
             if (layoutAnalyzer == null) { layoutAnalyzer = new BlobPageLayoutAnalyzer(); }
             LayoutAnalyzer = layoutAnalyzer;
 
-            Cache = cache;
+            Cache = DW.Wrap(new PageContentCache());
+            PrefetchManager = new PrefetchManager(Cache);
+            PrefetchManager.Start();
         }
 
-        public PageContent GetPage(int pageNum, Size screenSize, IBookPageProvider pageProvider) 
+        public PageContent GetPage(int pageNum, Size screenSize, DW<IBookPageProvider> pageProvider) 
         {
             // Try to get from cache
             PageContent pageInfo;
             if (Cache != null)
             {
-                pageInfo = Cache.o.Get(pageProvider.BookFilename, pageNum, screenSize.Width);
+                pageInfo = Cache.o.Get(pageProvider.o.BookFilename, pageNum, screenSize.Width);
                 if (pageInfo != null)
                 {
                     return pageInfo;
@@ -48,7 +50,7 @@ namespace PdfBookReader.Render
             // Save to cache
             if (Cache != null)
             {
-                Cache.o.Add(pageProvider.BookFilename, pageNum, screenSize.Width, pageInfo);
+                Cache.o.Add(pageProvider.o.BookFilename, pageNum, screenSize.Width, pageInfo);
             }
 
             return pageInfo;
@@ -57,7 +59,7 @@ namespace PdfBookReader.Render
         // Simple optimization -- try to render in appropriate size
         int lastPageWidth = 1000; // for first page
 
-        PageContent RenderPhysicalPage(int pageNum, Size screenSize, IBookPageProvider pageProvider)
+        PageContent RenderPhysicalPage(int pageNum, Size screenSize, DW<IBookPageProvider> pageProvider)
         {
             Log.Debug("Rendering: #{0} w={1}", pageNum, screenSize.Width);
 
@@ -70,7 +72,7 @@ namespace PdfBookReader.Render
                 
                 PageLayoutInfo layout;
                 Size layoutRenderSize = new Size(lastPageWidth, int.MaxValue); 
-                DW<Bitmap> layoutPage = pageProvider.RenderPage(pageNum, layoutRenderSize, RenderQuality.Optimal);
+                DW<Bitmap> layoutPage = pageProvider.o.RenderPage(pageNum, layoutRenderSize, RenderQuality.Optimal);
                 layout = LayoutAnalyzer.DetectPageLayout(layoutPage);
 
                 // Special case - empty page
@@ -102,7 +104,7 @@ namespace PdfBookReader.Render
                         lastPageWidth, pageWidth, lastPageWidth - pageWidth);
 
                     Size displayPageMaxSize = new Size(pageWidth, int.MaxValue);
-                    displayPage = pageProvider.RenderPage(pageNum, displayPageMaxSize, RenderQuality.Optimal);
+                    displayPage = pageProvider.o.RenderPage(pageNum, displayPageMaxSize, RenderQuality.Optimal);
                     layout.ScaleBounds(displayPage.o.Size);
                 }
 
@@ -115,5 +117,15 @@ namespace PdfBookReader.Render
             }
         }
 
+
+
+
+        public void Dispose()
+        {
+            PrefetchManager.Stop();
+
+            Cache.o.SaveCache();
+            Cache.o.Dispose();
+        }
     }
 }

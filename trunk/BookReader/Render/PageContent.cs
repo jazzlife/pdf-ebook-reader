@@ -16,6 +16,8 @@ namespace PdfBookReader.Render
     [DataContract(Name = "PageContent")]
     class PageContent : ICachedDisposable
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         [DataMember (Name = "PageNum")]
         public readonly int PageNum; // page number in document, 1-n
         
@@ -25,12 +27,27 @@ namespace PdfBookReader.Render
         // Serialized separately
         DW<Bitmap> _image; // physical page image
 
+
+        int _topOnScreen;
         // Not serialized
         /// <summary>
         /// Distance between content bounds top and screen page top 
         /// screen.Top - countentBounds.Top
         /// </summary>
-        public int TopOnScreen = 0;
+        public int TopOnScreen
+        {
+            get { return _topOnScreen; }
+            set
+            {
+                if (!(-3000 < value && value < 3000))
+                {
+                    logger.Error("Wrong _topOfScreen value: " + value + " in: " + this);
+                }
+
+                _topOnScreen = value;
+            }
+
+        }
 
         public PageContent(int pageNum, DW<Bitmap> image, PageLayoutInfo layout)
         {
