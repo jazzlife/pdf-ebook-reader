@@ -98,6 +98,7 @@
     <Compile Include="Render\IPageContentSource.cs" />
     <Compile Include="Render\PdfRenderPerformanceInfo.cs" />
     <Compile Include="Render\Cache\PrefetchManager.cs" />
+    <Compile Include="Render\ScreenRenderManager.cs" />
     <Compile Include="Render\TheadSafe.cs" />
     <Compile Include="UI\BookListViewItem.cs" />
     <Compile Include="UI\BookProgressBar.cs">
@@ -132,7 +133,7 @@
     <Compile Include="Render\PageLayoutInfo.cs" />
     <Compile Include="Render\PdfBookPageProvider.cs" />
     <Compile Include="Render\PageContent.cs" />
-    <Compile Include="Render\ScreenProvider.cs" />
+    <Compile Include="Render\ScreenBook.cs" />
     <Compile Include="Render\ScreenRenderAlgorithm.cs" />
     <Compile Include="Utils\ArgCheck.cs" />
     <Compile Include="Utils\DisposableWrapper.cs" />

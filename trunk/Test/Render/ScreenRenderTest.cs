@@ -10,6 +10,7 @@ using System.Drawing.Imaging;
 using PdfBookReaderTest.TestUtils;
 using System.IO;
 using PdfBookReader.Render;
+using PdfBookReader.Model;
 
 namespace PdfBookReaderTest
 {
@@ -52,24 +53,20 @@ namespace PdfBookReaderTest
             Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, new Size(800, 600), true);
         }
 
-        void Render(String file, int maxPages, Size screenPageSize, bool renderUp = false)
+        void Render(String file, int maxPages, Size screenSize, bool renderUp = false)
         {
-            var pdfReader = DW.Wrap<IBookPageProvider>(new PdfBookPageProvider(file));
-            var contentProvider = DW.Wrap<IPageContentSource>(new CachedPageContentSource());
+            var contentSource = DW.Wrap<IPageContentSource>(new CachedPageContentSource());
 
-            ScreenProvider screenPageProvider = new ScreenProvider(
-                pdfReader, 
-                contentProvider, 
-                screenPageSize);
+            ScreenBook screenPageProvider = new ScreenBook(new Book(file), screenSize);
 
             PTimer timer = new PTimer("Screen Page Load {0}x{1} '{2}'", 
-                screenPageSize.Width, screenPageSize.Height, Path.GetFileName(file));
+                screenSize.Width, screenSize.Height, Path.GetFileName(file));
 
             for (int pageNum = 0; pageNum < maxPages; pageNum++)
             {
                 using (timer.NewRun)
                 {
-                    using (Bitmap screenPage = RenderFollowing(screenPageProvider, renderUp))
+                    using (Bitmap screenPage = RenderFollowing(screenPageProvider, contentSource, renderUp))
                     {
                         // Last page
                         if (screenPage == null) { break; }
@@ -83,10 +80,10 @@ namespace PdfBookReaderTest
             Console.WriteLine(timer);
         }
 
-        Bitmap RenderFollowing(ScreenProvider provider, bool renderUp)
+        Bitmap RenderFollowing(ScreenBook provider, DW<IPageContentSource> csrc, bool renderUp)
         {
-            if (renderUp) { return provider.RenderPreviousScreen().o; }
-            else { return provider.RenderNextScreen().o; }
+            if (renderUp) { return provider.RenderPreviousScreen(csrc).o; }
+            else { return provider.RenderNextScreen(csrc).o; }
         }
 
     }
