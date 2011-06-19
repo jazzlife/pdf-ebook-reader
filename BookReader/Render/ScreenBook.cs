@@ -14,65 +14,75 @@ namespace PdfBookReader.Render
     /// Renders screen pages based on physical pages.
     /// Keeps track of current page with ability to request next/previous.
     /// </summary>
-    partial class ScreenProvider : IDisposable
+    partial class ScreenBook 
     {
+        public readonly Book Book;
+
         Size _screenSize;
 
-        public DW<IBookPageProvider> PageProvider { get; private set; }
-        public DW<IPageContentSource> ContentProvider { get; private set; }
+        DW<IBookPageProvider> _bookPageProvider;
 
-        public ScreenProvider(
-            DW<IBookPageProvider> bookPageProvider,
-            DW<IPageContentSource> contentProvider,
-            Size screenPageSize)
+        public ScreenBook(Book book, Size screenPageSize)
         {
-            ArgCheck.NotNull(bookPageProvider, "bookPageProvider");
-            ArgCheck.NotNull(contentProvider, "contentProvider");
+            ArgCheck.NotNull(book, "book");
 
+            Book = book;
             ScreenSize = screenPageSize;
-            PageProvider = bookPageProvider;
-            ContentProvider = contentProvider;
         }
 
-        #region Config Properties
+        #region Public properties
 
         public Size ScreenSize 
         {
             get { return _screenSize; }
-            private set
+            set 
             {
-                ArgCheck.NotEmpty(value);
+                if (_screenSize == value) { return; }
 
-                _screenSize = value;
+                _screenSize = value; 
+
+                // Size changed, so top and bottom page are no longer relevant,
+                // We should re-render based on Book.Position instead
+                TopPage = null;
+                BottomPage = null;
             }
         }
 
         #endregion
 
-        /// <summary>
-        /// Position in the document changed
-        /// </summary>
-        public event EventHandler PositionChanged;
-
-        /// <summary>
-        /// Position of currnet screen within the book.
-        /// </summary>
-        public PositionInBook CurrentPosition
+        public DW<IBookPageProvider> BookPageProvider
         {
             get
             {
-                if (PageProvider == null) { throw new InvalidOperationException(); }
-
-                if (TopPage == null)
+                if (_bookPageProvider == null)
                 {
-                    return PositionInBook.FromPhysicalPage(1, PageProvider.o.PageCount);
+                    _bookPageProvider = DW.Wrap<IBookPageProvider>(new PdfBookPageProvider(Book.Filename));
                 }
-
-                return PositionInBook.FromPhysicalPage(
-                    TopPage.PageNum,
-                    PageProvider.o.PageCount,
-                    TopPage.TopOnScreen, TopPage.Layout.Bounds.Height);
+                return _bookPageProvider;
             }
+            // TODO: dispose when approrpiate
+        }
+
+
+        void UpdateBookPosition()
+        {
+            Book.CurrentPosition = GetCurrentPosition();
+        }
+
+        // The public one is Position property of Book
+        PositionInBook GetCurrentPosition()
+        {
+            if (BookPageProvider == null) { throw new InvalidOperationException(); }
+
+            if (TopPage == null)
+            {
+                return PositionInBook.FromPhysicalPage(1, BookPageProvider.o.PageCount);
+            }
+
+            return PositionInBook.FromPhysicalPage(
+                TopPage.PageNum,
+                BookPageProvider.o.PageCount,
+                TopPage.TopOnScreen, TopPage.Layout.Bounds.Height);
         }
 
         /// <summary>
@@ -80,17 +90,23 @@ namespace PdfBookReader.Render
         /// </summary>
         /// <param name="positionInBook"></param>
         /// <returns></returns>
-        public DW<Bitmap> RenderPage(PositionInBook position)
+        public DW<Bitmap> RenderScreen(PositionInBook position, DW<IPageContentSource> pageContentSource)
         {
-            ArgCheck.Equals(position.PageCount == PageProvider.o.PageCount, "position page count not same as current book");
+            // Initialize position if unknown
+            if (position == null)
+            {
+                position = PositionInBook.FromPhysicalPage(1, BookPageProvider.o.PageCount);
+            }
+
+            ArgCheck.Equals(position.PageCount == BookPageProvider.o.PageCount, "position page count not same as current book");
 
             // Fix for showing the full last page
-            TopPage = GetPhysicalPage(position.PageNum);
+            TopPage = GetPageContent(position.PageNum, pageContentSource);
 
             TopPage.TopOnScreen = position.GetTopOnScreen(TopPage.Layout.Bounds.Height);
 
             // Render "current" page based on new TopPage. No change in size.
-            RenderCurrent r = new RenderCurrent(this, ScreenSize);
+            RenderCurrent r = new RenderCurrent(this, pageContentSource, ScreenSize);
             return r.Run();
         }
 
@@ -98,22 +114,22 @@ namespace PdfBookReader.Render
         /// Render the first screen page, and set it as current page
         /// </summary>
         /// <returns></returns>
-        public DW<Bitmap> RenderFirstPage() 
+        public DW<Bitmap> RenderFirstPage(DW<IPageContentSource> pageContentSource) 
         {
             TopPage = null;
             BottomPage = null;
-            return RenderNextScreen();
+            return RenderNextScreen(pageContentSource);
         }
 
         /// <summary>
         /// Render the last screen page, and set it as current page
         /// </summary>
         /// <returns></returns>
-        public DW<Bitmap> RenderLastPage()
+        public DW<Bitmap> RenderLastPage(DW<IPageContentSource> pageContentSource)
         {
             TopPage = null;
             BottomPage = null;
-            return RenderPreviousScreen();
+            return RenderPreviousScreen(pageContentSource);
         }
 
         /// <summary>
@@ -121,11 +137,11 @@ namespace PdfBookReader.Render
         /// </summary>
         /// <param name="newScreenPageSize"></param>
         /// <returns></returns>
-        public DW<Bitmap> RenderCurrentScreen(Size newScreenPageSize)
+        public DW<Bitmap> RenderCurrentScreen(Size newScreenPageSize, DW<IPageContentSource> pageContentSource)
         {
             Size oldSize = ScreenSize;
             ScreenSize = newScreenPageSize;
-            RenderCurrent r = new RenderCurrent(this, oldSize);
+            RenderCurrent r = new RenderCurrent(this, pageContentSource, oldSize);
             return r.Run();
         }
 
@@ -135,11 +151,11 @@ namespace PdfBookReader.Render
         /// If currently at last page, returns null.
         /// </summary>
         /// <returns></returns>
-        public DW<Bitmap> RenderNextScreen()
+        public DW<Bitmap> RenderNextScreen(DW<IPageContentSource> pageContentSource)
         {
             if (!HasNextScreen) { throw new InvalidOperationException("no next screen."); }
 
-            RenderDown r = new RenderDown(this);
+            RenderDown r = new RenderDown(this, pageContentSource);
             return r.Run();
         }
 
@@ -149,11 +165,11 @@ namespace PdfBookReader.Render
         /// If currently at first page, returns null.
         /// </summary>
         /// <returns></returns>
-        public DW<Bitmap> RenderPreviousScreen()
+        public DW<Bitmap> RenderPreviousScreen(DW<IPageContentSource> pageContentSource)
         {
             if (!HasPreviousScreen) { throw new InvalidOperationException("no previous screen."); }
 
-            RenderUp r = new RenderUp(this);
+            RenderUp r = new RenderUp(this, pageContentSource);
             return r.Run();
         }
 
@@ -168,7 +184,7 @@ namespace PdfBookReader.Render
                 if (BottomPage == null) { return true; }
 
                 bool v = BottomPage.BottomOnScreen > ScreenSize.Height ||
-                    (BottomPage.BottomOnScreen == ScreenSize.Height && BottomPage.PageNum < PageProvider.o.PageCount);
+                    (BottomPage.BottomOnScreen == ScreenSize.Height && BottomPage.PageNum < BookPageProvider.o.PageCount);
 
                 return v;
             }
@@ -273,27 +289,30 @@ namespace PdfBookReader.Render
         /// </summary>
         /// <param name="pageNum"></param>
         /// <returns></returns>
-        PageContent GetPhysicalPage(int pageNum)
+        PageContent GetPageContent(int pageNum, DW<IPageContentSource> pageSource)
         {
             // No physical page
-            if (pageNum < 1 || pageNum > PageProvider.o.PageCount)
+            if (pageNum < 1 || pageNum > BookPageProvider.o.PageCount)
             {
                 Trace.WriteLine("GetPhysicalPage: null, pageNum out of range: " + pageNum);
                 return null;
             }
 
-            Trace.WriteLine("GetPhysicalPage: pageNum = " + pageNum);
-
             // Render actual page (may take long)
-            return ContentProvider.o.GetPage(pageNum, ScreenSize, PageProvider);
-        }        
+            return pageSource.o.GetPage(pageNum, ScreenSize, BookPageProvider);
+        }
 
-
-        public void Dispose()
+        // Close book -- dispose resources in use
+        public void Close()
         {
-            // Only dispose disposable items we specifically created
+            // Dispose items we specifically created
             TopPage = null;
             BottomPage = null;
+
+            if (_bookPageProvider != null)
+            {
+                _bookPageProvider.DisposeItem();
+            }
         }
     }
 

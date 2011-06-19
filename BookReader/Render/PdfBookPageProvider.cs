@@ -197,7 +197,7 @@ namespace PdfBookReader.Render
                 _pdfDoc.o.UseMuPDF = true; 
             }
 
-            // Scale            
+            // Scale
             Size pageSize = new Size(_pdfDoc.o.PageWidth, _pdfDoc.o.PageHeight);
             Size size = pageSize.ScaleToFitBounds(maxSize);
 

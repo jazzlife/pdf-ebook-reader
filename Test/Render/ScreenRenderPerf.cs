@@ -36,10 +36,8 @@ namespace PdfBookReaderTest.Render
 
         void RenderOneFile(PTimer timer, String file)
         {
-            ScreenProvider provider = new ScreenProvider(
-                DW.Wrap<IBookPageProvider>(new PdfBookPageProvider(file)),
-                DW.Wrap<IPageContentSource>(new CachedPageContentSource()), 
-                ScreenSize);
+            var contentSource = DW.Wrap<IPageContentSource>(new CachedPageContentSource());
+            ScreenBook book = new ScreenBook(new Book(file), ScreenSize);
 
             const int RenderNextRepeats = 10;
             const int RenderMiddleRepeats = 5;
@@ -51,24 +49,24 @@ namespace PdfBookReaderTest.Render
             // Render first, forward
             using(IDisposable a = timer.NewRun, b = fileTimer.NewRun)
             {
-                provider.RenderFirstPage();
-            }            
+                book.RenderFirstPage(contentSource);
+            }
             for (int i = 0; i < RenderNextRepeats; i++)
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    provider.RenderNextScreen();
+                    book.RenderNextScreen(contentSource);
                 }
             }
 
             // Render middle and re-render
-            int middle = provider.PageProvider.o.PageCount / 2;            
+            int middle = book.BookPageProvider.o.PageCount / 2;            
             for (int i = 0; i < RenderMiddleRepeats; i++)
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    PositionInBook pos = PositionInBook.FromPositionUnit(middle, provider.PageProvider.o.PageCount);
-                    provider.RenderPage(pos);
+                    PositionInBook pos = PositionInBook.FromPositionUnit(middle, book.BookPageProvider.o.PageCount);
+                    book.RenderScreen(pos, contentSource);
                 }
             }
 
@@ -76,24 +74,24 @@ namespace PdfBookReaderTest.Render
             for (int i = 0; i < RenderResizeRepeats; i++)
             {
                 // Render at different size
-                Size newSize = new Size((int)(provider.ScreenSize.Width * 1.2), (int)(provider.ScreenSize.Height * 1.2));
-                provider.RenderCurrentScreen(newSize);
+                Size newSize = new Size((int)(book.ScreenSize.Width * 1.2), (int)(book.ScreenSize.Height * 1.2));
+                book.RenderCurrentScreen(newSize, contentSource);
             }
             using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
             {
-                provider.RenderCurrentScreen(ScreenSize); // back to normal
+                book.RenderCurrentScreen(ScreenSize, contentSource); // back to normal
             }
 
             // Render last, backward
             using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
             {
-                provider.RenderLastPage();
+                book.RenderLastPage(contentSource);
             }
             for (int i = 0; i < RenderPreviousRepeats; i++)
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    provider.RenderPreviousScreen();
+                    book.RenderPreviousScreen(contentSource);
                 }
             }
 

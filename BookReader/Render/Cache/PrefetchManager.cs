@@ -9,13 +9,28 @@ using PdfBookReader.Utils;
 
 namespace PdfBookReader.Render
 {
+    class PrefetchManager 
+    {
+        readonly object MyLock = new object();
+        readonly DW<PageContentCache> Cache;
+
+        public PrefetchManager(DW<PageContentCache> cache)
+        {
+            Cache = cache;
+        }
+
+        public void Start() { }
+        public void Stop() { }
+    }
+
+    /*
     // DRAFT, REVISE HEAVILY
     class PrefetchManager
     {
         // TODO: should be a singleton
         readonly DW<PageContentCache> Cache;
 
-        DW<ScreenProvider> _screenProvider;
+        DW<ScreenBook> _screenProvider;
 
         Thread _prefetchThread;
         bool _stopLoop = false;
@@ -29,7 +44,7 @@ namespace PdfBookReader.Render
 
         AutoResetEvent _currentBookDoneWait = new AutoResetEvent(false);
 
-        public DW<ScreenProvider> ScreenProvider
+        public DW<ScreenBook> ScreenProvider
         {
             get { return _screenProvider; }
             set
@@ -74,7 +89,7 @@ namespace PdfBookReader.Render
         // Returns true if all pages done, false otherwise
         bool PrefetchStartingAtCurrentPage()
         {
-            DW<ScreenProvider> currentBook = ScreenProvider;
+            DW<ScreenBook> currentBook = ScreenProvider;
             if (currentBook == null) { return true; }
 
             int currentPageNum = ScreenProvider.o.CurrentPosition.PageNum;
@@ -125,7 +140,7 @@ namespace PdfBookReader.Render
             }
         }
 
-        bool ShouldRestartFetch(DW<ScreenProvider> currentBook, int currentPageNum, Size currentSize)
+        bool ShouldRestartFetch(DW<ScreenBook> currentBook, int currentPageNum, Size currentSize)
         {
             if (_stopLoop) { return true; }
             if (currentBook != ScreenProvider) { return true; }
@@ -158,7 +173,7 @@ namespace PdfBookReader.Render
             }
         }
 
-        void PrefetchPage(DW<ScreenProvider> screenProvider, int pageNum)
+        void PrefetchPage(DW<ScreenBook> screenProvider, int pageNum)
         {
             lock (MyLock)
             {
@@ -192,4 +207,5 @@ namespace PdfBookReader.Render
         }
 
     }
+     */
 }

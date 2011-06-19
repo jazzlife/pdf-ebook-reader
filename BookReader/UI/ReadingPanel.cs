@@ -18,8 +18,7 @@ namespace PdfBookReader.UI
         BookLibrary _library;
         Book _book;
 
-        DW<IBookPageProvider> _bookPageProvider;
-        DW<ScreenProvider> _screenPageProvider;
+        ScreenRenderManager _renderManager;
         DW<Bitmap> _currentScreenImage;
 
         // read-only
@@ -35,14 +34,13 @@ namespace PdfBookReader.UI
             ArgCheck.NotNull(library, "library");
             _library = library;
 
-            _contentSource = DW.Wrap<IPageContentSource>(new CachedPageContentSource());
+            _renderManager = new ScreenRenderManager(_library, pbContent.Size);
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Book Book
         {
             get { return _book; }
-
             set
             {
                 if (value == _book) { return; }
@@ -54,33 +52,19 @@ namespace PdfBookReader.UI
                 }
 
                 _book = value;
+                _renderManager.CurrentBook = _book;
 
                 if (_book != null)
                 {
-                    // Rendering components
-                    BookPageProvider = DW.Wrap<IBookPageProvider>(new PdfBookPageProvider(_book.Filename));
-                    ScreenProvider = DW.Wrap(new ScreenProvider(BookPageProvider, _contentSource, pbContent.Size));
-
                     // Subcribe 
                     _book.CurrentPositionChanged += OnBookPositionChanged;
 
-                    // Initialize position if unknown
-                    if (_book.CurrentPosition == null)
-                    {
-                        _book.CurrentPosition = PositionInBook.FromPhysicalPage(1, BookPageProvider.o.PageCount);
-                    }
-
                     // Set the (no the first "current" page).
-                    CurrentScreenImage = ScreenProvider.o.RenderPage(_book.CurrentPosition);
+                    CurrentScreenImage = _renderManager.RenderCurrent(pbContent.Size);
 
-                    bookProgressBar.PageIncrementSize = ScreenProvider.o.CurrentPosition.UnitSize;
+                    bookProgressBar.PageIncrementSize = _book.CurrentPosition.UnitSize;
 
                     UpdateUIState();
-                }
-                else
-                {
-                    ScreenProvider = null;
-                    BookPageProvider = null;
                 }
             }
         }
@@ -101,7 +85,7 @@ namespace PdfBookReader.UI
             if (pos < 0) { pos = 0; }
 
             PositionInBook pi = PositionInBook.FromPositionUnit(pos, Book.CurrentPosition.PageCount);
-            CurrentScreenImage = ScreenProvider.o.RenderPage(pi);
+            CurrentScreenImage = _renderManager.Render(pi);
         }
 
         #endregion
@@ -125,47 +109,6 @@ namespace PdfBookReader.UI
             }
         }
 
-        private DW<ScreenProvider> ScreenProvider
-        {
-            get { return _screenPageProvider; }
-            set 
-            {
-                if (_screenPageProvider != null)
-                {
-                    _screenPageProvider.o.PositionChanged -= o_PositionChanged;
-                    _screenPageProvider.DisposeItem();
-                }
-
-                _screenPageProvider = value;
-
-                if (_screenPageProvider != null)
-                {
-                    _screenPageProvider.o.PositionChanged += o_PositionChanged;
-                }
-            }
-        }
-
-        void o_PositionChanged(object sender, EventArgs e)
-        {
-            // IMPORTANT: Screen provider event updats Book.CurrentPosition.
-            // (since we don't want to pass book inside it). 
-
-            // However, UI elements are driven by BOOK position change 
-            // event, not one from the provider.
-
-            if (Book != null &&
-                Book.Filename == ScreenProvider.o.PageProvider.o.BookFilename)
-            {
-                Book.CurrentPosition = ScreenProvider.o.CurrentPosition;
-            }
-        }
-
-        private DW<IBookPageProvider> BookPageProvider
-        {
-            get { return _bookPageProvider; }
-            set { value.AssignNewDisposeOld(ref _bookPageProvider); }
-        }
-
         public event EventHandler GoToLibrary;
 
         private void pbContent_Resize(object sender, EventArgs e)
@@ -183,26 +126,26 @@ namespace PdfBookReader.UI
         private void timerResize_Tick(object sender, EventArgs e)
         {
             timerResize.Stop();
-            if (ScreenProvider == null) { return; }
+            if (Book == null) { return; }
 
-            CurrentScreenImage = ScreenProvider.o.RenderCurrentScreen(pbContent.Size);
+            CurrentScreenImage = _renderManager.RenderCurrent(pbContent.Size);
         }
 
         #region UI update
         void UpdateUIState()
         {
-            if (ScreenProvider == null) { return; }
-
-            bNextPage.Enabled = ScreenProvider.o.HasNextScreen;
-            bPrevPage.Enabled = ScreenProvider.o.HasPreviousScreen;
+            bNextPage.Enabled = _renderManager.HasNextScreen;
+            bPrevPage.Enabled = _renderManager.HasPreviousScreen;
 
             UpdateBookProgressBar();
         }
 
         void UpdateBookProgressBar()
         {
+            if (Book == null) { return; }
+
             // TODO: shift progress so it's full at last page
-            PositionInBook pos = ScreenProvider.o.CurrentPosition;
+            PositionInBook pos = Book.CurrentPosition;
             bookProgressBar.Value = pos.PositionUnit;
 
             lbPageNum.Text = String.Format("{0:0.0}/{1}", 
@@ -218,12 +161,12 @@ namespace PdfBookReader.UI
 
         private void bNextPage_Click(object sender, EventArgs e)
         {
-            CurrentScreenImage = ScreenProvider.o.RenderNextScreen();
+            CurrentScreenImage = _renderManager.RenderNext();
         }
 
         private void bPrevPage_Click(object sender, EventArgs e)
         {
-            CurrentScreenImage = ScreenProvider.o.RenderPreviousScreen();            
+            CurrentScreenImage = _renderManager.RenderPrevious();            
         }
 
         const int WidthIncrement = 100;
