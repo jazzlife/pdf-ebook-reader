@@ -13,7 +13,7 @@ namespace PdfBookReader.Render
     /// <summary>
     /// Main class for rendering
     /// </summary>
-    class ScreenRenderManager : IPageCacheContextManager
+    class ScreenRenderManager : IPageCacheContextManager, IDisposable
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -40,7 +40,7 @@ namespace PdfBookReader.Render
             // BUG: need to monotor current page in *all* books, not just one, but this is academic...
             _library.CurrentBookPositionChanged += new EventHandler(_library_CurrentBookPositionChanged);
 
-            _pageSource = DW.Wrap<IPageSource>(new CachedPageSource());
+            _pageSource = RenderFactory.ConcreteFactory.GetPageSource(this);
 
             OnCurrentBookChanged(this, EventArgs.Empty);
         }
@@ -68,6 +68,18 @@ namespace PdfBookReader.Render
             }
         }
 
+        /// <summary>
+        /// For debugging cache (showing it in the UI)
+        /// </summary>
+        internal DW<PageCache> Cache
+        {
+            get 
+            {
+                CachedPageSource ps = _pageSource.o as CachedPageSource;
+                if (ps != null) { return ps.Cache; }
+                return null;
+            }
+        }
 
         #region Event handlers
 
@@ -190,6 +202,7 @@ namespace PdfBookReader.Render
                 foreach (Page page in pages)
                 {
                     DrawPhysicalPage(g, page);
+                    page.InUse = false;
                 }
 
                 DrawScreenAfter(g);
@@ -234,6 +247,8 @@ namespace PdfBookReader.Render
 
         #endregion
 
+        #region IPageCacheContextManager
+
         public PageCacheContext CacheContext { get; private set; }
         public event EvHandler<PageCacheContext> CacheContextChanged;
 
@@ -241,6 +256,25 @@ namespace PdfBookReader.Render
         {
             CacheContext = new PageCacheContext(ScreenSize.Width, _library);
             if (CacheContextChanged != null) { CacheContextChanged(this, EvArgs.Create(CacheContext)); }
+        }
+
+        public ScreenBook GetScreenBook(Guid bookId)
+        {
+            // QQ: should we make this thread safe? Access to library is everywhere...
+            Book book = _library.Books.FirstOrDefault( x => x.Id == bookId);
+            if (book == null) { return null; }
+
+            return GetScreenBook(book);
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            if (_pageSource != null)
+            {
+                _pageSource.DisposeItem();
+            }
         }
     }
 }

@@ -16,26 +16,33 @@ namespace PdfBookReaderTest.Render
         Size ScreenSize = new Size(100, 200);
         int PageHeight 
         {
-            get { return ((TestBookProvider)bookProv.o).PageHeight; }
-            set { ((TestBookProvider)bookProv.o).PageHeight = value; }
+            get { return ((BlankBookProvider)TestRenderFactory.BookProvider.o).PageHeight; }
+            set { ((BlankBookProvider)TestRenderFactory.BookProvider.o).PageHeight = value; }
+        }
+        int PageCount
+        {
+            get { return ((BlankBookProvider)TestRenderFactory.BookProvider.o).PageCount; }
+            set { ((BlankBookProvider)TestRenderFactory.BookProvider.o).PageCount = value; }
         }
 
-        DW<IPageSource> src;
-        DW<IBookProvider> bookProv; 
-
+        ScreenBook screenBook;
         AssembleScreenAlgorithm algCur; 
         AssembleScreenAlgorithm algNext; 
         AssembleScreenAlgorithm algPrevious;
 
+
+
         [SetUp]
         public void SetUp()
         {
-            src = DW.Wrap<IPageSource>(new TestPageSource());
-            bookProv = DW.Wrap<IBookProvider>(new TestBookProvider());
+            RenderFactory.ConcreteFactory = new TestRenderFactory();
 
-            algCur = new AssembleCurrentScreenAlgorithm(src, bookProv);
-            algNext = new AssembleNextScreenAlgorithm(src, bookProv);
-            algPrevious = new AssemblePreviousScreenAlgorithm(src, bookProv);
+            var src = RenderFactory.ConcreteFactory.GetPageSource(null);
+            screenBook = new ScreenBook(new Book("dummy"), ScreenSize);
+
+            algCur = new AssembleCurrentScreenAlgorithm(src, screenBook);
+            algNext = new AssembleNextScreenAlgorithm(src, screenBook);
+            algPrevious = new AssemblePreviousScreenAlgorithm(src, screenBook);
         }
 
         [Test]
@@ -43,7 +50,7 @@ namespace PdfBookReaderTest.Render
         {
             // Test with null position
             PageHeight = 60;
-            PositionInBook pos = PositionInBook.FromPhysicalPage(1, bookProv.o.PageCount);
+            PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
             Assert.IsTrue(algCur.CanApply(pos, ScreenSize));
             var pages = algCur.AssembleScreen(ref pos, ScreenSize);
@@ -61,7 +68,7 @@ namespace PdfBookReaderTest.Render
         {
             // Test with null position
             PageHeight = 60;
-            PositionInBook pos = PositionInBook.FromPhysicalPage(1, bookProv.o.PageCount);
+            PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
             // Current
             Assert.IsTrue(algNext.CanApply(pos, ScreenSize));
@@ -100,7 +107,7 @@ namespace PdfBookReaderTest.Render
         {
             // Test with null position
             PageHeight = 300;
-            PositionInBook pos = PositionInBook.FromPhysicalPage(1, bookProv.o.PageCount);
+            PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
             // Current
             Assert.IsTrue(algNext.CanApply(pos, ScreenSize));
@@ -129,7 +136,7 @@ namespace PdfBookReaderTest.Render
         {
             // Test with null position
             PageHeight = ScreenSize.Height;
-            PositionInBook pos = PositionInBook.FromPhysicalPage(10, bookProv.o.PageCount);
+            PositionInBook pos = PositionInBook.FromPhysicalPage(10, PageCount);
 
             // Do a few
             for (int i = 11; i < 30; i++)
@@ -146,7 +153,7 @@ namespace PdfBookReaderTest.Render
 
             // Pages not starting from zero
             // Start halfway down first page
-            pos = PositionInBook.FromPositionUnit(0.005f, bookProv.o.PageCount);
+            pos = PositionInBook.FromPositionUnit(0.005f, PageCount);
 
             for (int i = 1; i < 20; i++)
             {
@@ -166,7 +173,7 @@ namespace PdfBookReaderTest.Render
         {
             // Test with null position
             PageHeight = 60;
-            PositionInBook pos = PositionInBook.FromPhysicalPage(1, bookProv.o.PageCount);
+            PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
             // Current
             Assert.IsFalse(algPrevious.CanApply(pos, ScreenSize));
@@ -217,7 +224,7 @@ namespace PdfBookReaderTest.Render
         {
             // Test with null position
             PageHeight = 300;
-            PositionInBook pos = PositionInBook.FromPhysicalPage(1, bookProv.o.PageCount);
+            PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
             // Current
             Assert.IsFalse(algPrevious.CanApply(pos, ScreenSize));
@@ -269,7 +276,7 @@ namespace PdfBookReaderTest.Render
         {
             // Test with null position
             PageHeight = ScreenSize.Height;
-            PositionInBook pos = PositionInBook.FromPhysicalPage(2, bookProv.o.PageCount, -100, PageHeight);
+            PositionInBook pos = PositionInBook.FromPhysicalPage(2, PageCount, -100, PageHeight);
             Assert.AreEqual(1.5f, pos.Position);
 
             // One page back
@@ -305,15 +312,15 @@ namespace PdfBookReaderTest.Render
             PageHeight = ScreenSize.Height;
 
             // top of last page (exact)
-            PositionInBook pos = PositionInBook.FromPhysicalPage(bookProv.o.PageCount, bookProv.o.PageCount);
+            PositionInBook pos = PositionInBook.FromPhysicalPage(PageCount, PageCount);
             Assert.IsFalse(algNext.CanApply(pos, ScreenSize), "last page exactly full");
 
             // slight bit before - true
-            PositionInBook posBefore = PositionInBook.FromPositionUnit(pos.PositionUnit - 0.001f, bookProv.o.PageCount);
+            PositionInBook posBefore = PositionInBook.FromPositionUnit(pos.PositionUnit - 0.001f, PageCount);
             Assert.IsTrue(algNext.CanApply(posBefore, ScreenSize), "bit before");
 
             // slight bit after - false
-            PositionInBook posAfter = PositionInBook.FromPositionUnit(pos.PositionUnit + 0.001f, bookProv.o.PageCount);
+            PositionInBook posAfter = PositionInBook.FromPositionUnit(pos.PositionUnit + 0.001f, PageCount);
             Assert.IsFalse(algNext.CanApply(posAfter, ScreenSize), "bit after");
         }
 
@@ -324,11 +331,11 @@ namespace PdfBookReaderTest.Render
             PageHeight = ScreenSize.Height;
 
             // exactly at the start
-            PositionInBook pos = PositionInBook.FromPhysicalPage(1, bookProv.o.PageCount);
+            PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
             Assert.IsFalse(algPrevious.CanApply(pos, ScreenSize), "exactly at 0");
 
             // slight bit after - false
-            PositionInBook posAfter = PositionInBook.FromPositionUnit(pos.PositionUnit + 0.001f, bookProv.o.PageCount);
+            PositionInBook posAfter = PositionInBook.FromPositionUnit(pos.PositionUnit + 0.001f, PageCount);
             Assert.IsTrue(algPrevious.CanApply(posAfter, ScreenSize), "bit after");
 
         }
@@ -337,44 +344,5 @@ namespace PdfBookReaderTest.Render
         static T[] A<T>(params T[] args) { return args; }        
     }
 
-    class TestBookProvider : IBookProvider
-    {
-        public int PageHeight { get; set; }
-        public int PageCount { get; set; }
-        public string BookFilename { get; set; }
 
-        public TestBookProvider(String filename = "foo", int pageCount = 100, int pageHeight = 60)
-        {
-            BookFilename = filename;
-            PageCount = pageCount;
-            PageHeight = pageHeight;
-        }
-
-        public DW<Bitmap> RenderPageImage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality)
-        {
-            DW<Bitmap> image = DW.Wrap(new Bitmap(maxSize.Width, PageHeight));
-            return image;
-        }
-
-        public void Dispose() { }
-    }
-
-    class TestPageSource : IPageSource
-    {
-        public IPageLayoutStrategy LayoutStrategy { get; set; }
-             
-        public TestPageSource()
-        {
-            LayoutStrategy = new BlankLayoutStrategy();
-        }
-
-        public Page GetPage(int pageNum, Size screenSize, DW<IBookProvider> bookProvider)
-        {
-            DW<Bitmap> image = bookProvider.o.RenderPageImage(pageNum, new Size(screenSize.Width, int.MaxValue));
-            PageLayoutInfo layout = LayoutStrategy.DetectLayout(image);
-            return new Page(pageNum, image, layout);
-        }
-
-        public void Dispose() { }
-    }
 }

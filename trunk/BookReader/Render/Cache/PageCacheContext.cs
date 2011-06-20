@@ -40,13 +40,23 @@ namespace PdfBookReader.Render.Cache
                 BookId = b.Id;
                 Position = b.CurrentPosition;
             }
+
+            public override string ToString()
+            {
+                return BookId.ToString().Substring(5) + " " + Position;
+            }
         }
     }
 
-    interface IPageCacheContextManager
+    interface IPageCacheContextManager : ICacheContextManager<PageCacheContext>
     {
-        PageCacheContext CacheContext { get; }
-        event EvHandler<PageCacheContext> CacheContextChanged;
+        ScreenBook GetScreenBook(Guid bookId);
+    }
+
+    interface ICacheContextManager<TContext>
+    {
+        TContext CacheContext { get; }
+        event EvHandler<TContext> CacheContextChanged;
     }
 
 }

@@ -12,98 +12,108 @@ namespace PdfBookReader.Render.Cache
     /// <summary>
     /// Wraps the disk and memory caches for PageContent objects.
     /// </summary>
-    class PageCache : ICache<string, Page>
+    class PageCache : SimpleCache<PageKey, Page, PageCacheContext>
     {
-        readonly static Logger Log = LogManager.GetCurrentClassLogger();
+        readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
         readonly object MyLock = new object();
 
         PageDiskCache _diskCache;
-        PageMemoryCache _memoryCache;
-
-        // Unnecessary, saved within the book
-        [Obsolete]
-        Dictionary<string, Guid> _bookIds = new Dictionary<string,Guid>();
-
-        public PageCache(string filePrefix = "page-", string fileExtension = "png")
+        
+        public PageCache(IPageCacheContextManager contextManager)
+            : base("PageMemoryCache", contextManager, RenderFactory.ConcreteFactory.GetPageCachePolicyMemory())
         {
-            _memoryCache = new PageMemoryCache();
-            _diskCache = new PageDiskCache(filePrefix, fileExtension);
-
-            _bookIds = XmlHelper.DeserializeOrDefault(BookIdsFilename, new Dictionary<string, Guid>());
+            _diskCache = new PageDiskCache(contextManager);
         }
 
-        public bool Contains(string key)
+        #region load/save
+        protected override Dictionary<PageKey, Page> LoadItems()
+        {
+            // Memory cache - always use a fresh empty collection
+            return new Dictionary<PageKey, Page>();
+        }
+
+        protected override Dictionary<PageKey, CachedItemInfo> LoadCacheInfos()
+        {
+            // Memory cache - always use a fresh empty collection
+            return new Dictionary<PageKey, CachedItemInfo>();
+        }
+
+        public override void SaveCache()
+        {
+            // No need to call base.SaveCache, it's memory-only
+            _diskCache.SaveCache();
+        }
+        #endregion
+
+        public override bool Contains(PageKey key)
         {
             lock (MyLock)
             {
-                if (_memoryCache.Contains(key)) { return true; }
-                if (_diskCache.Contains(key)) { return true; }
+
+                if (base.Contains(key)) { return true; }
+                if (_diskCache.Contains(key)) 
+                {
+                    // Add to memory if policy approves
+                    if (RetainPolicy.MustRetain(key, ContextManager.CacheContext))
+                    {
+                        Page page = _diskCache.Get(key);
+                        base.Add(key, page);
+                    }
+
+                    // TODO: add to memory if policy approves?
+                    return true; 
+                }
                 return false;
             }
         }
 
-        public bool Contains(String fullFilePath, int pageNum, int width)
+        public override void Add(PageKey key, Page value)
         {
             lock (MyLock)
             {
-                return Contains(GetKey(fullFilePath, pageNum, width));
-            }
-        }
-
-        public bool MemoryCacheContains(string key)
-        {
-            lock (MyLock)
-            {
-                return _memoryCache.Contains(key);
-            }
-        }
-        public bool MemoryCacheContains(String fullFilePath, int pageNum, int width)
-        {
-            lock (MyLock)
-            {
-                return MemoryCacheContains(GetKey(fullFilePath, pageNum, width));
-            }
-        }
-
-        public void Add(string key, Page value)
-        {
-            lock (MyLock)
-            {
-                // Add to both memory and disk
-                _memoryCache.Add(key, value);
+                // Always add to disk
                 _diskCache.Add(key, value);
-            }
 
-            // Removing exipired items handled within lower-level caches
-            // Memory cache eventually removes each item from memory
-            // Disk cache removes files from disk
-        }
-
-        public void Add(String fullFilePath, int pageNum, int width, Page value)
-        {
-            lock (MyLock)
-            {
-                Add(GetKey(fullFilePath, pageNum, width), value);
+                // Add to memory if policy approves
+                if (value.InUse || RetainPolicy.MustRetain(key, ContextManager.CacheContext))
+                {
+                    base.Add(key, value);
+                }
             }
         }
 
-        public Page Get(string key)
+        public override void Remove(PageKey key)
+        {
+            Page item = base.Get(key);
+            if (item == null) { return; }
+
+            if (item.InUse) { return; }
+            item.Image.DisposeItem();
+
+            base.Remove(key);
+        }
+
+        public override Page Get(PageKey key)
         {
             lock (MyLock)
             {
-                Page item = _memoryCache.Get(key);
+                Page item = base.Get(key);
                 if (item != null)
                 {
-                    Log.Debug("Get: Page in memory cache: " + key);
+                    logger.Debug("Get: Page in memory: " + key);
                     return item;
                 }
 
                 item = _diskCache.Get(key);
                 if (item != null)
                 {
-                    Log.Debug("Get: Page in disk cache: " + key);
-                    _memoryCache.Add(key, item);
+                    logger.Debug("Get: Page on disk: " + key);
+                    
+                    // TODO: only add to memory if policy is happy
+                    base.Add(key, item);
+                    
+                    
                     return item;
                 }
 
@@ -111,112 +121,35 @@ namespace PdfBookReader.Render.Cache
             }
         }
 
-        public Page Get(String fullFilePath, int pageNum, int width)
+
+        string BookIdsFilename { get { return Path.Combine(AppPaths.CacheFolderPath, "BookIds.xml"); } }
+
+        public override void Dispose()
         {
             lock (MyLock)
             {
-                return Get(GetKey(fullFilePath, pageNum, width));
+                base.Dispose();
+
+                _diskCache.Dispose();
+                _diskCache = null;
             }
         }
 
-        public void UpdatePriority(string key, ItemRetainPriority newPriority)
+        public IEnumerable<PageKey> GetMemoryKeys()
         {
             lock (MyLock)
             {
-                _memoryCache.UpdatePriority(key, newPriority);
-                _diskCache.UpdatePriority(key, newPriority);
+                return base.GetAllKeys().ToArray();
             }
         }
 
-        public void UpdatePriority(String fullFilePath, int pageNum, int width, ItemRetainPriority newPriority)
+        public IEnumerable<PageKey> GetDiskKeys()
         {
             lock (MyLock)
             {
-                UpdatePriority(GetKey(fullFilePath, pageNum, width), newPriority);
+                return _diskCache.GetAllKeys().ToArray();
             }
         }
 
-        public void SaveCache()
-        {
-            lock (MyLock)
-            {
-                _memoryCache.SaveCache();
-                _diskCache.SaveCache();
-                XmlHelper.Serialize(_bookIds, BookIdsFilename);
-            }
-        }
-
-        /// <summary>
-        /// Get the cache lookup key based on item information.
-        /// </summary>
-        /// <param name="fullFilePath"></param>
-        /// <param name="pageNum"></param>
-        /// <param name="width"></param>
-        /// <returns></returns>
-        string GetKey(String fullFilePath, int pageNum, int width)
-        {
-            return width + "_" + GetBookId(fullFilePath) + "_p" + pageNum;
-        }
-
-
-        string BookIdsFilename { get { return Path.Combine(CacheUtils.CacheFolderPath, "BookIds.xml"); } }
-
-        Guid GetBookId(String filename)
-        {
-            Guid id;
-            if (!_bookIds.TryGetValue(filename, out id))
-            {
-                id = Guid.NewGuid();
-                _bookIds.Add(filename, id);
-            }
-            return id;
-        }
-
-        // Test
-        #region Debug / Test
-
-        public IEnumerable<string> GetAllKeys() { throw new NotImplementedException("Not implemented"); }
-
-        int GetPageNum(String key) 
-        { 
-            return int.Parse(key.Substring(key.LastIndexOf("_p") + 2)); 
-        }
-        
-        public IEnumerable<int> GetMemoryPageNums(String fullFilePath, int width)
-        {
-            lock (MyLock)
-            {
-                String item = width + "_" + GetBookId(fullFilePath);
-
-                return _memoryCache.GetAllKeys()
-                    .Where(x => x.StartsWith(item))
-                    .Select(x => GetPageNum(x)); 
-            }
-        }
-        public IEnumerable<int> GetDiskPageNums(String fullFilePath, int width)
-        {
-            lock (MyLock)
-            {
-                String item = width + "_" + GetBookId(fullFilePath);
-
-                return _diskCache.GetAllKeys()
-                    .Where(x => x.StartsWith(item))
-                    .Select(x => GetPageNum(x));
-            }
-        }
-
-        #endregion
-
-
-        public void Dispose()
-        {
-            if (_memoryCache == null) { return; }
-
-            _memoryCache.Dispose();
-            _diskCache.Dispose();
-
-            _memoryCache = null;
-            _diskCache = null;
-        }
     }
 }

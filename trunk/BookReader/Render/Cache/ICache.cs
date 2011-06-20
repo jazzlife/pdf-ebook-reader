@@ -39,47 +39,19 @@ namespace PdfBookReader.Render.Cache
         // Optional methods
 
         /// <summary>
-        /// Update item priority, if possible. 
-        /// If item is not present in cache, does nothing (does not fetch it).
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="newPriority"></param>
-        void UpdatePriority(TKey key, ItemRetainPriority newPriority);
-
-        /// <summary>
         /// For testing purposes. Returns a copy, may be slow.
         /// </summary>
         IEnumerable<TKey> GetAllKeys();
     }
 
-    public static class CacheUtils
+    /// <summary>
+    /// Cached item info, used by expiration algorithm.
+    /// Should be lightweight -- for disk-based cache items 
+    /// it may be kept in memory for speed.
+    /// </summary>
+    public struct CachedItemInfo
     {
-        readonly static object MyStaticLock = new object();
-
-        static String _cacheFolderPath;
-        public static String CacheFolderPath
-        {
-
-            get
-            {
-                lock (MyStaticLock)
-                {
-                    if (_cacheFolderPath == null)
-                    {
-                        // For testing
-                        String basePath = @"E:\temp";
-                        if (!Directory.Exists(basePath)) 
-                        {
-                            basePath = Path.GetTempPath();
-                        }
-
-                        String dirName = Path.GetFileNameWithoutExtension(Application.ExecutablePath) + "-cache";
-                        _cacheFolderPath = Path.Combine(basePath, dirName);
-                    }
-                    if (!Directory.Exists(_cacheFolderPath)) { Directory.CreateDirectory(_cacheFolderPath); }
-                    return _cacheFolderPath;
-                }
-            }
-        }
+        public DateTime LastAccessTime;
     }
+
 }

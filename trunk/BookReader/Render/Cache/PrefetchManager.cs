@@ -9,145 +9,96 @@ using PdfBookReader.Utils;
 
 namespace PdfBookReader.Render
 {
-    class PrefetchManager 
+    class PrefetchManager : IDisposable
     {
-        readonly object MyLock = new object();
-        readonly DW<PageCache> Cache;
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public PrefetchManager(DW<PageCache> cache)
-        {
-            Cache = cache;
-        }
-
-        public void Start() { }
-        public void Stop() { }
-    }
-
-    /*
-    // DRAFT, REVISE HEAVILY
-    class PrefetchManager
-    {
-        // TODO: should be a singleton
-        readonly DW<PageContentCache> Cache;
-
-        DW<ScreenBook> _screenProvider;
+        internal readonly DW<PageCache> Cache;
+        readonly IPageSource PhysicalSource;
+        readonly IPrefetchPolicy<PageKey, PageCacheContext> Policy;
+        readonly IPageCacheContextManager ContextManager;
 
         Thread _prefetchThread;
         bool _stopLoop = false;
+        AutoResetEvent _waitForContextChange = new AutoResetEvent(false);
+        PageCacheContext _currentContext;
 
-        readonly object MyLock = new object();
-
-        public PrefetchManager(DW<PageContentCache> cache)
+        public PrefetchManager(DW<PageCache> cache, 
+            IPageSource pageSource,
+            IPageCacheContextManager contextManager)
         {
+            ArgCheck.NotNull(cache, "cache");
+            ArgCheck.NotNull(pageSource, "pageSource");
+            ArgCheck.NotNull(contextManager, "contextManager");
+
             Cache = cache;
+            PhysicalSource = pageSource;
+            ContextManager = contextManager;
+
+            ContextManager.CacheContextChanged += OnCacheContextChanged;
+
+            Policy = RenderFactory.ConcreteFactory.GetPrefetchPolicy();
         }
 
-        AutoResetEvent _currentBookDoneWait = new AutoResetEvent(false);
+        #region prefetch thread
 
-        public DW<ScreenBook> ScreenProvider
-        {
-            get { return _screenProvider; }
-            set
-            {
-                lock (MyLock)
-                {
-                    if (_screenProvider == value) { return; }
-
-                    if (_screenProvider != null)
-                    {
-                        _screenProvider.o.PositionChanged -= OnPositionChanged;
-                    }
-
-                    _screenProvider = value;
-
-                    if (_screenProvider != null)
-                    {
-                        _screenProvider.o.PositionChanged += OnPositionChanged;
-                        OnPositionChanged(this, EventArgs.Empty);
-                    }
-                }
-            }
-        }
-
-        void OnPositionChanged(object sender, EventArgs e)
-        {
-            _currentBookDoneWait.Set();
-        }
-
-        void DoLoop()
+        void PrefetchLoop()
         {
             while (!_stopLoop)
             {
-
-                if (PrefetchStartingAtCurrentPage())
+                if (PrefetchNeededKeys())
                 {
-                    _currentBookDoneWait.WaitOne();
+                    logger.Debug("Done with all, waiting for context change.");
+                    _waitForContextChange.WaitOne();
                 }
             }
         }
 
-        // Returns true if all pages done, false otherwise
-        bool PrefetchStartingAtCurrentPage()
+        // returns true if prefetch is complete, 
+        // false if context changed before it was done
+        bool PrefetchNeededKeys()
         {
-            DW<ScreenBook> currentBook = ScreenProvider;
-            if (currentBook == null) { return true; }
+            PageCacheContext context = _currentContext;
+            if (context == null) { return true; }
+            
+            var pageKeys = Policy.PrefetchKeyOrder(context);
+            logger.Debug("Starting to prefetch: " + pageKeys);
 
-            int currentPageNum = ScreenProvider.o.CurrentPosition.PageNum;
-            int pageCount = ScreenProvider.o.PageProvider.o.PageCount;
-            Size currentScreenSize = ScreenProvider.o.ScreenSize;
-
-            foreach(int pageNum in GetPrefretchPageNumbers(currentPageNum, pageCount))
+            foreach (var key in pageKeys)
             {
-                // Quit if current page changed
-                if (ShouldRestartFetch(currentBook, currentPageNum, currentScreenSize)) { return false; }
+                if (Cache.o.Contains(key)) { continue; }
 
-                PrefetchPage(currentBook, pageNum);
+                // Render and add to cache
+                lock (Cache)
+                {
+                    ScreenBook sb = ContextManager.GetScreenBook(key.BookId);
+                    if (1 <= key.PageNum && key.PageNum <= sb.BookProvider.o.PageCount)
+                    {
+                        Size size = new Size(key.ScreenWidth, int.MaxValue);
+                        Page page = PhysicalSource.GetPage(key.PageNum, size, sb);
+                        Cache.o.Add(key, page);
+                    }
+                }
+
+                if (_stopLoop) { return false; }
+
+                if (context != _currentContext)
+                {
+                    logger.Debug("Context changed");
+                    return false;
+                }
             }
+
             return true;
         }
 
-        /// <summary>
-        /// Get the order in which to prefetch
-        /// </summary>
-        /// <param name="currentPageNum"></param>
-        /// <param name="pageCount"></param>
-        /// <returns></returns>
-        IEnumerable<int> GetPrefretchPageNumbers(int currentPageNum, int pageCount)
+        #endregion
+
+
+        void OnCacheContextChanged(object sender, EvArgs<PageCacheContext> e)
         {
-            // current page is fetched by normal channels
-
-            const int PrefetchForward = 30;
-            const int PrefetchBack = 10;
-
-            int forwardMax = Math.Min(currentPageNum + PrefetchForward, pageCount);
-            int backwardMin = Math.Max(currentPageNum - PrefetchBack, 1);
-
-            int forwardNum = currentPageNum + 1;
-            int backwardNum = currentPageNum - 1;
-
-            // Two steps forward, one step back
-            while (true)
-            {
-                if (forwardNum <= forwardMax) { yield return forwardNum; }
-                ++forwardNum;
-                if (forwardNum <= forwardMax) { yield return forwardNum; }
-                ++forwardNum;
-
-                if (backwardNum >= backwardMin) { yield return backwardNum; }
-                --backwardNum;
-
-                if (backwardMin > backwardNum && forwardNum > forwardMax) { break; }
-            }
-        }
-
-        bool ShouldRestartFetch(DW<ScreenBook> currentBook, int currentPageNum, Size currentSize)
-        {
-            if (_stopLoop) { return true; }
-            if (currentBook != ScreenProvider) { return true; }
-            if (currentPageNum != ScreenProvider.o.CurrentPosition.PageNum) { return true; }
-            if (currentSize.Width != ScreenProvider.o.ScreenSize.Width) { return true; }
-
-            return false;
+            _currentContext = e.Value;
+            _waitForContextChange.Set();
         }
 
         public void Start()
@@ -155,57 +106,26 @@ namespace PdfBookReader.Render
             _stopLoop = false;
             if (_prefetchThread == null)
             {
-                _prefetchThread = new Thread(DoLoop);
+                _prefetchThread = new Thread(PrefetchLoop);
                 _prefetchThread.Name = "Prefetch thread";
                 _prefetchThread.Start();
             }
         }
 
-        public void Stop()
+        public void Stop() 
         {
             _stopLoop = true;
-            _currentBookDoneWait.Set();
+            _currentContext = null;
+            _waitForContextChange.Set();
 
-            // Wait until done working with all relevant objects
-            if (_prefetchThread != null) 
-            { 
-                _prefetchThread.Join(); 
-            }
+            // Wait for the thread to end
+            _prefetchThread.Join();
         }
 
-        void PrefetchPage(DW<ScreenBook> screenProvider, int pageNum)
+        public void Dispose()
         {
-            lock (MyLock)
-            {
-                if (pageNum < 1 || 
-                    pageNum > screenProvider.o.PageProvider.o.PageCount ||
-                    ScreenProvider == null || 
-                    ScreenProvider.IsDisposed)
-                {
-                    return;
-                }
-
-                if (!Cache.o.MemoryCacheContains(
-                        ScreenProvider.o.PageProvider.o.BookFilename,
-                        pageNum,
-                        ScreenProvider.o.ScreenSize.Width))
-                {
-                    PageContent pc = ScreenProvider.o.ContentProvider.o.GetPage(
-                        pageNum,
-                        ScreenProvider.o.ScreenSize,
-                        ScreenProvider.o.PageProvider);
-                    
-                    // BUG: leaking memory since PC is not set to InUse
-                    // and would never be disposed. Cannot return it here,
-                    // as the main thead could still have this item. 
-
-                    // Major architectural change is necessary to fix this in a nice way
-                }
-
-
-            }
+            Stop();
         }
-
     }
-     */
+
 }

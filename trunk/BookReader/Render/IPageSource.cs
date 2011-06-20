@@ -21,6 +21,6 @@ namespace PdfBookReader.Render
         /// <param name="screenSize"></param>
         /// <param name="bookProvider"></param>
         /// <returns></returns>
-        Page GetPage(int pageNum, Size screenSize, DW<IBookProvider> bookProvider);
+        Page GetPage(int pageNum, Size screenSize, ScreenBook screenBook);
     }
 }

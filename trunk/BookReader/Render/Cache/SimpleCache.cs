@@ -9,26 +9,30 @@ using System.IO;
 namespace PdfBookReader.Render.Cache
 {
     /// <summary>
-    /// Caches items in one xml file and infos (expiration data) in another.
+    /// Caches items in one xml file and infos in another.
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>    
-    class SimpleCache<TKey, TValue> : ICache<TKey, TValue> where TValue : class
+    class SimpleCache<TKey, TValue, TContext> : ICache<TKey, TValue> where TValue : class
     {
         public readonly String Name;
 
         Dictionary<TKey, CachedItemInfo> _cacheInfos;
         Dictionary<TKey, TValue> _cache;
-        
-        IExpirationPolicy _expirationPolicy;
 
-        public SimpleCache(String name, IExpirationPolicy expirationPolicy)
+        protected ICacheContextManager<TContext> ContextManager;
+        protected ICacheRetainPolicy<TKey, TContext> RetainPolicy;
+
+        public SimpleCache(String name, 
+            ICacheContextManager<TContext> contextManager,
+            ICacheRetainPolicy<TKey, TContext> retainPolicy)
         {
             ArgCheck.NotEmpty(name, "name");
-            ArgCheck.NotNull(expirationPolicy, "expirationPolicy");
 
             Name = name;
-            _expirationPolicy = expirationPolicy;
+            
+            RetainPolicy = retainPolicy;
+            ContextManager = contextManager;
 
             _cache = LoadItems();
             _cacheInfos = LoadCacheInfos();
@@ -40,7 +44,7 @@ namespace PdfBookReader.Render.Cache
         {
             get
             {
-                return Path.Combine(CacheUtils.CacheFolderPath, Name + "CacheInfos.xml");
+                return Path.Combine(AppPaths.CacheFolderPath, Name + "CacheInfos.xml");
             }
         }
 
@@ -48,27 +52,14 @@ namespace PdfBookReader.Render.Cache
         {
             get
             {
-                return Path.Combine(CacheUtils.CacheFolderPath, Name + "Items.xml");
+                return Path.Combine(AppPaths.CacheFolderPath, Name + "Items.xml");
             }
         }
 
         protected virtual Dictionary<TKey, CachedItemInfo> LoadCacheInfos()
         {
-            Dictionary<TKey, CachedItemInfo> infos;
-
-            if (_expirationPolicy is NoExpirationPolicy ||
-                !File.Exists(CacheInfosFileName))
-            {
-                infos = new Dictionary<TKey, CachedItemInfo>();
-            }
-            else
-            {
-                // TODO: try/catch around file access
-                infos = XmlHelper.Deserialize<Dictionary<TKey, CachedItemInfo>>(CacheInfosFileName);
-            }
-
-            // Special case: no items stored
-            if (_cache == null) { return infos; }
+            Dictionary<TKey, CachedItemInfo> infos = XmlHelper.DeserializeOrDefault(
+                CacheInfosFileName, new Dictionary<TKey, CachedItemInfo>());
 
             // Only keep cached infos corresponding to existing items,
             // create new infos as necessary
@@ -93,32 +84,12 @@ namespace PdfBookReader.Render.Cache
 
         protected virtual Dictionary<TKey, TValue> LoadItems()
         {
-            if (File.Exists(ItemsFileName))
-            {
-                return XmlHelper.Deserialize<Dictionary<TKey, TValue>>(ItemsFileName);
-            }
-            else
-            {
-                return new Dictionary<TKey, TValue>();
-            }
+            return XmlHelper.DeserializeOrDefault(ItemsFileName, new Dictionary<TKey, TValue>());
         }
 
         public virtual void SaveCache()
         {
-            SaveCacheInfos();
-            if (_cache != null) { SaveItems(); }
-        }
-
-        protected virtual void SaveCacheInfos()
-        {
-            // Optimization: no need to save
-            if (_expirationPolicy is NoExpirationPolicy) { return; }
-
-
             XmlHelper.Serialize(_cacheInfos, CacheInfosFileName);
-        }
-        protected virtual void SaveItems()
-        {
             XmlHelper.Serialize(_cache, ItemsFileName);
         }
 
@@ -133,7 +104,7 @@ namespace PdfBookReader.Render.Cache
 
         public virtual void Add(TKey key, TValue value)
         {
-            // if it exists
+            // remove if it exists
             _cacheInfos.Remove(key); 
             _cache.Remove(key);
 
@@ -143,54 +114,39 @@ namespace PdfBookReader.Render.Cache
 
             _cache.Add(key, value);
 
-            // Remove old items
-            if (_expirationPolicy.ShouldCheck(_cacheInfos))
-            {
-                var keys = _expirationPolicy.GetExpiredItemKeys<TKey, CachedItemInfo>(_cacheInfos);
+            RemoveExpiredItems();
+        }
 
-                foreach (TKey expKey in keys)
-                {
-                    Remove(expKey);
-                }
+        protected virtual void RemoveExpiredItems()
+        {
+            if (RetainPolicy == null) { return; }
+
+            TContext context = ContextManager.CacheContext;
+            RetainPolicy.KeysToRemove(_cacheInfos, context);
+
+            var toRemove = RetainPolicy.KeysToRemove(_cacheInfos, ContextManager.CacheContext).ToArray();
+            foreach (var key in toRemove)
+            {
+                Remove(key);
             }
         }
 
-        public void Remove(TKey key)
+        public virtual void Remove(TKey key)
         {
-            if (CanRemoveItem(key))
-            {
-                RemoveItem(key);
-                _cacheInfos.Remove(key);
-            }
-        }
-
-        protected virtual bool CanRemoveItem(TKey key) { return true; }
-
-        protected virtual void RemoveItem(TKey key)
-        {
-            if (_cache == null) { return; }
-
-            TValue item = null;
-            if (_cache != null)
-            {
-                _cache.TryGetValue(key, out item);
-                _cache.Remove(key);
-            }
+            _cache.Remove(key);
+            _cacheInfos.Remove(key);
         }
 
         public virtual TValue Get(TKey key)
         {
             TValue item = null;
-            if (_cache != null)
+            if (_cache.TryGetValue(key, out item))
             {
-                if (_cache.TryGetValue(key, out item))
-                {
-                    // Update access info. 
-                    // NOTE: Entry *must* exist, or there is a bug
-                    CachedItemInfo info = _cacheInfos[key];
-                    info.LastAccessTime = DateTime.Now;
-                    _cacheInfos[key] = info;
-                }
+                // Update access info. 
+                // NOTE: Entry *must* exist, or there is a bug
+                CachedItemInfo info = _cacheInfos[key];
+                info.LastAccessTime = DateTime.Now;
+                _cacheInfos[key] = info;
             }
             return item;
         }
@@ -202,22 +158,12 @@ namespace PdfBookReader.Render.Cache
 
         #endregion
 
-        public void UpdatePriority(TKey key, ItemRetainPriority newPriority)
-        {
-            CachedItemInfo info;
-            if (_cacheInfos.TryGetValue(key, out info))
-            {
-                info.Priority = newPriority;
-                _cacheInfos[key] = info;                
-            }
-        }
-
         public IEnumerable<TKey> GetAllKeys()
         {
             return new List<TKey>(_cache.Keys);
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (_cache == null) { return; }
 

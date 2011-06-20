@@ -18,12 +18,12 @@ namespace PdfBookReader.Render
     abstract class AssembleScreenAlgorithm
     {
         protected readonly DW<IPageSource> PageSource;
-        protected readonly DW<IBookProvider> BookProvider;
+        protected readonly ScreenBook ScreenBook;
 
-        public AssembleScreenAlgorithm(DW<IPageSource> source, DW<IBookProvider> bookPageProvider)
+        public AssembleScreenAlgorithm(DW<IPageSource> source, ScreenBook screenBook)
         {
             PageSource = source;
-            BookProvider = bookPageProvider;
+            ScreenBook = screenBook;
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace PdfBookReader.Render
         protected virtual Page GetInitialPage(ref PositionInBook position, Size screenSize)
         {
             // Find physical page at position
-            Page curPage = PageSource.o.GetPage(position.PageNum, screenSize, BookProvider);
+            Page curPage = PageSource.o.GetPage(position.PageNum, screenSize, ScreenBook);
             curPage.TopOnScreen = position.GetTopOnScreen(curPage.Layout.Bounds.Height);
             return curPage;
         }
@@ -84,7 +84,7 @@ namespace PdfBookReader.Render
         internal abstract void AdvancePage(ref Page curPage, Size sceenSize);
 
         // Helper
-        protected int PageCount { get { return BookProvider.o.PageCount; } }
+        protected int PageCount { get { return ScreenBook.Book.CurrentPosition.PageCount; } }
     }
 
     /// <summary>
@@ -92,7 +92,8 @@ namespace PdfBookReader.Render
     /// </summary>
     sealed class AssembleCurrentScreenAlgorithm : AssembleScreenAlgorithm
     {
-        public AssembleCurrentScreenAlgorithm(DW<IPageSource> s, DW<IBookProvider> p) : base(s, p) { }
+        public AssembleCurrentScreenAlgorithm(DW<IPageSource> s, ScreenBook p) 
+            : base(s, p) { }
 
         public override bool CanApply(PositionInBook position, Size screenSize)
         {
@@ -104,7 +105,7 @@ namespace PdfBookReader.Render
         internal override void AdvancePage(ref Page curPage, Size sceenSize)
         {
             int bottom = curPage.BottomOnScreen;
-            curPage = PageSource.o.GetPage(curPage.PageNum + 1, sceenSize, BookProvider);
+            curPage = PageSource.o.GetPage(curPage.PageNum + 1, sceenSize, ScreenBook);
             curPage.TopOnScreen = bottom;
         }
 
@@ -127,7 +128,8 @@ namespace PdfBookReader.Render
     {
         AssembleCurrentScreenAlgorithm _assembleCurrent;
 
-        public AssembleNextScreenAlgorithm(DW<IPageSource> s, DW<IBookProvider> p) : base(s, p) 
+        public AssembleNextScreenAlgorithm(DW<IPageSource> s, ScreenBook p)
+            : base(s, p) 
         {
             _assembleCurrent = new AssembleCurrentScreenAlgorithm(s, p);
         }
@@ -176,7 +178,8 @@ namespace PdfBookReader.Render
     /// </summary>
     sealed class AssemblePreviousScreenAlgorithm : AssembleScreenAlgorithm
     {
-        public AssemblePreviousScreenAlgorithm(DW<IPageSource> s, DW<IBookProvider> p) : base(s, p) { }
+        public AssemblePreviousScreenAlgorithm(DW<IPageSource> s, ScreenBook p) 
+            : base(s, p) { }
 
         public override bool CanApply(PositionInBook position, Size screenSize)
         {
@@ -218,7 +221,7 @@ namespace PdfBookReader.Render
         internal override void AdvancePage(ref Page curPage, Size sceenSize)
         {
             int top = curPage.TopOnScreen;
-            curPage = PageSource.o.GetPage(curPage.PageNum - 1, sceenSize, BookProvider);
+            curPage = PageSource.o.GetPage(curPage.PageNum - 1, sceenSize, ScreenBook);
             curPage.BottomOnScreen = top;
         }
     }

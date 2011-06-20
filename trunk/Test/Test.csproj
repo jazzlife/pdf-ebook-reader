@@ -71,10 +71,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Render\AssembleScreenTest.cs" />
-    <Compile Include="Render\BlobPageLayoutAnalyzerPerf.cs" />
+    <None Include="Render\BlobPageLayoutAnalyzerPerf.cs.old" />
     <Compile Include="Render\Cache\PageContentPrefetchPolicyTest.cs" />
-    <Compile Include="Render\PhysicalPageRenderPerf.cs" />
+    <None Include="Render\PhysicalPageRenderPerf.cs.old" />
     <None Include="Render\ScreenRenderPerf.cs.old" />
+    <Compile Include="Render\TestRenderFactory.cs" />
     <Compile Include="TestUtilsTest\PerformanceMeasureTest.cs" />
     <Compile Include="TestUtils\DataContract.cs" />
     <Compile Include="TestUtils\IPerformanceNode.cs" />
