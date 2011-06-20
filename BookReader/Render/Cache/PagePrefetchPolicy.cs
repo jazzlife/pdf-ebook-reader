@@ -6,19 +6,19 @@ using PdfBookReader.Model;
 
 namespace PdfBookReader.Render.Cache
 {
-    class PageContentPrefetchPolicy :
+    class PagePrefetchPolicy :
         ICacheRetainPolicy<PageKey, PageCacheContext>,
         IPrefetchPolicy<PageKey, PageCacheContext>
     {
         #region pre-configured items
 
-        static PageContentPrefetchPolicy _diskPolicy;
-        public static PageContentPrefetchPolicy GetGeneralPolicy()
+        static PagePrefetchPolicy _diskPolicy;
+        public static PagePrefetchPolicy GetGeneralPolicy()
         {
 
             if (_diskPolicy == null)
             {
-                _diskPolicy = new PageContentPrefetchPolicy()
+                _diskPolicy = new PagePrefetchPolicy()
                 {
                     Retain_InCurrentBookAfter = 30,
                     Retain_InCurrentBookBefore = 10,
@@ -31,12 +31,12 @@ namespace PdfBookReader.Render.Cache
             return _diskPolicy;
         }
 
-        static PageContentPrefetchPolicy _memoryPolicy;
-        public static PageContentPrefetchPolicy GetMemoryPolicy()
+        static PagePrefetchPolicy _memoryPolicy;
+        public static PagePrefetchPolicy GetMemoryPolicy()
         {
             if (_memoryPolicy == null)
             {
-                _memoryPolicy = new PageContentPrefetchPolicy()
+                _memoryPolicy = new PagePrefetchPolicy()
                 {
                     Retain_InCurrentBookAfter = 10,
                     Retain_InCurrentBookBefore = 3,

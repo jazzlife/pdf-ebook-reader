@@ -87,19 +87,19 @@
     <Compile Include="Model\BookLibrary.cs" />
     <Compile Include="Model\PositionInBook.cs" />
     <Compile Include="Render\Cache\CachePrefetchPolicy.cs" />
-    <Compile Include="Render\Cache\PageContentCache.cs" />
-    <Compile Include="Render\Cache\PageContentPrefetchPolicy.cs" />
-    <Compile Include="Render\Cache\PageContentMemoryCache.cs" />
-    <Compile Include="Render\Cache\PageContentDiskCache.cs" />
+    <Compile Include="Render\Cache\PageCache.cs" />
+    <Compile Include="Render\Cache\PagePrefetchPolicy.cs" />
+    <Compile Include="Render\Cache\PageMemoryCache.cs" />
+    <Compile Include="Render\Cache\PageDiskCache.cs" />
     <Compile Include="Render\Cache\IExpirationPolicy.cs" />
     <Compile Include="Render\Cache\PageKey.cs" />
     <Compile Include="Render\Cache\SimpleCache.cs" />
-    <Compile Include="Render\CachedPageContentSource.cs" />
-    <Compile Include="Render\IPageContentSource.cs" />
-    <Compile Include="Render\PdfRenderPerformanceInfo.cs" />
+    <Compile Include="Render\Cache\CachedPageSource.cs" />
+    <Compile Include="Render\IPageSource.cs" />
+    <Compile Include="Render\BookFormats\PdfRenderPerformanceInfo.cs" />
     <Compile Include="Render\Cache\PrefetchManager.cs" />
+    <Compile Include="Render\AssembleScreen.cs" />
     <Compile Include="Render\ScreenRenderManager.cs" />
-    <Compile Include="Render\TheadSafe.cs" />
     <Compile Include="UI\BookListViewItem.cs" />
     <Compile Include="UI\BookProgressBar.cs">
       <SubType>Component</SubType>
@@ -124,17 +124,16 @@
     <Compile Include="UI\ReadingPanel.Designer.cs">
       <DependentUpon>ReadingPanel.cs</DependentUpon>
     </Compile>
-    <Compile Include="Render\BlankPageLayoutAnalyzer.cs" />
-    <Compile Include="Render\BlobPageLayoutAnalyzer.cs" />
+    <Compile Include="Render\Layout\BlankLayoutStrategy.cs" />
+    <Compile Include="Render\Layout\ConnectedBlobLayoutStrategy.cs" />
     <Compile Include="Utils\DebugOnlyAttribute.cs" />
-    <Compile Include="Render\IPageLayoutAnalyzer.cs" />
-    <Compile Include="Render\IBookPageProvider.cs" />
+    <Compile Include="Render\Layout\IPageLayoutStrategy.cs" />
+    <Compile Include="Render\BookFormats\IBookProvider.cs" />
     <Compile Include="Render\LayoutInfo.cs" />
     <Compile Include="Render\PageLayoutInfo.cs" />
-    <Compile Include="Render\PdfBookPageProvider.cs" />
+    <Compile Include="Render\BookFormats\PdfBookProvider.cs" />
     <Compile Include="Render\PageContent.cs" />
     <Compile Include="Render\ScreenBook.cs" />
-    <Compile Include="Render\ScreenRenderAlgorithm.cs" />
     <Compile Include="Utils\ArgCheck.cs" />
     <Compile Include="Utils\DisposableWrapper.cs" />
     <Compile Include="Utils\EventHandling.cs" />

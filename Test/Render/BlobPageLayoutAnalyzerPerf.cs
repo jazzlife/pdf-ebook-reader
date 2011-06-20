@@ -45,7 +45,7 @@ namespace PdfBookReaderTest.Render
 
         void ProcessImage(PTimer timer, String file, int index = 0)
         {
-            BlobPageLayoutAnalyzer detector = new BlobPageLayoutAnalyzer();
+            ConnectedBlobLayoutStrategy detector = new ConnectedBlobLayoutStrategy();
             PageLayoutInfo layout;
 
             // Convert format
@@ -53,7 +53,7 @@ namespace PdfBookReaderTest.Render
             {
                 using (timer.NewRun)
                 {
-                    layout = detector.DetectPageLayout(DW.Wrap(inBmp));
+                    layout = detector.DetectLayout(DW.Wrap(inBmp));
                 }
 
                 String path = Path.Combine(CacheUtils.CacheFolderPath, "layout");

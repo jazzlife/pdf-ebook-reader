@@ -13,10 +13,10 @@ namespace PdfBookReader.Render
     /// <summary>
     /// Analyzes the page layout based on connected blobs contained within it.
     /// </summary>
-    class BlobPageLayoutAnalyzer : IPageLayoutAnalyzer
+    class ConnectedBlobLayoutStrategy : IPageLayoutStrategy
     {
 
-        public PageLayoutInfo DetectPageLayout(DW<Bitmap> bmp)
+        public PageLayoutInfo DetectLayout(DW<Bitmap> bmp)
         {
             ArgCheck.NotNull(bmp, "bmp");
 

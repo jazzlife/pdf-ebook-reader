@@ -12,23 +12,23 @@ namespace PdfBookReader.Render.Cache
     /// <summary>
     /// Wraps the disk and memory caches for PageContent objects.
     /// </summary>
-    class PageContentCache : ICache<string, PageContent>
+    class PageCache : ICache<string, Page>
     {
         readonly static Logger Log = LogManager.GetCurrentClassLogger();
 
         readonly object MyLock = new object();
 
-        PageContentDiskCache _diskCache;
-        PageContentMemoryCache _memoryCache;
+        PageDiskCache _diskCache;
+        PageMemoryCache _memoryCache;
 
         // Unnecessary, saved within the book
         [Obsolete]
         Dictionary<string, Guid> _bookIds = new Dictionary<string,Guid>();
 
-        public PageContentCache(string filePrefix = "page-", string fileExtension = "png")
+        public PageCache(string filePrefix = "page-", string fileExtension = "png")
         {
-            _memoryCache = new PageContentMemoryCache();
-            _diskCache = new PageContentDiskCache(filePrefix, fileExtension);
+            _memoryCache = new PageMemoryCache();
+            _diskCache = new PageDiskCache(filePrefix, fileExtension);
 
             _bookIds = XmlHelper.DeserializeOrDefault(BookIdsFilename, new Dictionary<string, Guid>());
         }
@@ -66,7 +66,7 @@ namespace PdfBookReader.Render.Cache
             }
         }
 
-        public void Add(string key, PageContent value)
+        public void Add(string key, Page value)
         {
             lock (MyLock)
             {
@@ -80,7 +80,7 @@ namespace PdfBookReader.Render.Cache
             // Disk cache removes files from disk
         }
 
-        public void Add(String fullFilePath, int pageNum, int width, PageContent value)
+        public void Add(String fullFilePath, int pageNum, int width, Page value)
         {
             lock (MyLock)
             {
@@ -88,11 +88,11 @@ namespace PdfBookReader.Render.Cache
             }
         }
 
-        public PageContent Get(string key)
+        public Page Get(string key)
         {
             lock (MyLock)
             {
-                PageContent item = _memoryCache.Get(key);
+                Page item = _memoryCache.Get(key);
                 if (item != null)
                 {
                     Log.Debug("Get: Page in memory cache: " + key);
@@ -111,7 +111,7 @@ namespace PdfBookReader.Render.Cache
             }
         }
 
-        public PageContent Get(String fullFilePath, int pageNum, int width)
+        public Page Get(String fullFilePath, int pageNum, int width)
         {
             lock (MyLock)
             {

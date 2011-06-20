@@ -19,7 +19,7 @@ namespace PdfBookReaderTest.Render.Cache
         [Test]
         public void EmptyPolicy()
         {
-            var policy = new PageContentPrefetchPolicy();
+            var policy = new PagePrefetchPolicy();
 
             var key = new PageKey(Guid.Empty, 1, ScreenWidth);
             var context = new PageCacheContext(ScreenWidth, GetLibrary(0));
@@ -44,7 +44,7 @@ namespace PdfBookReaderTest.Render.Cache
             var context = new PageCacheContext(ScreenWidth, GetLibrary(NumBooks));
 
             // Run method 
-            var policy = new PageContentPrefetchPolicy()
+            var policy = new PagePrefetchPolicy()
             {
                 Retain_Initial = 10
             };
@@ -76,7 +76,7 @@ namespace PdfBookReaderTest.Render.Cache
             context.Library.CurrentBook = curBook;
 
             // Run method 
-            var policy = new PageContentPrefetchPolicy()
+            var policy = new PagePrefetchPolicy()
             {
                 Retain_Initial = 10
             };
@@ -98,7 +98,7 @@ namespace PdfBookReaderTest.Render.Cache
             context.Library.CurrentBook = book;
             book.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
 
-            var policy = new PageContentPrefetchPolicy();
+            var policy = new PagePrefetchPolicy();
             
             var keys = policy.PrefetchKeyOrder(context);
             AssertMustRetainAllKeys(keys, policy, context);
@@ -116,7 +116,7 @@ namespace PdfBookReaderTest.Render.Cache
             context.Library.CurrentBook = book;
             book.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
 
-            var policy = new PageContentPrefetchPolicy()
+            var policy = new PagePrefetchPolicy()
             {
                 Retain_Initial = 10
             };
@@ -137,7 +137,7 @@ namespace PdfBookReaderTest.Render.Cache
             context.Library.CurrentBook = book;
             book.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
 
-            var policy = new PageContentPrefetchPolicy()
+            var policy = new PagePrefetchPolicy()
             {
                 Retain_InCurrentBookAfter = 10
             };
@@ -160,7 +160,7 @@ namespace PdfBookReaderTest.Render.Cache
             context.Library.CurrentBook = book;
             book.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
 
-            var policy = new PageContentPrefetchPolicy()
+            var policy = new PagePrefetchPolicy()
             {
                 Retain_InCurrentBookBefore = 10
             };
@@ -183,7 +183,7 @@ namespace PdfBookReaderTest.Render.Cache
             context.Library.CurrentBook = book;
             book.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
 
-            var policy = new PageContentPrefetchPolicy()
+            var policy = new PagePrefetchPolicy()
             {
                 Retain_InCurrentBookBefore = 2,
                 Retain_InCurrentBookAfter = 7,
@@ -210,7 +210,7 @@ namespace PdfBookReaderTest.Render.Cache
 
             context.Library.Books[1].CurrentPosition = PositionInBook.FromPhysicalPage(66, 100);
 
-            var policy = new PageContentPrefetchPolicy()
+            var policy = new PagePrefetchPolicy()
             {
                 Retain_InCurrentBookAfter = 3,
                 Retain_InCurrentBookBefore = 1,
@@ -246,7 +246,7 @@ namespace PdfBookReaderTest.Render.Cache
         {
             var context = new PageCacheContext(ScreenWidth, GetLibrary(3));
 
-            var policy = new PageContentPrefetchPolicy()
+            var policy = new PagePrefetchPolicy()
             {
                 Retain_Initial = 2
             };
@@ -266,7 +266,7 @@ namespace PdfBookReaderTest.Render.Cache
         {
             var context = new PageCacheContext(ScreenWidth, GetLibrary(1));
 
-            var policy = new PageContentPrefetchPolicy()
+            var policy = new PagePrefetchPolicy()
             {
                 OtherItemsToKeepCount = 7
             };
@@ -293,7 +293,7 @@ namespace PdfBookReaderTest.Render.Cache
 
         #region Helpers
 
-        void AssertMustRetainAllKeys(IEnumerable<PageKey> keys, PageContentPrefetchPolicy policy, PageCacheContext context)
+        void AssertMustRetainAllKeys(IEnumerable<PageKey> keys, PagePrefetchPolicy policy, PageCacheContext context)
         {
             foreach (var key in keys)
             {

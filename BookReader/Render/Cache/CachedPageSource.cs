@@ -10,47 +10,47 @@ using NLog;
 
 namespace PdfBookReader.Render
 {
-    class CachedPageContentSource : IPageContentSource
+    class CachedPageSource : IPageSource
     {
-        readonly static Logger Log = LogManager.GetCurrentClassLogger();
+        readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public IPageLayoutAnalyzer LayoutAnalyzer { get; set; }
+        public IPageLayoutStrategy LayoutAnalyzer { get; set; }
 
         // Cache
-        readonly DW<PageContentCache> Cache;
+        readonly DW<PageCache> Cache;
         readonly PrefetchManager PrefetchManager;
 
         object MyLock = new object();
 
-        public CachedPageContentSource(IPageLayoutAnalyzer layoutAnalyzer = null)
+        public CachedPageSource(IPageLayoutStrategy layoutAnalyzer = null)
         {
-            if (layoutAnalyzer == null) { layoutAnalyzer = new BlobPageLayoutAnalyzer(); }
+            if (layoutAnalyzer == null) { layoutAnalyzer = new ConnectedBlobLayoutStrategy(); }
             LayoutAnalyzer = layoutAnalyzer;
 
-            Cache = DW.Wrap(new PageContentCache());
+            Cache = DW.Wrap(new PageCache());
             PrefetchManager = new PrefetchManager(Cache);
             PrefetchManager.Start();
         }
 
-        public PageContent GetPage(int pageNum, Size screenSize, DW<IBookPageProvider> pageProvider) 
+        public Page GetPage(int pageNum, Size screenSize, DW<IBookProvider> bookProvider) 
         {
             // Try to get from cache
-            PageContent pageInfo;
+            Page pageInfo;
             if (Cache != null)
             {
-                pageInfo = Cache.o.Get(pageProvider.o.BookFilename, pageNum, screenSize.Width);
+                pageInfo = Cache.o.Get(bookProvider.o.BookFilename, pageNum, screenSize.Width);
                 if (pageInfo != null)
                 {
                     return pageInfo;
                 }
             }
 
-            pageInfo = RenderPhysicalPage(pageNum, screenSize, pageProvider);
+            pageInfo = RenderPhysicalPage(pageNum, screenSize, bookProvider);
 
             // Save to cache
             if (Cache != null)
             {
-                Cache.o.Add(pageProvider.o.BookFilename, pageNum, screenSize.Width, pageInfo);
+                Cache.o.Add(bookProvider.o.BookFilename, pageNum, screenSize.Width, pageInfo);
             }
 
             return pageInfo;
@@ -59,9 +59,9 @@ namespace PdfBookReader.Render
         // Simple optimization -- try to render in appropriate size
         int lastPageWidth = 1000; // for first page
 
-        PageContent RenderPhysicalPage(int pageNum, Size screenSize, DW<IBookPageProvider> pageProvider)
+        Page RenderPhysicalPage(int pageNum, Size screenSize, DW<IBookProvider> pageProvider)
         {
-            Log.Debug("Rendering: #{0} w={1}", pageNum, screenSize.Width);
+            logger.Debug("Rendering: #{0} w={1}", pageNum, screenSize.Width);
 
             // Lock to protect physical provider 
             // Note: cache is already protected
@@ -72,8 +72,8 @@ namespace PdfBookReader.Render
                 
                 PageLayoutInfo layout;
                 Size layoutRenderSize = new Size(lastPageWidth, int.MaxValue); 
-                DW<Bitmap> layoutPage = pageProvider.o.RenderPage(pageNum, layoutRenderSize, RenderQuality.Optimal);
-                layout = LayoutAnalyzer.DetectPageLayout(layoutPage);
+                DW<Bitmap> layoutPage = pageProvider.o.RenderPageImage(pageNum, layoutRenderSize, RenderQuality.Optimal);
+                layout = LayoutAnalyzer.DetectLayout(layoutPage);
 
                 // Special case - empty page
                 if (layout.Bounds.IsEmpty)
@@ -83,7 +83,7 @@ namespace PdfBookReader.Render
                     // Dummy layout -- screenWidth x 100
                     layout.Bounds = new Rectangle(0, 0, screenSize.Width, 100);
                     DW<Bitmap> emptyPage = DW.Wrap(new Bitmap(layout.Bounds.Width, layout.Bounds.Height));
-                    return new PageContent(pageNum, emptyPage, layout);
+                    return new Page(pageNum, emptyPage, layout);
                 }
 
                 // Render actual page. Bounded by width, but not height.
@@ -100,11 +100,11 @@ namespace PdfBookReader.Render
                     layoutPage.DisposeItem();
 
                     // render a new image
-                    Log.Debug("Slow: rendering second page for display. old:{0} - new:{1} = {2}", 
+                    logger.Debug("Slow: rendering second page for display. old:{0} - new:{1} = {2}", 
                         lastPageWidth, pageWidth, lastPageWidth - pageWidth);
 
                     Size displayPageMaxSize = new Size(pageWidth, int.MaxValue);
-                    displayPage = pageProvider.o.RenderPage(pageNum, displayPageMaxSize, RenderQuality.Optimal);
+                    displayPage = pageProvider.o.RenderPageImage(pageNum, displayPageMaxSize, RenderQuality.Optimal);
                     layout.ScaleBounds(displayPage.o.Size);
                 }
 
@@ -113,7 +113,7 @@ namespace PdfBookReader.Render
 
                 // QQ: would cropping the display bitmap to content area yield any benefits?
                 // Not doing it for now, as it has a cost as well.
-                return new PageContent(pageNum, displayPage, layout);
+                return new Page(pageNum, displayPage, layout);
             }
         }
 
