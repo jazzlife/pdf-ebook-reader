@@ -87,7 +87,9 @@
     <Compile Include="Model\BookLibrary.cs" />
     <Compile Include="Model\PositionInBook.cs" />
     <Compile Include="Render\Cache\CachePrefetchPolicy.cs" />
+    <Compile Include="Utils\Immutable.cs" />
     <Compile Include="Render\Cache\PageCache.cs" />
+    <Compile Include="Render\Cache\PageCacheContext.cs" />
     <Compile Include="Render\Cache\PagePrefetchPolicy.cs" />
     <Compile Include="Render\Cache\PageMemoryCache.cs" />
     <Compile Include="Render\Cache\PageDiskCache.cs" />
@@ -136,7 +138,7 @@
     <Compile Include="Render\ScreenBook.cs" />
     <Compile Include="Utils\ArgCheck.cs" />
     <Compile Include="Utils\DisposableWrapper.cs" />
-    <Compile Include="Utils\EventHandling.cs" />
+    <Compile Include="Utils\EvArgs.cs" />
     <Compile Include="Utils\ExtensionMethods.cs" />
     <Compile Include="Render\Cache\ICache.cs" />
     <Compile Include="Render\Cache\ICachedDisposable.cs" />

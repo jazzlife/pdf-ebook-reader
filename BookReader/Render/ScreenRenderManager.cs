@@ -6,13 +6,14 @@ using PdfBookReader.Model;
 using PdfBookReader.Utils;
 using System.Drawing;
 using System.Drawing.Imaging;
+using PdfBookReader.Render.Cache;
 
 namespace PdfBookReader.Render
 {
     /// <summary>
     /// Main class for rendering
     /// </summary>
-    class ScreenRenderManager
+    class ScreenRenderManager : IPageCacheContextManager
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -81,14 +82,14 @@ namespace PdfBookReader.Render
             // Set the current screen book field
             _curScreenBook = GetScreenBook(_library.CurrentBook);
 
-            // TODO: not sure what do do about ScrenBook closing
-            // They're fairly light on resources, apart from the PDF file...
-            // Prefetch manager may use them at unpredictable times, not sure when
-            // it's appropriate to dispose of them.
+            OnCacheContextChanged();
         }
 
         /// <summary>
         /// Gets the ScreenBook object, or creates it if needed.
+        /// 
+        /// It's good to call Close() on ScreenBook objects sometimes -- 
+        /// they will be re-opened automatically as needed.
         /// </summary>
         /// <param name="book"></param>
         /// <returns></returns>
@@ -111,25 +112,25 @@ namespace PdfBookReader.Render
             // QQ: *maybe* should initiate page render (P3), but only if this class
             // is not the one that cased the position to change. Beware of the loop!
 
-            logger.Debug("CurrentBookPositionChanged"); 
-            // TODO: update cache policies
+            logger.Debug("CurrentBookPositionChanged");
+            OnCacheContextChanged();
         }
 
         void _library_BooksChanged(object sender, EventArgs e)
         {
             logger.Debug("CurrentBookChanged");
-            // TODO: update cache policies
+            OnCacheContextChanged();
         }
 
         void OnScreenSizeChanged()
         {
             logger.Debug("CurrentBookChanged");
-            // TODO: update cache policies
+            OnCacheContextChanged();
         }
 
         #endregion
 
-        #region Commands and UI properties
+        #region Commands 
 
         public DW<Bitmap> Render(PositionInBook newPosition)
         {
@@ -174,7 +175,6 @@ namespace PdfBookReader.Render
         }
 
         #endregion
-
 
         #region Drawing
 
@@ -234,6 +234,13 @@ namespace PdfBookReader.Render
 
         #endregion
 
+        public PageCacheContext CacheContext { get; private set; }
+        public event EvHandler<PageCacheContext> CacheContextChanged;
 
+        void OnCacheContextChanged()
+        {
+            CacheContext = new PageCacheContext(ScreenSize.Width, _library);
+            if (CacheContextChanged != null) { CacheContextChanged(this, EvArgs.Create(CacheContext)); }
+        }
     }
 }

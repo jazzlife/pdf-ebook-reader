@@ -53,7 +53,6 @@ namespace PdfBookReader.Render.Cache
 
         #endregion
 
-
         #region Options
 
         /// <summary>
@@ -96,15 +95,15 @@ namespace PdfBookReader.Render.Cache
             // Retain the initial few pages
             if (key.PageNum <= Retain_Initial) { return true; }
 
-            foreach (Book book in context.Library.Books)
+            foreach (var bookPos in context.BookPositions)
             {
-                if (book.CurrentPosition == null) { continue; }
+                if (bookPos.Position == null) { continue; }
 
                 // Retain the range of pages around the current page                
-                int currentPage = book.CurrentPosition.PageNum;
+                int currentPage = bookPos.Position.PageNum;
 
-                if (context.Library.CurrentBook != null &&
-                    key.BookId == context.Library.CurrentBook.Id)
+                if (context.CurrentBookPosition != null &&
+                    key.BookId == context.CurrentBookPosition.BookId)
                 {
                     // Current book
                     if (currentPage - Retain_InCurrentBookBefore <= key.PageNum
@@ -155,10 +154,10 @@ namespace PdfBookReader.Render.Cache
         public IEnumerable<PageKey> PrefetchKeyOrder(PageCacheContext context)
         {
             // Current book 
-            if (context.Library.CurrentBook != null)
+            if (context.CurrentBookPosition != null)
             {
                 var keys = PrefetchKeysForBook(
-                    context.Library.CurrentBook,
+                    context.CurrentBookPosition,
                     Retain_InCurrentBookBefore,
                     Retain_InCurrentBookAfter,
                     context.ScreenWidth);
@@ -167,13 +166,14 @@ namespace PdfBookReader.Render.Cache
             }
 
             // Other books
-            foreach (Book book in context.Library.Books)
+            foreach (var bookPos in context.BookPositions)
             {
                 // Skip current book, already done
-                if (book == context.Library.CurrentBook) { continue; }
+                if (context.CurrentBookPosition != null &&
+                    bookPos.BookId == context.CurrentBookPosition.BookId) { continue; }
 
                 var keys = PrefetchKeysForBook(
-                    book,
+                    bookPos,
                     Retain_InOtherBookBefore,
                     Retain_InOtherBookAfter,
                     context.ScreenWidth);
@@ -182,21 +182,21 @@ namespace PdfBookReader.Render.Cache
             }
         }
 
-        IEnumerable<PageKey> PrefetchKeysForBook(Book book, int keepBefore, int keepAfter, int screenWidth)
+        IEnumerable<PageKey> PrefetchKeysForBook(PageCacheContext.BookPosition bookPos, int keepBefore, int keepAfter, int screenWidth)
         {
-            IEnumerable<int> pageNums = PrefetchPagesForBook(book, keepBefore, keepAfter);
+            IEnumerable<int> pageNums = PrefetchPagesForBook(bookPos, keepBefore, keepAfter);
             foreach (int page in pageNums)
             {
-                yield return new PageKey(book.Id, page, screenWidth);
+                yield return new PageKey(bookPos.BookId, page, screenWidth);
             }
         }
 
-        IEnumerable<int> PrefetchPagesForBook(Book book, int keepBefore, int keepAfter)
+        IEnumerable<int> PrefetchPagesForBook(PageCacheContext.BookPosition bookPos, int keepBefore, int keepAfter)
         {
             // items around the current page
-            if (book.CurrentPosition != null)
+            if (bookPos.Position != null)
             {
-                int currentPage = book.CurrentPosition.PageNum;
+                int currentPage = bookPos.Position.PageNum;
 
                 yield return currentPage;
 
@@ -230,15 +230,5 @@ namespace PdfBookReader.Render.Cache
         }
     }
 
-    class PageCacheContext
-    {
-        public readonly int ScreenWidth;
-        public readonly BookLibrary Library;
-        public PageCacheContext(int screenWidth, BookLibrary library)
-        {
-            ScreenWidth = screenWidth;
-            Library = library;
-        }
-    }
 
 }
