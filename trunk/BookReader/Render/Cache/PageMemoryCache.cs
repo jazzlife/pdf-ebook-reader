@@ -7,16 +7,16 @@ using System.Drawing;
 namespace PdfBookReader.Render.Cache
 {
     // Not thread-safe, lock externally
-    class PageContentMemoryCache : SimpleCache<string, PageContent>
+    class PageMemoryCache : SimpleCache<string, Page>
     {
-        public PageContentMemoryCache() :
+        public PageMemoryCache() :
             base("BitmapMemoryCache", new DefaultExpirationPolicy(20, 30))
         { }
 
-        protected override Dictionary<string, PageContent> LoadItems()
+        protected override Dictionary<string, Page> LoadItems()
         {
             // Always use a fresh empty collection
-            return new Dictionary<string, PageContent>();
+            return new Dictionary<string, Page>();
         }
 
         protected override Dictionary<string, CachedItemInfo> LoadCacheInfos()
@@ -37,14 +37,14 @@ namespace PdfBookReader.Render.Cache
 
         protected override bool CanRemoveItem(string key)
         {
-            PageContent cdItem = GetItemNoInfoUpdate(key);
+            Page cdItem = GetItemNoInfoUpdate(key);
             // Remove item only if it is not in use
             return !cdItem.InUse;
         }
 
         protected override void RemoveItem(string key)
         {
-            PageContent cdItem = GetItemNoInfoUpdate(key);
+            Page cdItem = GetItemNoInfoUpdate(key);
             if (cdItem.InUse) { throw new InvalidOperationException("Item in use, cannot remove: " + cdItem); }
 
             base.RemoveItem(key);

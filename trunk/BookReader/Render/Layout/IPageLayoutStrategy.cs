@@ -10,9 +10,9 @@ namespace PdfBookReader.Render
     /// <summary>
     /// Analyzes the layout of a physical page.
     /// </summary>
-    interface IPageLayoutAnalyzer
+    interface IPageLayoutStrategy
     {
-        PageLayoutInfo DetectPageLayout(DW<Bitmap> physicalPage);
+        PageLayoutInfo DetectLayout(DW<Bitmap> physicalPage);
     }
 
 

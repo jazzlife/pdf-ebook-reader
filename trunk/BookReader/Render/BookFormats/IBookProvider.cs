@@ -13,7 +13,7 @@ namespace PdfBookReader.Render
     /// 
     /// Disposable since it may contain large in-memory objects.
     /// </summary>
-    public interface IBookPageProvider : IDisposable
+    public interface IBookProvider : IDisposable
     {
         /// <summary>
         /// Total number of pages in the book.
@@ -32,7 +32,7 @@ namespace PdfBookReader.Render
         /// <param name="maxSize">Maximum size to fit the page within (preserving aspect ratio)</param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        DW<Bitmap> RenderPage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality);
+        DW<Bitmap> RenderPageImage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality);
     }
 
     public enum RenderQuality

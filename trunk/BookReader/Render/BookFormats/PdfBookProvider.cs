@@ -12,7 +12,7 @@ using PdfBookReader.Render;
 
 namespace PdfBookReader.Render
 {
-    public class PdfBookPageProvider : IBookPageProvider
+    public class PdfBookPageProvider : IBookProvider
     {
         DW<PDFWrapper> _pdfDoc;
         String _fullPath;
@@ -165,7 +165,7 @@ namespace PdfBookReader.Render
         const double ZoomConst = 72.0;
 
 
-        public DW<Bitmap> RenderPage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.Optimal)
+        public DW<Bitmap> RenderPageImage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.Optimal)
         {
             if (pageNum < 1) { throw new ArgumentException("pageNum < 1. Should start at 1"); }
             AssertPdfDocLoaded();

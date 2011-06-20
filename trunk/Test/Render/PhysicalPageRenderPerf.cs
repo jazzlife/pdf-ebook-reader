@@ -81,7 +81,7 @@ namespace PdfBookReaderTest.Render
                     // Only time the render method
                     using (IDisposable d1 = localTimer.NewRun, d2 = sumTimer.NewRun)
                     {
-                        bmp = r.RenderPage(pageNum, PageSize, quality);
+                        bmp = r.RenderPageImage(pageNum, PageSize, quality);
                     }
 
                     // Count save when caching, but not normally
@@ -118,7 +118,7 @@ namespace PdfBookReaderTest.Render
             {
                 foreach (String file in Files)
                 {
-                    RenderAndAnalyzePages(sumTimer, file, analyzer: new BlankPageLayoutAnalyzer());
+                    RenderAndAnalyzePages(sumTimer, file, analyzer: new BlankLayoutStrategy());
                 }
             }
         }
@@ -130,7 +130,7 @@ namespace PdfBookReaderTest.Render
             if (!Directory.Exists(CacheUtils.CacheFolderPath)) { t2b_BaselinePageReadNoAnalysis(); }
 
             // Disk cache
-            using(PageContentCache cache = new PageContentCache())
+            using(PageCache cache = new PageCache())
             {
                 using (PTimer sumTimer = new PTimer("Cached retrieval"))
                 {
@@ -152,21 +152,21 @@ namespace PdfBookReaderTest.Render
         }
 
         void RenderAndAnalyzePages(PTimer sumTimer, String file, RenderQuality quality = RenderQuality.Optimal,
-            IPageLayoutAnalyzer analyzer = null, PageContentCache cache = null)
+            IPageLayoutStrategy analyzer = null, PageCache cache = null)
         {
-            var pcp = DW.Wrap(new CachedPageContentSource(analyzer));
-            var pageProvider = DW.Wrap<IBookPageProvider>(new PdfBookPageProvider(file));
+            var pcp = DW.Wrap(new CachedPageSource(analyzer));
+            var bookProvider = DW.Wrap<IBookProvider>(new PdfBookPageProvider(file));
 
             using (PTimer localTimer = new PTimer(">>{0}: {1}".F(sumTimer.Name, Path.GetFileNameWithoutExtension(file))))
             {
-                foreach (int pageNum in PageNums(pageProvider.o.PageCount))
+                foreach (int pageNum in PageNums(bookProvider.o.PageCount))
                 {
-                    PageContent pc;
+                    Page pc;
 
                     // Only time the render method
                     using (IDisposable d1 = localTimer.NewRun, d2 = sumTimer.NewRun)
                     {
-                        pc = pcp.o.GetPage(pageNum, PageSize, pageProvider);
+                        pc = pcp.o.GetPage(pageNum, PageSize, bookProvider);
                     }
                 }
             }

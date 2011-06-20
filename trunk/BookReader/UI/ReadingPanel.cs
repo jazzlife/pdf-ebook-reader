@@ -22,7 +22,7 @@ namespace PdfBookReader.UI
         DW<Bitmap> _currentScreenImage;
 
         // read-only
-        DW<IPageContentSource> _contentSource;
+        DW<IPageSource> _contentSource;
 
         public ReadingPanel()
         {
@@ -60,7 +60,8 @@ namespace PdfBookReader.UI
                     _book.CurrentPositionChanged += OnBookPositionChanged;
 
                     // Set the (no the first "current" page).
-                    CurrentScreenImage = _renderManager.RenderCurrent(pbContent.Size);
+                    _renderManager.ScreenSize = pbContent.Size;
+                    CurrentScreenImage = _renderManager.Render(_book.CurrentPosition);
 
                     bookProgressBar.PageIncrementSize = _book.CurrentPosition.UnitSize;
 
@@ -128,7 +129,8 @@ namespace PdfBookReader.UI
             timerResize.Stop();
             if (Book == null) { return; }
 
-            CurrentScreenImage = _renderManager.RenderCurrent(pbContent.Size);
+            _renderManager.ScreenSize = pbContent.Size;
+            CurrentScreenImage = _renderManager.Render(_book.CurrentPosition);
         }
 
         #region UI update

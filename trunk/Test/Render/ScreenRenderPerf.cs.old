@@ -36,8 +36,10 @@ namespace PdfBookReaderTest.Render
 
         void RenderOneFile(PTimer timer, String file)
         {
-            var contentSource = DW.Wrap<IPageContentSource>(new CachedPageContentSource());
-            ScreenBook book = new ScreenBook(new Book(file), ScreenSize);
+            var library = GetOneBookLibrary(file);
+            var renderMgr = new ScreenRenderManager(library, ScreenSize);
+
+            var book = library.CurrentBook;
 
             const int RenderNextRepeats = 10;
             const int RenderMiddleRepeats = 5;
@@ -49,24 +51,24 @@ namespace PdfBookReaderTest.Render
             // Render first, forward
             using(IDisposable a = timer.NewRun, b = fileTimer.NewRun)
             {
-                book.RenderFirstPage(contentSource);
+                renderMgr.Render(null);
             }
             for (int i = 0; i < RenderNextRepeats; i++)
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    book.RenderNextScreen(contentSource);
+                    renderMgr.RenderNext();
                 }
             }
 
             // Render middle and re-render
-            int middle = book.BookPageProvider.o.PageCount / 2;            
+            int middle = book.CurrentPosition.PageCount / 2;            
             for (int i = 0; i < RenderMiddleRepeats; i++)
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    PositionInBook pos = PositionInBook.FromPositionUnit(middle, book.BookPageProvider.o.PageCount);
-                    book.RenderScreen(pos, contentSource);
+                    PositionInBook pos = PositionInBook.FromPositionUnit(middle, book.CurrentPosition.PageCount);
+                    renderMgr.Render(pos);
                 }
             }
 
@@ -74,29 +76,44 @@ namespace PdfBookReaderTest.Render
             for (int i = 0; i < RenderResizeRepeats; i++)
             {
                 // Render at different size
-                Size newSize = new Size((int)(book.ScreenSize.Width * 1.2), (int)(book.ScreenSize.Height * 1.2));
-                book.RenderCurrentScreen(newSize, contentSource);
+                Size newSize = new Size((int)(renderMgr.ScreenSize.Width * 1.2), (int)(renderMgr.ScreenSize.Height * 1.2));
+                renderMgr.ScreenSize = newSize;
+                renderMgr.Render(book.CurrentPosition);
             }
             using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
             {
-                book.RenderCurrentScreen(ScreenSize, contentSource); // back to normal
+                renderMgr.ScreenSize = ScreenSize;
+                renderMgr.Render(book.CurrentPosition); // back to normal
             }
 
             // Render last, backward
             using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
             {
-                book.RenderLastPage(contentSource);
+                renderMgr.Render(PositionInBook.FromPositionUnit(0.99f * book.CurrentPosition.PageCount, book.CurrentPosition.PageCount); 
             }
             for (int i = 0; i < RenderPreviousRepeats; i++)
             {
                 using (IDisposable a = timer.NewRun, b = fileTimer.NewRun)
                 {
-                    book.RenderPreviousScreen(contentSource);
+                    renderMgr.RenderPrevious(contentSource);
                 }
             }
 
             Console.WriteLine();
             Console.Write(fileTimer);
+        }
+
+        BookLibrary GetOneBookLibrary(String bookFile)
+        {
+            // Load from non-existing temp file to prevent saving to real library
+            String file = Path.GetTempFileName();
+            File.Delete(file);
+
+            var lib = BookLibrary.Load(file);
+            lib.AddBook(new Book(bookFile));
+            lib.CurrentBook = lib.Books.First();
+
+            return lib;
         }
     }
 }

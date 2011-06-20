@@ -12,9 +12,9 @@ namespace PdfBookReader.Render
     class PrefetchManager 
     {
         readonly object MyLock = new object();
-        readonly DW<PageContentCache> Cache;
+        readonly DW<PageCache> Cache;
 
-        public PrefetchManager(DW<PageContentCache> cache)
+        public PrefetchManager(DW<PageCache> cache)
         {
             Cache = cache;
         }

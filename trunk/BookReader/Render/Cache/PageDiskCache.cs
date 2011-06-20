@@ -13,12 +13,12 @@ namespace PdfBookReader.Render.Cache
 
 
     // Not thread-safe, lock externally
-    class PageContentDiskCache : SimpleCache<string, PageContent>        
+    class PageDiskCache : SimpleCache<string, Page>        
     {
         public readonly string Prefix;
         public readonly string Extension;
 
-        public PageContentDiskCache(string filePrefix = "page-", string fileExtension = "png")
+        public PageDiskCache(string filePrefix = "page-", string fileExtension = "png")
             : base (filePrefix, new DefaultExpirationPolicy(600, 800) )
         {
             ArgCheck.FilenameCharsValid(filePrefix, "filePrefix");
@@ -28,12 +28,12 @@ namespace PdfBookReader.Render.Cache
             Extension = fileExtension;
         }
 
-        public override void Add(string key, PageContent value)
+        public override void Add(string key, Page value)
         {
             ArgCheck.FilenameCharsValid(key, "key");
 
             // Make a copy, we do not store the bitmap pointer.
-            PageContent actualPc = new PageContent(value.PageNum, null, value.Layout);
+            Page actualPc = new Page(value.PageNum, null, value.Layout);
 
             base.Add(key, value);
 
@@ -52,9 +52,9 @@ namespace PdfBookReader.Render.Cache
             if (File.Exists(filename)) { File.Delete(filename); }
         }
 
-        public override PageContent Get(string key)
+        public override Page Get(string key)
         {
-            PageContent tempPc = base.Get(key); // temporary value, no image
+            Page tempPc = base.Get(key); // temporary value, no image
             if (tempPc == null) { return null; }
 
             String filename = GetFullPath(key);
@@ -63,7 +63,7 @@ namespace PdfBookReader.Render.Cache
             // TODO: try/catch around file access
             DW<Bitmap> b = DW.Wrap(new Bitmap(filename));
 
-            return new PageContent(tempPc.PageNum, b, tempPc.Layout);
+            return new Page(tempPc.PageNum, b, tempPc.Layout);
         }
 
         string GetFullPath(String key)

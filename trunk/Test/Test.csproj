@@ -73,7 +73,7 @@
     <Compile Include="Render\BlobPageLayoutAnalyzerPerf.cs" />
     <Compile Include="Render\Cache\PageContentPrefetchPolicyTest.cs" />
     <Compile Include="Render\PhysicalPageRenderPerf.cs" />
-    <Compile Include="Render\ScreenRenderPerf.cs" />
+    <None Include="Render\ScreenRenderPerf.cs.old" />
     <Compile Include="TestUtilsTest\PerformanceMeasureTest.cs" />
     <Compile Include="TestUtils\DataContract.cs" />
     <Compile Include="TestUtils\IPerformanceNode.cs" />
@@ -83,7 +83,7 @@
     <Compile Include="Utils\DisposableWrapperTest.cs" />
     <Compile Include="Utils\ExtensionMethodsTest.cs" />
     <Compile Include="Utils\SizeScaleTest.cs" />
-    <Compile Include="Render\ScreenRenderTest.cs" />
+    <None Include="Render\ScreenRenderTest.cs.old" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestUtils\PTimer.cs" />

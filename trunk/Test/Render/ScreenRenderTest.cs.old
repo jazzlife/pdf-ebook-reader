@@ -41,7 +41,7 @@ namespace PdfBookReaderTest
         [Test]
         public void One_RenderDown_ExtraLongPage()
         {
-            IPageLayoutAnalyzer analyzer = new BlobPageLayoutAnalyzer();
+            IPageLayoutStrategy analyzer = new ConnectedBlobLayoutStrategy();
             Render(Path.Combine(TestConst.PdfFilePath, file_clean), 100, new Size(440, 1680));
         }
 

@@ -11,10 +11,10 @@ using PdfBookReader.Render.Cache;
 namespace PdfBookReader.Render
 {
     /// <summary>
-    /// Rendered physical page with the detected layout info. 
+    /// Physical page from the book along with the detected layout info. 
     /// </summary>
     [DataContract(Name = "PageContent")]
-    class PageContent : ICachedDisposable
+    class Page : ICachedDisposable
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -49,7 +49,7 @@ namespace PdfBookReader.Render
 
         }
 
-        public PageContent(int pageNum, DW<Bitmap> image, PageLayoutInfo layout)
+        public Page(int pageNum, DW<Bitmap> image, PageLayoutInfo layout)
         {
             ArgCheck.GreaterThanOrEqual(pageNum, 1, "pageNum");
             //ArgCheck.NotNull(image);
