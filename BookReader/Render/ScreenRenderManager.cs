@@ -102,6 +102,7 @@ namespace PdfBookReader.Render
                 sb = new ScreenBook(book, _screenSize);
                 _screenBooks.Add(sb.Book.Id, sb);
             }
+
             return sb;
         }
 
@@ -179,6 +180,8 @@ namespace PdfBookReader.Render
 
         DW<Bitmap> GetScreenBitmap(List<Page> pages)
         {
+            if (pages == null) { return null; }
+
             DW<Bitmap> screenBmp = DW.Wrap(new Bitmap(ScreenSize.Width, ScreenSize.Height, PixelFormat.Format24bppRgb));
             using (Graphics g = Graphics.FromImage(screenBmp.o))
             {

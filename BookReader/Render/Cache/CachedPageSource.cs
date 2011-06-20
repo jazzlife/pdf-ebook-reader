@@ -14,7 +14,7 @@ namespace PdfBookReader.Render
     {
         readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public IPageLayoutStrategy LayoutAnalyzer { get; set; }
+        public IPageLayoutStrategy LayoutStrategy { get; set; }
 
         // Cache
         readonly DW<PageCache> Cache;
@@ -22,10 +22,10 @@ namespace PdfBookReader.Render
 
         object MyLock = new object();
 
-        public CachedPageSource(IPageLayoutStrategy layoutAnalyzer = null)
+        public CachedPageSource(IPageLayoutStrategy layoutStrategy = null)
         {
-            if (layoutAnalyzer == null) { layoutAnalyzer = new ConnectedBlobLayoutStrategy(); }
-            LayoutAnalyzer = layoutAnalyzer;
+            if (layoutStrategy == null) { layoutStrategy = new ConnectedBlobLayoutStrategy(); }
+            LayoutStrategy = layoutStrategy;
 
             Cache = DW.Wrap(new PageCache());
             PrefetchManager = new PrefetchManager(Cache);
@@ -73,7 +73,7 @@ namespace PdfBookReader.Render
                 PageLayoutInfo layout;
                 Size layoutRenderSize = new Size(lastPageWidth, int.MaxValue); 
                 DW<Bitmap> layoutPage = pageProvider.o.RenderPageImage(pageNum, layoutRenderSize, RenderQuality.Optimal);
-                layout = LayoutAnalyzer.DetectLayout(layoutPage);
+                layout = LayoutStrategy.DetectLayout(layoutPage);
 
                 // Special case - empty page
                 if (layout.Bounds.IsEmpty)

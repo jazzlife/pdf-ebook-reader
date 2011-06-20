@@ -64,8 +64,6 @@ namespace PdfBookReader.UI
                     CurrentScreenImage = _renderManager.Render(_book.CurrentPosition);
 
                     bookProgressBar.PageIncrementSize = _book.CurrentPosition.UnitSize;
-
-                    UpdateUIState();
                 }
             }
         }
