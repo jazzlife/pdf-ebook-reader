@@ -18,15 +18,14 @@ namespace PdfBookReader.UI
         BookLibrary _library;
         Book _book;
 
-        ScreenRenderManager _renderManager;
+        DW<ScreenRenderManager> _renderManager;
         DW<Bitmap> _currentScreenImage;
-
-        // read-only
-        DW<IPageSource> _contentSource;
 
         public ReadingPanel()
         {
             InitializeComponent();
+
+            this.Disposed += new EventHandler(ReadingPanel_Disposed);
         }
 
         public void Initialize(BookLibrary library)
@@ -34,7 +33,16 @@ namespace PdfBookReader.UI
             ArgCheck.NotNull(library, "library");
             _library = library;
 
-            _renderManager = new ScreenRenderManager(_library, pbContent.Size);
+            _renderManager = DW.Wrap(new ScreenRenderManager(_library, pbContent.Size));
+        }
+
+
+        void ReadingPanel_Disposed(object sender, EventArgs e)
+        {
+            if (_renderManager != null)
+            {
+                _renderManager.DisposeItem();
+            }
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -52,7 +60,7 @@ namespace PdfBookReader.UI
                 }
 
                 _book = value;
-                _renderManager.CurrentBook = _book;
+                _renderManager.o.CurrentBook = _book;
 
                 if (_book != null)
                 {
@@ -60,8 +68,8 @@ namespace PdfBookReader.UI
                     _book.CurrentPositionChanged += OnBookPositionChanged;
 
                     // Set the (no the first "current" page).
-                    _renderManager.ScreenSize = pbContent.Size;
-                    CurrentScreenImage = _renderManager.Render(_book.CurrentPosition);
+                    _renderManager.o.ScreenSize = pbContent.Size;
+                    CurrentScreenImage = _renderManager.o.Render(_book.CurrentPosition);
 
                     bookProgressBar.PageIncrementSize = _book.CurrentPosition.UnitSize;
                 }
@@ -84,7 +92,7 @@ namespace PdfBookReader.UI
             if (pos < 0) { pos = 0; }
 
             PositionInBook pi = PositionInBook.FromPositionUnit(pos, Book.CurrentPosition.PageCount);
-            CurrentScreenImage = _renderManager.Render(pi);
+            CurrentScreenImage = _renderManager.o.Render(pi);
         }
 
         #endregion
@@ -127,15 +135,15 @@ namespace PdfBookReader.UI
             timerResize.Stop();
             if (Book == null) { return; }
 
-            _renderManager.ScreenSize = pbContent.Size;
-            CurrentScreenImage = _renderManager.Render(_book.CurrentPosition);
+            _renderManager.o.ScreenSize = pbContent.Size;
+            CurrentScreenImage = _renderManager.o.Render(_book.CurrentPosition);
         }
 
         #region UI update
         void UpdateUIState()
         {
-            bNextPage.Enabled = _renderManager.HasNextScreen;
-            bPrevPage.Enabled = _renderManager.HasPreviousScreen;
+            bNextPage.Enabled = _renderManager.o.HasNextScreen;
+            bPrevPage.Enabled = _renderManager.o.HasPreviousScreen;
 
             UpdateBookProgressBar();
         }
@@ -161,12 +169,12 @@ namespace PdfBookReader.UI
 
         private void bNextPage_Click(object sender, EventArgs e)
         {
-            CurrentScreenImage = _renderManager.RenderNext();
+            CurrentScreenImage = _renderManager.o.RenderNext();
         }
 
         private void bPrevPage_Click(object sender, EventArgs e)
         {
-            CurrentScreenImage = _renderManager.RenderPrevious();            
+            CurrentScreenImage = _renderManager.o.RenderPrevious();            
         }
 
         const int WidthIncrement = 100;
@@ -184,38 +192,24 @@ namespace PdfBookReader.UI
 
         private void timerCacheDisplay_Tick(object sender, EventArgs e)
         {
-            // NOTE: remarkably inefficient, for debugging only
+            if (Book == null) { return; }
 
-            /*
-            if (_pageCache != null)
+            // NOTE: remarkably inefficient, and breaking compatibility -- for debugging only
+
+            PageCache cache = _renderManager.o.Cache.o;
+            if (cache != null)
             {
-                if (Book == null)
-                {
-                    bookProgressBar.SetLoadedPages(null, null);
-                }
-                else
-                {
-                    var memPages = _pageCache.o.GetMemoryPageNums(Book.Filename, ScreenProvider.o.ScreenSize.Width);
-                    var diskPages = _pageCache.o.GetDiskPageNums(Book.Filename, ScreenProvider.o.ScreenSize.Width);
-                    bookProgressBar.SetLoadedPages(memPages, diskPages);
-                }
+                var memPages = cache.GetMemoryKeys();
+                var diskPages = cache.GetDiskKeys();
 
-            }
-             */
-        }
+                this.FindForm().Text = "Disk pages: " + diskPages.Count();
 
-        protected override void OnLoad(EventArgs e)
-        {
-            this.FindForm().FormClosed += OnUnload;
-        }
-
-        void OnUnload(object sender, FormClosedEventArgs e)
-        {
-            if (_contentSource != null)
-            {
-                _contentSource.DisposeItem();
+                bookProgressBar.SetLoadedPages(
+                    memPages.Where( x => x.BookId == Book.Id).Select(x=>x.PageNum),
+                    diskPages.Where(x => x.BookId == Book.Id).Select(x => x.PageNum));
             }
         }
+
 
     }
 }

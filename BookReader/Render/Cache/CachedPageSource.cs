@@ -14,111 +14,51 @@ namespace PdfBookReader.Render
     {
         readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public IPageLayoutStrategy LayoutStrategy { get; set; }
-
         // Cache
-        readonly DW<PageCache> Cache;
+        internal readonly DW<PageCache> Cache;
         readonly PrefetchManager PrefetchManager;
+        readonly IPageSource PhysicalSource;
 
         object MyLock = new object();
 
-        public CachedPageSource(IPageLayoutStrategy layoutStrategy = null)
+        public CachedPageSource(IPageCacheContextManager contextManager)
         {
-            if (layoutStrategy == null) { layoutStrategy = new ConnectedBlobLayoutStrategy(); }
-            LayoutStrategy = layoutStrategy;
+            PhysicalSource = new SimplePageSource();
+            LayoutStrategy = RenderFactory.ConcreteFactory.GetLayoutStrategy();
 
-            Cache = DW.Wrap(new PageCache());
-            PrefetchManager = new PrefetchManager(Cache);
+            Cache = DW.Wrap(new PageCache(contextManager));
+            PrefetchManager = new PrefetchManager(Cache, PhysicalSource, contextManager);
             PrefetchManager.Start();
+
         }
 
-        public Page GetPage(int pageNum, Size screenSize, DW<IBookProvider> bookProvider) 
+        public IPageLayoutStrategy LayoutStrategy 
+        { 
+            get { return PhysicalSource.LayoutStrategy; }
+            set { PhysicalSource.LayoutStrategy = value; } 
+        }
+
+        public Page GetPage(int pageNum, Size screenSize, ScreenBook screenBook)
         {
             // Try to get from cache
-            Page pageInfo;
-            if (Cache != null)
+            PageKey key = new PageKey(screenBook.Book.Id, pageNum, screenSize.Width);
+            Page page = Cache.o.Get(key);
+            if (page != null) 
             {
-                pageInfo = Cache.o.Get(bookProvider.o.BookFilename, pageNum, screenSize.Width);
-                if (pageInfo != null)
-                {
-                    return pageInfo;
-                }
+                page.InUse = true;
+                return page; 
             }
 
-            pageInfo = RenderPhysicalPage(pageNum, screenSize, bookProvider);
-
-            // Save to cache
-            if (Cache != null)
+            // Render and add to cache
+            lock (Cache)
             {
-                Cache.o.Add(bookProvider.o.BookFilename, pageNum, screenSize.Width, pageInfo);
-            }
+                page = PhysicalSource.GetPage(pageNum, screenSize, screenBook);
+                Cache.o.Add(key, page);
 
-            return pageInfo;
-        }
-
-        // Simple optimization -- try to render in appropriate size
-        int lastPageWidth = 1000; // for first page
-
-        Page RenderPhysicalPage(int pageNum, Size screenSize, DW<IBookProvider> pageProvider)
-        {
-            logger.Debug("Rendering: #{0} w={1}", pageNum, screenSize.Width);
-
-            // Lock to protect physical provider 
-            // Note: cache is already protected
-            lock (MyLock)
-            {
-                // NOTE: rendering the page twice -- we need the layout in order to figure out
-                // the best dimensions for the final render.
-                
-                PageLayoutInfo layout;
-                Size layoutRenderSize = new Size(lastPageWidth, int.MaxValue); 
-                DW<Bitmap> layoutPage = pageProvider.o.RenderPageImage(pageNum, layoutRenderSize, RenderQuality.Optimal);
-                layout = LayoutStrategy.DetectLayout(layoutPage);
-
-                // Special case - empty page
-                if (layout.Bounds.IsEmpty)
-                {
-                    layoutPage.DisposeItem();
-
-                    // Dummy layout -- screenWidth x 100
-                    layout.Bounds = new Rectangle(0, 0, screenSize.Width, 100);
-                    DW<Bitmap> emptyPage = DW.Wrap(new Bitmap(layout.Bounds.Width, layout.Bounds.Height));
-                    return new Page(pageNum, emptyPage, layout);
-                }
-
-                // Render actual page. Bounded by width, but not height.
-                int pageWidth = (int)((float)screenSize.Width / layout.BoundsUnit.Width);
-
-                DW<Bitmap> displayPage;
-                if (lastPageWidth - 10 < pageWidth && pageWidth < lastPageWidth + 2)
-                {
-                    // keep the image
-                    displayPage = layoutPage;
-                }
-                else
-                {
-                    layoutPage.DisposeItem();
-
-                    // render a new image
-                    logger.Debug("Slow: rendering second page for display. old:{0} - new:{1} = {2}", 
-                        lastPageWidth, pageWidth, lastPageWidth - pageWidth);
-
-                    Size displayPageMaxSize = new Size(pageWidth, int.MaxValue);
-                    displayPage = pageProvider.o.RenderPageImage(pageNum, displayPageMaxSize, RenderQuality.Optimal);
-                    layout.ScaleBounds(displayPage.o.Size);
-                }
-
-                // Update width
-                lastPageWidth = pageWidth;
-
-                // QQ: would cropping the display bitmap to content area yield any benefits?
-                // Not doing it for now, as it has a cost as well.
-                return new Page(pageNum, displayPage, layout);
+                page.InUse = true;
+                return page;
             }
         }
-
-
-
 
         public void Dispose()
         {

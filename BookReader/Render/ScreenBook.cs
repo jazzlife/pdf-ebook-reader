@@ -14,7 +14,7 @@ namespace PdfBookReader.Render
     /// Renders screen pages based on physical pages.
     /// Keeps track of current page with ability to request next/previous.
     /// </summary>
-    partial class ScreenBook 
+    class ScreenBook 
     {
         public readonly Book Book;
 
@@ -58,7 +58,7 @@ namespace PdfBookReader.Render
             {
                 if (_bookProvider == null)
                 {
-                    _bookProvider = DW.Wrap<IBookProvider>(new PdfBookPageProvider(Book.Filename));
+                    _bookProvider = RenderFactory.ConcreteFactory.GetBookProvider(Book.Filename);
                 }
                 return _bookProvider;
             }
@@ -85,7 +85,7 @@ namespace PdfBookReader.Render
         public List<Page> AssembleCurrentScreen(PositionInBook newPosition, DW<IPageSource> pageContentSource)
         {
             return AssembleScreenHelper(newPosition,
-                    new AssembleCurrentScreenAlgorithm(pageContentSource, BookProvider));
+                    new AssembleCurrentScreenAlgorithm(pageContentSource, this));
         }
 
 
@@ -93,14 +93,14 @@ namespace PdfBookReader.Render
         {
             PositionInBook position = GetBookPosition();
             return AssembleScreenHelper(position,
-                new AssembleNextScreenAlgorithm(pageContentSource, BookProvider));
+                new AssembleNextScreenAlgorithm(pageContentSource, this));
         }
 
         public List<Page> AssemblePreviousScreen(DW<IPageSource> pageContentSource)
         {
             PositionInBook position = GetBookPosition();
             return AssembleScreenHelper(position,
-                new AssemblePreviousScreenAlgorithm(pageContentSource, BookProvider));
+                new AssemblePreviousScreenAlgorithm(pageContentSource, this));
         }
 
         /// <summary>
@@ -121,14 +121,14 @@ namespace PdfBookReader.Render
         public bool HasNextScreen(DW<IPageSource> pageContentSource)
         {
             PositionInBook position = GetBookPosition();
-            AssembleScreenAlgorithm alg = new AssembleNextScreenAlgorithm(pageContentSource, BookProvider);
+            AssembleScreenAlgorithm alg = new AssembleNextScreenAlgorithm(pageContentSource, this);
             return alg.CanApply(position, ScreenSize);
         }
 
         public bool HasPreviousScreen(DW<IPageSource> pageContentSource)
         {
             PositionInBook position = GetBookPosition();
-            AssembleScreenAlgorithm alg = new AssemblePreviousScreenAlgorithm(pageContentSource, BookProvider);
+            AssembleScreenAlgorithm alg = new AssemblePreviousScreenAlgorithm(pageContentSource, this);
             return alg.CanApply(position, ScreenSize);
         }
 

@@ -17,14 +17,18 @@ namespace PdfBookReader.UI
         {
             InitializeComponent();
 
-            _library = BookLibrary.Load(BookLibrary.DefaultFilename);
-
-            pLibrary.Initialize(_library);
-            pReading.Initialize(_library);
-
             pLibrary.Dock = DockStyle.Fill;
             pReading.Dock = DockStyle.Fill;
             pReading.Visible = false;
+
+            _library = BookLibrary.Load(BookLibrary.DefaultFilename);
+
+            if (!DesignMode)
+            {
+                pLibrary.Initialize(_library);
+                pReading.Initialize(_library);
+            }
+
         }
 
         private void pLibrary_OpenBook(object sender, OpenBookEventArgs e)

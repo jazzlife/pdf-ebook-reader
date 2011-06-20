@@ -8,30 +8,19 @@ using System.IO;
 
 namespace PdfBookReader.Render.Cache
 {
-
-
-
-
     // Not thread-safe, lock externally
-    class PageDiskCache : SimpleCache<string, Page>        
+    class PageDiskCache : SimpleCache<PageKey, Page, PageCacheContext>        
     {
-        public readonly string Prefix;
-        public readonly string Extension;
+        public readonly string Prefix = "page";
+        public readonly string Extension = "png";
 
-        public PageDiskCache(string filePrefix = "page-", string fileExtension = "png")
-            : base (filePrefix, new DefaultExpirationPolicy(600, 800) )
+        public PageDiskCache(IPageCacheContextManager contextManager)
+            : base("PageCache", contextManager,
+                   RenderFactory.ConcreteFactory.GetPageCachePolicyDisk())
+        { }
+
+        public override void Add(PageKey key, Page value)
         {
-            ArgCheck.FilenameCharsValid(filePrefix, "filePrefix");
-            ArgCheck.IsNot(fileExtension.Contains('.'), "File extension should not contain a dot (.)");
-
-            Prefix = filePrefix;
-            Extension = fileExtension;
-        }
-
-        public override void Add(string key, Page value)
-        {
-            ArgCheck.FilenameCharsValid(key, "key");
-
             // Make a copy, we do not store the bitmap pointer.
             Page actualPc = new Page(value.PageNum, null, value.Layout);
 
@@ -41,18 +30,15 @@ namespace PdfBookReader.Render.Cache
             value.Image.o.Save(filename);
         }
 
-        protected override void RemoveItem(string key)
+        public override void Remove(PageKey key)
         {
-            // Do NOT dispose the bitmap here, that will be done by the memory cache
-            // Items will always go through memory cache, it has the ultimate reposibility
-
-            base.RemoveItem(key);
-
             String filename = GetFullPath(key);
-            if (File.Exists(filename)) { File.Delete(filename); }
-        }
+            File.Delete(filename);
 
-        public override Page Get(string key)
+            base.Remove(key);
+        }
+        
+        public override Page Get(PageKey key)
         {
             Page tempPc = base.Get(key); // temporary value, no image
             if (tempPc == null) { return null; }
@@ -66,9 +52,10 @@ namespace PdfBookReader.Render.Cache
             return new Page(tempPc.PageNum, b, tempPc.Layout);
         }
 
-        string GetFullPath(String key)
+        string GetFullPath(PageKey key)
         {
-            return Path.Combine(CacheUtils.CacheFolderPath, Prefix + key + "." + Extension);
+            String filename = "{0}_{1}_p{2}_w{3}.{4}".F(Prefix, key.BookId, key.PageNum, key.ScreenWidth, Extension);
+            return Path.Combine(AppPaths.CacheFolderPath, filename);
         }
     }
 }

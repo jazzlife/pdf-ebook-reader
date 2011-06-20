@@ -187,7 +187,7 @@ namespace PdfBookReader.Render
 
         DW<Bitmap> RenderPageCore(int pageNum, Size maxSize, RenderQuality quality)
         {
-            if (pageNum < 1 || pageNum > _pdfDoc.o.PageCount) { return null; }
+            ArgCheck.InRange(pageNum, 0, PageCount, "pageNum");
 
             _pdfDoc.o.CurrentPage = pageNum;
 

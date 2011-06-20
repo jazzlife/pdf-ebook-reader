@@ -19,7 +19,7 @@ namespace PdfBookReaderTest.Render.Cache
         [Test]
         public void EmptyPolicy()
         {
-            var policy = new PagePrefetchPolicy();
+            var policy = new PagePrefetchAndRetainPolicy();
 
             var key = new PageKey(Guid.Empty, 1, ScreenWidth);
             var context = new PageCacheContext(ScreenWidth, GetLibrary(0));
@@ -44,7 +44,7 @@ namespace PdfBookReaderTest.Render.Cache
             var context = new PageCacheContext(ScreenWidth, GetLibrary(NumBooks));
 
             // Run method 
-            var policy = new PagePrefetchPolicy()
+            var policy = new PagePrefetchAndRetainPolicy()
             {
                 Retain_Initial = 10
             };
@@ -77,7 +77,7 @@ namespace PdfBookReaderTest.Render.Cache
             var context = new PageCacheContext(ScreenWidth, library);
 
             // Run method 
-            var policy = new PagePrefetchPolicy()
+            var policy = new PagePrefetchAndRetainPolicy()
             {
                 Retain_Initial = 10
             };
@@ -99,7 +99,7 @@ namespace PdfBookReaderTest.Render.Cache
 
             var context = new PageCacheContext(ScreenWidth, library);
 
-            var policy = new PagePrefetchPolicy();
+            var policy = new PagePrefetchAndRetainPolicy();
             
             var keys = policy.PrefetchKeyOrder(context);
             AssertMustRetainAllKeys(keys, policy, context);
@@ -118,7 +118,7 @@ namespace PdfBookReaderTest.Render.Cache
 
             var context = new PageCacheContext(ScreenWidth, library);
 
-            var policy = new PagePrefetchPolicy()
+            var policy = new PagePrefetchAndRetainPolicy()
             {
                 Retain_Initial = 10
             };
@@ -140,7 +140,7 @@ namespace PdfBookReaderTest.Render.Cache
             
             var context = new PageCacheContext(ScreenWidth, library);
 
-            var policy = new PagePrefetchPolicy()
+            var policy = new PagePrefetchAndRetainPolicy()
             {
                 Retain_InCurrentBookAfter = 10
             };
@@ -164,7 +164,7 @@ namespace PdfBookReaderTest.Render.Cache
 
             var context = new PageCacheContext(ScreenWidth, library);
 
-            var policy = new PagePrefetchPolicy()
+            var policy = new PagePrefetchAndRetainPolicy()
             {
                 Retain_InCurrentBookBefore = 10
             };
@@ -188,7 +188,7 @@ namespace PdfBookReaderTest.Render.Cache
 
             var context = new PageCacheContext(ScreenWidth, library);
 
-            var policy = new PagePrefetchPolicy()
+            var policy = new PagePrefetchAndRetainPolicy()
             {
                 Retain_InCurrentBookBefore = 2,
                 Retain_InCurrentBookAfter = 7,
@@ -215,7 +215,7 @@ namespace PdfBookReaderTest.Render.Cache
 
             var context = new PageCacheContext(ScreenWidth, library);
 
-            var policy = new PagePrefetchPolicy()
+            var policy = new PagePrefetchAndRetainPolicy()
             {
                 Retain_InCurrentBookAfter = 3,
                 Retain_InCurrentBookBefore = 1,
@@ -252,7 +252,7 @@ namespace PdfBookReaderTest.Render.Cache
             var library = GetLibrary(3);
             var context = new PageCacheContext(ScreenWidth, library);
 
-            var policy = new PagePrefetchPolicy()
+            var policy = new PagePrefetchAndRetainPolicy()
             {
                 Retain_Initial = 2
             };
@@ -272,7 +272,7 @@ namespace PdfBookReaderTest.Render.Cache
         {
             var context = new PageCacheContext(ScreenWidth, GetLibrary(1));
 
-            var policy = new PagePrefetchPolicy()
+            var policy = new PagePrefetchAndRetainPolicy()
             {
                 OtherItemsToKeepCount = 7
             };
@@ -299,7 +299,7 @@ namespace PdfBookReaderTest.Render.Cache
 
         #region Helpers
 
-        void AssertMustRetainAllKeys(IEnumerable<PageKey> keys, PagePrefetchPolicy policy, PageCacheContext context)
+        void AssertMustRetainAllKeys(IEnumerable<PageKey> keys, IPageRetainPolicy policy, PageCacheContext context)
         {
             foreach (var key in keys)
             {

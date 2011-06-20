@@ -22,16 +22,14 @@ namespace PdfBookReader.Render.Cache
         [DataMember]
         public readonly int ScreenWidth;
 
-        public readonly String Rep;
-
         public PageKey(Guid bookId, int pageNum, int screenWidth)
         {
             BookId = bookId;
             PageNum = pageNum;
             ScreenWidth = screenWidth;
-
-            Rep = "{0}_p{1}_w{2}".F(BookId, PageNum, ScreenWidth);
         }
+
+        public String Rep { get { return "{0}_p{1}_w{2}".F(BookId, PageNum, ScreenWidth); } }
 
         public override int GetHashCode()
         {

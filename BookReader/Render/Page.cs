@@ -77,7 +77,7 @@ namespace PdfBookReader.Render
 
         #region ICachedDisposable
 
-        bool _inUse = true;
+        bool _inUse = false;
         public void Return()
         {
             _inUse = false;
@@ -86,6 +86,7 @@ namespace PdfBookReader.Render
         public bool InUse
         {
             get { return _inUse; }
+            set { _inUse = value; }
         }
 
         #endregion
