@@ -122,7 +122,7 @@ namespace PdfBookReader.Model
         public int GetTopOnScreen(int pageHeight)
         {
             float positionWithinPage = (Position + 1) - PageNum;
-            int topOnScreen = -(int)(positionWithinPage * pageHeight);
+            int topOnScreen = -(int)Math.Round(positionWithinPage * pageHeight);
             return topOnScreen;
         }
 

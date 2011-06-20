@@ -12,7 +12,7 @@ namespace PdfBookReader.Render
     /// </summary>
     interface IPageSource : IDisposable
     {
-        IPageLayoutStrategy LayoutAnalyzer { get; set; }
+        IPageLayoutStrategy LayoutStrategy { get; set; }
 
         /// <summary>
         /// Get the given physical page (render or fetch from cache).

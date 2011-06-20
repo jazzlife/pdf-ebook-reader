@@ -28,6 +28,13 @@ namespace PdfBookReader.Render
 
             Book = book;
             ScreenSize = screenPageSize;
+
+            // Slightly hacky but best way to do it
+            // -- set the book position info if it's null
+            if (Book.CurrentPosition == null)
+            {
+                Book.CurrentPosition = PositionInBook.FromPhysicalPage(1, BookProvider.o.PageCount);
+            }
         }
 
         #region Public properties
@@ -114,14 +121,14 @@ namespace PdfBookReader.Render
         public bool HasNextScreen(DW<IPageSource> pageContentSource)
         {
             PositionInBook position = GetBookPosition();
-            AssembleScreenAlgorithm alg = new AssembleCurrentScreenAlgorithm(pageContentSource, BookProvider);
+            AssembleScreenAlgorithm alg = new AssembleNextScreenAlgorithm(pageContentSource, BookProvider);
             return alg.CanApply(position, ScreenSize);
         }
 
         public bool HasPreviousScreen(DW<IPageSource> pageContentSource)
         {
             PositionInBook position = GetBookPosition();
-            AssembleScreenAlgorithm alg = new AssembleCurrentScreenAlgorithm(pageContentSource, BookProvider);
+            AssembleScreenAlgorithm alg = new AssemblePreviousScreenAlgorithm(pageContentSource, BookProvider);
             return alg.CanApply(position, ScreenSize);
         }
 

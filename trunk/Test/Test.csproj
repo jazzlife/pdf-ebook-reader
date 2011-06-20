@@ -70,6 +70,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Render\AssembleScreenTest.cs" />
     <Compile Include="Render\BlobPageLayoutAnalyzerPerf.cs" />
     <Compile Include="Render\Cache\PageContentPrefetchPolicyTest.cs" />
     <Compile Include="Render\PhysicalPageRenderPerf.cs" />
