@@ -52,15 +52,15 @@ namespace PdfBookReaderTest.Render.Cache
             AssertMustRetainAllKeys(keys, policy, context);
 
             // Check for each book
-            var books = context.Library.Books;
+            var booksPos = context.BookPositions;
             for (int bookIdx = 0; bookIdx < NumBooks; bookIdx++)
             {
                 // Has the GUID
-                CollectionAssert.Contains(keys.Select(x=>x.BookId), books[bookIdx].Id);
+                CollectionAssert.Contains(keys.Select(x=>x.BookId), booksPos[bookIdx].BookId);
 
                 // Has all the elements
                 var bookKeys = LinqExtensions.IntRange(1, 10)
-                    .Select(x => new PageKey(books[bookIdx].Id, x, ScreenWidth));
+                    .Select(x => new PageKey(booksPos[bookIdx].BookId, x, ScreenWidth));
                 
                 CollectionAssert.IsSubsetOf(bookKeys, keys);
             }
@@ -70,10 +70,11 @@ namespace PdfBookReaderTest.Render.Cache
         public void Prefetch_CurrentBookFirst()
         {
             const int NumBooks = 3;
-            var context = new PageCacheContext(ScreenWidth, GetLibrary(NumBooks));
+            
+            var library = GetLibrary(NumBooks);
+            library.CurrentBook = library.Books.Last();
 
-            var curBook = context.Library.Books.Last();
-            context.Library.CurrentBook = curBook;
+            var context = new PageCacheContext(ScreenWidth, library);
 
             // Run method 
             var policy = new PagePrefetchPolicy()
@@ -84,7 +85,7 @@ namespace PdfBookReaderTest.Render.Cache
 
             // Has all the elements
             var curBookKeys = LinqExtensions.IntRange(1, 10)
-                .Select(x => new PageKey(curBook.Id, x, ScreenWidth));
+                .Select(x => new PageKey(library.CurrentBook.Id, x, ScreenWidth));
 
             CollectionAssert.AreEqual(curBookKeys, keys.Take(10), "current book's pages come first");
         }
@@ -92,11 +93,11 @@ namespace PdfBookReaderTest.Render.Cache
         [Test]
         public void Prefetch_CurrentPage()
         {
-            var context = new PageCacheContext(ScreenWidth, GetLibrary(1));
-
-            Book book = context.Library.Books[0];
-            context.Library.CurrentBook = book;
+            var library = GetLibrary(1);
+            Book book = library.Books[0];
             book.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
+
+            var context = new PageCacheContext(ScreenWidth, library);
 
             var policy = new PagePrefetchPolicy();
             
@@ -110,11 +111,12 @@ namespace PdfBookReaderTest.Render.Cache
         [Test]
         public void Prefetch_CurrentPageFirst()
         {
-            var context = new PageCacheContext(ScreenWidth, GetLibrary(1));
-
-            Book book = context.Library.Books[0];
-            context.Library.CurrentBook = book;
+            var library = GetLibrary(1);
+            Book book = library.Books[0];
+            library.CurrentBook = book;
             book.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
+
+            var context = new PageCacheContext(ScreenWidth, library);
 
             var policy = new PagePrefetchPolicy()
             {
@@ -131,11 +133,12 @@ namespace PdfBookReaderTest.Render.Cache
         [Test]
         public void Prefetch_CurrentPageAfter()
         {
-            var context = new PageCacheContext(ScreenWidth, GetLibrary(1));
-
-            Book book = context.Library.Books[0];
-            context.Library.CurrentBook = book;
+            var library = GetLibrary(1);
+            Book book = library.Books[0];
+            library.CurrentBook = book;
             book.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
+            
+            var context = new PageCacheContext(ScreenWidth, library);
 
             var policy = new PagePrefetchPolicy()
             {
@@ -154,11 +157,12 @@ namespace PdfBookReaderTest.Render.Cache
         [Test]
         public void Prefetch_CurrentPageBefore()
         {
-            var context = new PageCacheContext(ScreenWidth, GetLibrary(1));
-
-            Book book = context.Library.Books[0];
-            context.Library.CurrentBook = book;
+            var library = GetLibrary(1);
+            Book book = library.Books[0];
+            library.CurrentBook = book;
             book.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
+
+            var context = new PageCacheContext(ScreenWidth, library);
 
             var policy = new PagePrefetchPolicy()
             {
@@ -177,11 +181,12 @@ namespace PdfBookReaderTest.Render.Cache
         [Test]
         public void Prefetch_CurrentPageComplex()
         {
-            var context = new PageCacheContext(ScreenWidth, GetLibrary(1));
-
-            Book book = context.Library.Books[0];
-            context.Library.CurrentBook = book;
+            var library = GetLibrary(1);
+            Book book = library.Books[0];
+            library.CurrentBook = book;
             book.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
+
+            var context = new PageCacheContext(ScreenWidth, library);
 
             var policy = new PagePrefetchPolicy()
             {
@@ -202,13 +207,13 @@ namespace PdfBookReaderTest.Render.Cache
         [Test]
         public void Prefetch_ThreeBooksComplex()
         {
-            var context = new PageCacheContext(ScreenWidth, GetLibrary(3));
-
-            Book curBook = context.Library.Books.Last();
-            context.Library.CurrentBook = curBook;
+            var library = GetLibrary(3);
+            Book curBook = library.Books.Last();
+            library.CurrentBook = curBook;
             curBook.CurrentPosition = PositionInBook.FromPhysicalPage(33, 100);
+            library.Books[1].CurrentPosition = PositionInBook.FromPhysicalPage(66, 100);
 
-            context.Library.Books[1].CurrentPosition = PositionInBook.FromPhysicalPage(66, 100);
+            var context = new PageCacheContext(ScreenWidth, library);
 
             var policy = new PagePrefetchPolicy()
             {
@@ -244,14 +249,15 @@ namespace PdfBookReaderTest.Render.Cache
         [Test]
         public void Remove_AllNotFetched()
         {
-            var context = new PageCacheContext(ScreenWidth, GetLibrary(3));
+            var library = GetLibrary(3);
+            var context = new PageCacheContext(ScreenWidth, library);
 
             var policy = new PagePrefetchPolicy()
             {
                 Retain_Initial = 2
             };
 
-            var dict = GetCacheDict(10, context.Library.Books.ToArray());
+            var dict = GetCacheDict(10, library.Books.ToArray());
 
             var keysToRemove = policy.KeysToRemove(dict, context);
 
@@ -312,7 +318,7 @@ namespace PdfBookReaderTest.Render.Cache
             for (int i = 0; i < numBooks; i++)
             {
                 var book = new Book("book-" + i);
-                lib.Books.Add(book);
+                lib.AddBook(book);
             }
 
             return lib;

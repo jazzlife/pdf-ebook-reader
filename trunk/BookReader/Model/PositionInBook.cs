@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using PdfBookReader.Utils;
 using System.Runtime.Serialization;
+using PdfBookReader.Render.Cache;
 
 namespace PdfBookReader.Model
 {
@@ -16,6 +17,7 @@ namespace PdfBookReader.Model
     /// heights can vary and are not all known. 
     /// </remarks>
     [DataContract]
+    [Immutable]
     public class PositionInBook
     {
         /// <summary>
