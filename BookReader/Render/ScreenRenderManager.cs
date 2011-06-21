@@ -7,6 +7,9 @@ using PdfBookReader.Utils;
 using System.Drawing;
 using System.Drawing.Imaging;
 using PdfBookReader.Render.Cache;
+using AForge.Imaging.Filters;
+using AForge;
+using PdfBookReader.Render.Filter;
 
 namespace PdfBookReader.Render
 {
@@ -27,6 +30,8 @@ namespace PdfBookReader.Render
 
         // Not dependent on book
         readonly DW<IPageSource> _pageSource;
+
+        PaperColorFilter _paperColor;
 
         public ScreenRenderManager(BookLibrary library, Size screenSize)
         {
@@ -80,6 +85,18 @@ namespace PdfBookReader.Render
                 return null;
             }
         }
+
+        public PaperColorFilter PaperColor
+        {
+            get { return _paperColor; }
+            set 
+            { 
+                _paperColor = value;
+                if (PaperColorChanged != null) { PaperColorChanged(this, EventArgs.Empty); }
+            }
+        }
+
+        public event EventHandler PaperColorChanged;
 
         #region Event handlers
 
@@ -147,6 +164,12 @@ namespace PdfBookReader.Render
 
         #region Commands 
 
+        public DW<Bitmap> Render()
+        {
+            if (_curScreenBook == null) { throw new InvalidOperationException("No book"); }
+            return Render(_curScreenBook.Book.CurrentPosition);
+        }
+
         public DW<Bitmap> Render(PositionInBook newPosition)
         {
             if (_curScreenBook == null) { throw new InvalidOperationException("No book"); }
@@ -197,6 +220,8 @@ namespace PdfBookReader.Render
         {
             if (pages == null) { return null; }
 
+
+
             DW<Bitmap> screenBmp = DW.Wrap(new Bitmap(ScreenSize.Width, ScreenSize.Height, PixelFormat.Format24bppRgb));
             using (Graphics g = Graphics.FromImage(screenBmp.o))
             {
@@ -216,6 +241,13 @@ namespace PdfBookReader.Render
             }
             pages.Clear();
 
+            // Apply the paper color filter
+            if (_paperColor != null)
+            {
+                _paperColor.ApplyInPlace(screenBmp.o);
+            }
+
+            
             return screenBmp;
         }
 
