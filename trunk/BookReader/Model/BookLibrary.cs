@@ -33,7 +33,16 @@ namespace PdfBookReader.Model
         /// <summary>
         /// Current book changed, or the page position within the current book changed.
         /// </summary>
-        public event EventHandler CurrentBookPositionChanged;
+        public event EventHandler BookPositionChanged;
+
+        void Initialize()
+        {
+            if (_books == null) { _books = new List<Book>(); }
+            foreach (Book b in Books)
+            {
+                b.CurrentPositionChanged += OnBookPositionChanged;
+            }
+        }
 
         public String Filename
         {
@@ -71,75 +80,71 @@ namespace PdfBookReader.Model
             {
                 if (_currentBook == value) { return; }
 
-                // Unsubscribe
-                if (_currentBook != null)
-                {
-                    _currentBook.CurrentPositionChanged -= OnCurrentBookPositionChanged;
-                }
-
                 _currentBook = value;
 
                 if (_currentBook == null) { _currentBookId = Guid.Empty; }
                 else { _currentBookId = _currentBook.Id; }
 
-                // Subscribe
-                if (_currentBook != null)
-                {
-                    _currentBook.CurrentPositionChanged += OnCurrentBookPositionChanged;
-                }
-
                 // Fire events
                 if (CurrentBookChanged != null) { CurrentBookChanged(this, EventArgs.Empty); }
-                if (CurrentBookPositionChanged != null) { CurrentBookPositionChanged(this, EventArgs.Empty); }
+                if (BookPositionChanged != null) { BookPositionChanged(this, EventArgs.Empty); }
             }
         }
 
         // For convenience, re-fire the book position changed event
-        void OnCurrentBookPositionChanged(object sender, EventArgs e)
+        void OnBookPositionChanged(object sender, EventArgs e)
         {
-            if (CurrentBookPositionChanged != null) { CurrentBookPositionChanged(this, EventArgs.Empty); }
+            if (BookPositionChanged != null) { BookPositionChanged(this, EventArgs.Empty); }
         }
 
         public void AddFiles(IEnumerable<String> files)
         {
-            foreach (String file in files) 
-            {
-                // Skip duplicates
-                if (_books.FirstOrDefault(x => x.Filename.EqualsIC(file)) == null)
-                {
-                    _books.Add(new Book(file)); 
-                }
-            }
+            var booksDict = _books.ToDictionary(x => Path.GetFullPath(x.Filename));
+            
+            var filesToAdd = files.Where(x => !booksDict.ContainsKey(Path.GetFullPath(x)));
+            
+            var booksToAdd = files.Select(x => new Book(x));
 
-            if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }
+            AddBooks(booksToAdd);
         }
 
         public void AddBook(Book book)
         {
+            ArgCheck.NotNull(book, "book");
+
             _books.Add(book);
+            book.CurrentPositionChanged += OnBookPositionChanged;
+
             if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }
         }
-
-        /// <summary>
-        /// Remove books that no longer exist on disk.
-        /// </summary>
-        public void RemoveMissingBooks()
+        public void AddBooks(IEnumerable<Book> booksToAdd)
         {
-            var toRemove = Books.Where(x => !File.Exists(x.Filename)).ToArray();
-            toRemove.ForEach(x => Books.Remove(x));
-
-            if (toRemove.Any())
+            foreach(var book in booksToAdd)
             {
-                if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }
+                _books.Add(book);
+                book.CurrentPositionChanged += OnBookPositionChanged;
             }
+            if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }            
         }
 
         public void RemoveBook(Book book)
         {
-            if (_books.Remove(book))
+            ArgCheck.NotNull(book, "book");
+
+            _books.Remove(book);
+            book.CurrentPositionChanged -= OnBookPositionChanged;
+
+            if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }
+        }
+        public void RemoveBooks(IEnumerable<Book> booksToRemove)
+        {
+            foreach (Book book in booksToRemove)
             {
-                if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }
+                _books.Remove(book);
+                book.CurrentPositionChanged -= OnBookPositionChanged;
             }
+
+            if (BooksChanged != null) { BooksChanged(this, EventArgs.Empty); }
         }
 
         /// <summary>
@@ -154,8 +159,9 @@ namespace PdfBookReader.Model
             library.Filename = filename;
 
             // ctor not called by serializer, must initialize
-            if (library._books == null) { library._books = new List<Book>(); }
+            library.Initialize();
 
+            // remove missing
             if (removeMissingBooks)
             {
                 library.RemoveMissingBooks();
@@ -164,6 +170,16 @@ namespace PdfBookReader.Model
 
             return library;
         }
+
+        /// <summary>
+        /// Remove books that no longer exist on disk.
+        /// </summary>
+        public void RemoveMissingBooks()
+        {
+            var toRemove = Books.Where(x => !File.Exists(x.Filename)).ToArray();
+            RemoveBooks(toRemove);
+        }
+
 
         public void Save()
         {

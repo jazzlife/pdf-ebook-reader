@@ -202,7 +202,9 @@ namespace PdfBookReader.UI
                 var memPages = cache.GetMemoryKeys();
                 var diskPages = cache.GetDiskKeys();
 
-                this.FindForm().Text = "Disk pages: " + diskPages.Count();
+                this.FindForm().Text = 
+                    "Cache(Disk:{0} Mem:{1}) Bitmaps(A:{2} D:{3}".F(
+                    diskPages.Count(), memPages.Count(), DW<Bitmap>.Active, " D:" + DW<Bitmap>.Disposed);
 
                 bookProgressBar.SetLoadedPages(
                     memPages.Where( x => x.BookId == Book.Id).Select(x=>x.PageNum),

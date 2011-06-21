@@ -52,18 +52,7 @@ namespace PdfBookReader.Render.Cache
             {
 
                 if (base.Contains(key)) { return true; }
-                if (_diskCache.Contains(key)) 
-                {
-                    // Add to memory if policy approves
-                    if (RetainPolicy.MustRetain(key, ContextManager.CacheContext))
-                    {
-                        Page page = _diskCache.Get(key);
-                        base.Add(key, page);
-                    }
-
-                    // TODO: add to memory if policy approves?
-                    return true; 
-                }
+                if (_diskCache.Contains(key)) { return true; }
                 return false;
             }
         }
@@ -75,11 +64,8 @@ namespace PdfBookReader.Render.Cache
                 // Always add to disk
                 _diskCache.Add(key, value);
 
-                // Add to memory if policy approves
-                if (value.InUse || RetainPolicy.MustRetain(key, ContextManager.CacheContext))
-                {
-                    base.Add(key, value);
-                }
+                // Always add to memory -- disk cache does not dispose items
+                base.Add(key, value);
             }
         }
 
@@ -102,6 +88,8 @@ namespace PdfBookReader.Render.Cache
                 if (item != null)
                 {
                     logger.Debug("Get: Page in memory: " + key);
+
+                    item.Reuse();
                     return item;
                 }
 
@@ -109,11 +97,9 @@ namespace PdfBookReader.Render.Cache
                 if (item != null)
                 {
                     logger.Debug("Get: Page on disk: " + key);
-                    
-                    // TODO: only add to memory if policy is happy
                     base.Add(key, item);
-                    
-                    
+
+                    item.Reuse();
                     return item;
                 }
 

@@ -60,36 +60,28 @@ namespace PdfBookReader.Render.Cache
             // Retain the initial few pages
             if (key.PageNum <= Retain_Initial) { return true; }
 
-            foreach (var bookPos in context.BookPositions)
+            // Find which book corresponding to the key 
+            var pos = context.BookPositions.FirstOrDefault(x => x.BookId == key.BookId);
+
+            // No book in library, do not retain
+            if (pos == null) { return false; }
+
+            // Retain the range of pages around the current page in this book
+            int currentPage = (pos.Position == null ? 1 : pos.Position.PageNum);
+
+            if (context.CurrentBookPosition != null &&
+                key.BookId == context.CurrentBookPosition.BookId)
             {
-                if (bookPos.Position == null) { continue; }
-
-                // Retain the range of pages around the current page                
-                int currentPage = bookPos.Position.PageNum;
-
-                if (context.CurrentBookPosition != null &&
-                    key.BookId == context.CurrentBookPosition.BookId)
-                {
-                    // Current book
-                    if (currentPage - Retain_InCurrentBookBefore <= key.PageNum
-                        && key.PageNum <= currentPage + Retain_InCurrentBookAfter)
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    // Other books
-                    if (currentPage - Retain_InOtherBookBefore <= key.PageNum
-                        && key.PageNum <= currentPage + Retain_InOtherBookAfter)
-                    {
-                        return true;
-                    }
-                }
+                // In current book
+                return currentPage - Retain_InCurrentBookBefore <= key.PageNum
+                    && key.PageNum <= currentPage + Retain_InCurrentBookAfter;
             }
-
-            // All others are optional
-            return false;
+            else 
+            {
+                // In other books
+                return currentPage - Retain_InOtherBookBefore <= key.PageNum
+                    && key.PageNum <= currentPage + Retain_InOtherBookAfter;
+            }
         }
 
         public IEnumerable<PageKey> KeysToRemove(
@@ -100,13 +92,10 @@ namespace PdfBookReader.Render.Cache
             // Optionally keep some of the other items (by recency)
             if (OtherItemsToKeepCount > 0)
             {
-                int toRemoveCount = toRemove.Count() - OtherItemsToKeepCount;
-                if (toRemoveCount > 0)
-                {
-                    toRemove = toRemove
+                toRemove = toRemove
                         .OrderBy(x => cacheInfos[x.Key].LastAccessTime)
-                        .Take(toRemoveCount);
-                }
+                        .Reverse()
+                        .Skip(OtherItemsToKeepCount);
             }
 
             return toRemove.Select(x => x.Key);

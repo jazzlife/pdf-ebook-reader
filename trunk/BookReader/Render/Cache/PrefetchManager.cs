@@ -69,16 +69,21 @@ namespace PdfBookReader.Render
                 if (Cache.o.Contains(key)) { continue; }
 
                 // Render and add to cache
-                lock (Cache)
+                ScreenBook sb = ContextManager.GetScreenBook(key.BookId);
+
+                if (1 <= key.PageNum && key.PageNum <= sb.BookProvider.o.PageCount)
                 {
-                    ScreenBook sb = ContextManager.GetScreenBook(key.BookId);
-                    if (1 <= key.PageNum && key.PageNum <= sb.BookProvider.o.PageCount)
+                    Size size = new Size(key.ScreenWidth, int.MaxValue);
+                    Page page;
+                    lock (this)
                     {
-                        Size size = new Size(key.ScreenWidth, int.MaxValue);
-                        Page page = PhysicalSource.GetPage(key.PageNum, size, sb);
-                        Cache.o.Add(key, page);
+                        page = PhysicalSource.GetPage(key.PageNum, size, sb);
                     }
+
+                    Cache.o.Add(key, page);
+                    page.Return();
                 }
+
 
                 if (_stopLoop) { return false; }
 

@@ -28,6 +28,13 @@ namespace PdfBookReader.UI
             _library = library;
 
             _library.BooksChanged += _library_BooksChanged;
+            _library.BookPositionChanged += _library_BookPositionChanged;
+            UpdateListViewItems();
+        }
+
+        void _library_BookPositionChanged(object sender, EventArgs e)
+        {
+            // Update the progress bars
             UpdateListViewItems();
         }
 

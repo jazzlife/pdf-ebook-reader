@@ -28,13 +28,15 @@ namespace PdfBookReader.Render.Cache
 
             String filename = GetFullPath(key);
             value.Image.o.Save(filename);
+
+            // May well save cache xml, since we're saving the bitmap 
+            //SaveCache();
         }
 
         public override void Remove(PageKey key)
         {
             String filename = GetFullPath(key);
             File.Delete(filename);
-
             base.Remove(key);
         }
         
@@ -47,9 +49,15 @@ namespace PdfBookReader.Render.Cache
             if (!File.Exists(filename)) { return null; }
 
             // TODO: try/catch around file access
-            DW<Bitmap> b = DW.Wrap(new Bitmap(filename));
+            // Note: new Bitmap(filename) locks the file
 
-            return new Page(tempPc.PageNum, b, tempPc.Layout);
+            DW<Bitmap> bmp;
+            using (var fs = new FileStream(filename, FileMode.Open))
+            {
+                bmp = DW.Wrap(new Bitmap(fs));
+            }
+
+            return new Page(tempPc.PageNum, bmp, tempPc.Layout);
         }
 
         string GetFullPath(PageKey key)

@@ -45,19 +45,17 @@ namespace PdfBookReader.Render
             Page page = Cache.o.Get(key);
             if (page != null) 
             {
-                page.InUse = true;
                 return page; 
             }
 
             // Render and add to cache
-            lock (Cache)
+            lock (PrefetchManager)
             {
                 page = PhysicalSource.GetPage(pageNum, screenSize, screenBook);
-                Cache.o.Add(key, page);
-
-                page.InUse = true;
-                return page;
             }
+
+            Cache.o.Add(key, page);
+            return page;
         }
 
         public void Dispose()

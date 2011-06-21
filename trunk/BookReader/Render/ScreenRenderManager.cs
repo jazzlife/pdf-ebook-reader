@@ -38,7 +38,7 @@ namespace PdfBookReader.Render
             _library.BooksChanged += new EventHandler(_library_BooksChanged);
             _library.CurrentBookChanged += new EventHandler(OnCurrentBookChanged);
             // BUG: need to monotor current page in *all* books, not just one, but this is academic...
-            _library.CurrentBookPositionChanged += new EventHandler(_library_CurrentBookPositionChanged);
+            _library.BookPositionChanged += new EventHandler(_library_CurrentBookPositionChanged);
 
             _pageSource = RenderFactory.ConcreteFactory.GetPageSource(this);
 
@@ -107,16 +107,19 @@ namespace PdfBookReader.Render
         /// <returns></returns>
         public ScreenBook GetScreenBook(Book book)
         {
-            if (book == null) { return null; }
-
-            ScreenBook sb;
-            if (!_screenBooks.TryGetValue(book.Id, out sb))
+            lock (this)
             {
-                sb = new ScreenBook(book, _screenSize);
-                _screenBooks.Add(sb.Book.Id, sb);
-            }
+                if (book == null) { return null; }
 
-            return sb;
+                ScreenBook sb;
+                if (!_screenBooks.TryGetValue(book.Id, out sb))
+                {
+                    sb = new ScreenBook(book, _screenSize);
+                    _screenBooks.Add(sb.Book.Id, sb);
+                }
+
+                return sb;
+            }
         }
 
         void _library_CurrentBookPositionChanged(object sender, EventArgs e)
@@ -202,11 +205,16 @@ namespace PdfBookReader.Render
                 foreach (Page page in pages)
                 {
                     DrawPhysicalPage(g, page);
-                    page.InUse = false;
                 }
 
                 DrawScreenAfter(g);
             }
+
+            foreach (var p in pages)
+            {
+                p.Return();
+            }
+            pages.Clear();
 
             return screenBmp;
         }
@@ -261,10 +269,13 @@ namespace PdfBookReader.Render
         public ScreenBook GetScreenBook(Guid bookId)
         {
             // QQ: should we make this thread safe? Access to library is everywhere...
-            Book book = _library.Books.FirstOrDefault( x => x.Id == bookId);
-            if (book == null) { return null; }
+            lock (this)
+            {
+                Book book = _library.Books.FirstOrDefault(x => x.Id == bookId);
+                if (book == null) { return null; }
 
-            return GetScreenBook(book);
+                return GetScreenBook(book);
+            }
         }
 
         #endregion
