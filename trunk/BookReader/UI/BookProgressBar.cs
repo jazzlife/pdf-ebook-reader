@@ -57,29 +57,19 @@ namespace PdfBookReader.UI
         #region Cache painting
         // Page numbers
         float _incrementSize = 0;
-        IEnumerable<int> _memoryPages;
         IEnumerable<int> _diskPages;
 
         private void PaintCacheState(PaintEventArgs e)
         {
             if (PageIncrementSize == 0 ||
-                _diskPages == null ||
-                _memoryPages == null) { return; }
+                _diskPages == null) { return; }
 
             foreach (int pageNum in _diskPages)
             {
                 float pos = (pageNum - 1) * PageIncrementSize;
 
-                Brush b = (pos % 2 == 0) ? Brushes.Blue : Brushes.LightBlue;
-                e.Graphics.FillRectangle(Brushes.Blue, (pos - PageIncrementSize) * Width, Height / 3, PageIncrementSize * Width, Height);
-            }
-
-            foreach (int pageNum in _memoryPages)
-            {
-                float pos = (pageNum - 1) * PageIncrementSize;
-
-                Brush b = (pos % 2 == 0) ? Brushes.DarkOrange : Brushes.Orange;
-                e.Graphics.FillRectangle(Brushes.Orange, (pos - PageIncrementSize) * Width, 2 * Height / 3, PageIncrementSize * Width, Height);
+                Brush brush = (pageNum % 2 == 0) ? Brushes.Green : Brushes.DarkGreen;
+                e.Graphics.FillRectangle(brush, pos * Width, Height / 2, PageIncrementSize * Width, Height);
             }
         }
 
@@ -95,12 +85,9 @@ namespace PdfBookReader.UI
             }
         }
 
-        public void SetLoadedPages(IEnumerable<int> memoryPages, IEnumerable<int> diskPages)
+        public void SetLoadedPages(IEnumerable<int> diskPages)
         {
-            if (memoryPages == _memoryPages &&
-                diskPages == _diskPages) { return; }
-
-            _memoryPages = memoryPages;
+            if (diskPages == _diskPages) { return; }
             _diskPages = diskPages;
             Invalidate();
         }

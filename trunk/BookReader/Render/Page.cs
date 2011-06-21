@@ -52,7 +52,6 @@ namespace PdfBookReader.Render
         public Page(int pageNum, DW<Bitmap> image, PageLayoutInfo layout)
         {
             ArgCheck.GreaterThanOrEqual(pageNum, 1, "pageNum");
-            //ArgCheck.NotNull(image);
 
             PageNum = pageNum;
             _image = image;
