@@ -51,8 +51,8 @@ namespace PdfBookReader.Render
         {
             return new PagePrefetchAndRetainPolicy()
             {
-                Retain_InCurrentBookAfter = 10,
-                Retain_InCurrentBookBefore = 3,
+                Retain_InCurrentBookAfter = 6,
+                Retain_InCurrentBookBefore = 2,
                 Retain_InOtherBookAfter = 0,
                 Retain_InOtherBookBefore = 0,
                 Retain_Initial = 0,
@@ -64,12 +64,12 @@ namespace PdfBookReader.Render
         {
             return new PagePrefetchAndRetainPolicy()
                 {
-                    Retain_InCurrentBookAfter = 30,
-                    Retain_InCurrentBookBefore = 10,
-                    Retain_InOtherBookAfter = 20,
-                    Retain_InOtherBookBefore = 0,
-                    Retain_Initial = 10,
-                    OtherItemsToKeepCount = 200
+                    Retain_InCurrentBookAfter = 20,
+                    Retain_InCurrentBookBefore = 4,
+                    Retain_InOtherBookAfter = 6,
+                    Retain_InOtherBookBefore = 2,
+                    Retain_Initial = 5,
+                    OtherItemsToKeepCount = 100
                 };
         }
     }

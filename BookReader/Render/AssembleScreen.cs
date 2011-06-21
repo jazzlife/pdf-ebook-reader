@@ -57,6 +57,7 @@ namespace PdfBookReader.Render
                 pageContents.Add(curPage);
 
                 if (ScreenFull(curPage, screenSize)) { break; }
+
                 AdvancePage(ref curPage, screenSize);
             }
 
@@ -138,8 +139,12 @@ namespace PdfBookReader.Render
         {
             // Get last page of current screen
             // Current screen render won't mess up position
-            Page lastPage = _assembleCurrent.AssembleScreen(ref position, screenSize).Last();
+            var pages = _assembleCurrent.AssembleScreen(ref position, screenSize);
 
+            // No longer in use
+            pages.ForEach(x => x.Return());
+
+            Page lastPage = pages.Last();
             return lastPage.PageNum < PageCount ||
                 // If last page in book, it must overflow the screen
                 lastPage.BottomOnScreen > screenSize.Height;
@@ -148,14 +153,21 @@ namespace PdfBookReader.Render
         protected override Page GetInitialPage(ref PositionInBook position, Size screenSize)
         {
             // Assemble current screen
-            Page curPage = _assembleCurrent.AssembleScreen(ref position, screenSize).Last();
-            
+            var pages = _assembleCurrent.AssembleScreen(ref position, screenSize);
+
+            Page curPage = pages.Last();            
+            pages.Remove(curPage);
+
+            // No longer in use
+            pages.ForEach(x => x.Return());
+
             // Move the last page of current screen up by one screen
             curPage.TopOnScreen -= screenSize.Height;
 
             // Edge case: if page is exactly above the screen, take the next one
             if (curPage.TopOnScreen == -curPage.Layout.Bounds.Height)
             {
+                curPage.Return(); // No longer in use
                 AdvancePage(ref curPage, screenSize);
             }
 
@@ -184,6 +196,10 @@ namespace PdfBookReader.Render
         public override bool CanApply(PositionInBook position, Size screenSize)
         {
             Page firstPage = base.GetInitialPage(ref position, screenSize);
+
+            // No longer in use
+            firstPage.Return();
+            
             return firstPage.PageNum > 1 ||
                 // If first page in book, it must overflow above current screen
                 firstPage.TopOnScreen < 0;
@@ -197,6 +213,9 @@ namespace PdfBookReader.Render
             // Edge case: if page is exactly below the screen, take the next one
             if (curPage.TopOnScreen == screenSize.Height)
             {
+                // No longer in use
+                curPage.Return();
+
                 AdvancePage(ref curPage, screenSize);
             }
 

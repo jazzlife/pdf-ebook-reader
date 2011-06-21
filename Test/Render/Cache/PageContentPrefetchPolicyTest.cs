@@ -266,7 +266,6 @@ namespace PdfBookReaderTest.Render.Cache
                 keysToRemove.Select(x => x.PageNum));
         }
 
-
         [Test]
         public void Remove_KeepOtherItems()
         {
@@ -284,9 +283,9 @@ namespace PdfBookReaderTest.Render.Cache
             Assert.AreEqual(3, keysToRemove.Count());
             
             // Makes sure *oldest* ones are removed
-            Assert.AreEqual(BaseTime + TimeSpan.FromDays(0), dict[keysToRemove.ElementAt(0)].LastAccessTime);
+            Assert.AreEqual(BaseTime + TimeSpan.FromDays(0), dict[keysToRemove.ElementAt(2)].LastAccessTime);
             Assert.AreEqual(BaseTime + TimeSpan.FromDays(1), dict[keysToRemove.ElementAt(1)].LastAccessTime);
-            Assert.AreEqual(BaseTime + TimeSpan.FromDays(2), dict[keysToRemove.ElementAt(2)].LastAccessTime);
+            Assert.AreEqual(BaseTime + TimeSpan.FromDays(2), dict[keysToRemove.ElementAt(0)].LastAccessTime);
 
             // Must NOT retain those keys
             foreach (var key in keysToRemove)
