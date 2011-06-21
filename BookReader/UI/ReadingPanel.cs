@@ -92,6 +92,14 @@ namespace PdfBookReader.UI
             if (pos < 0) { pos = 0; }
 
             PositionInBook pi = PositionInBook.FromPositionUnit(pos, Book.CurrentPosition.PageCount);
+
+            // Snap to first page if close to start
+            if (pi.Position < 1) 
+            { 
+                pi = PositionInBook.FromPhysicalPage(1, Book.CurrentPosition.PageCount); 
+            }
+
+
             CurrentScreenImage = _renderManager.o.Render(pi);
         }
 

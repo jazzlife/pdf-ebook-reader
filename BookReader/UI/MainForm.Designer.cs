@@ -50,6 +50,7 @@
             this.pLibrary.Size = new System.Drawing.Size(461, 597);
             this.pLibrary.TabIndex = 0;
             this.pLibrary.OpenBook += new System.EventHandler<PdfBookReader.UI.OpenBookEventArgs>(this.pLibrary_OpenBook);
+            this.pLibrary.Load += new System.EventHandler(this.pLibrary_Load);
             // 
             // MainForm
             // 

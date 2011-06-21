@@ -239,6 +239,7 @@ namespace PdfBookReader.Render
             g.DrawImage(curPage.Image.o, destRect, srcRect, GraphicsUnit.Pixel);
 
 #if DEBUG
+            /*
             // Debug drawing of page numbers / boundaries
             if (curPage.TopOnScreen >= 0)
             {
@@ -250,6 +251,10 @@ namespace PdfBookReader.Render
             }
             g.DrawLineHorizontal(Pens.LightGray, curPage.TopOnScreen);
             g.DrawLineHorizontal(Pens.LightBlue, curPage.BottomOnScreen - 1);
+             */
+            g.DrawLineHorizontal(Pens.LightBlue, curPage.TopOnScreen, 60);
+            g.DrawLineHorizontal(Pens.Orange, curPage.BottomOnScreen - 1, 60);
+
 #endif
         }
 
