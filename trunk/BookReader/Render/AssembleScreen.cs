@@ -17,6 +17,9 @@ namespace PdfBookReader.Render
     /// </summary>
     abstract class AssembleScreenAlgorithm
     {
+        // TODO: determine based on page analysis
+        public const int RowSpacing = 4;
+
         protected readonly DW<IPageSource> PageSource;
         protected readonly ScreenBook ScreenBook;
 
@@ -107,7 +110,7 @@ namespace PdfBookReader.Render
         {
             int bottom = curPage.BottomOnScreen;
             curPage = PageSource.o.GetPage(curPage.PageNum + 1, sceenSize, ScreenBook);
-            curPage.TopOnScreen = bottom;
+            curPage.TopOnScreen = bottom + RowSpacing;
         }
 
         internal override bool ScreenFull(Page curPage, Size screenSize)
@@ -241,7 +244,7 @@ namespace PdfBookReader.Render
         {
             int top = curPage.TopOnScreen;
             curPage = PageSource.o.GetPage(curPage.PageNum - 1, sceenSize, ScreenBook);
-            curPage.BottomOnScreen = top;
+            curPage.BottomOnScreen = top - RowSpacing;
         }
     }
 }

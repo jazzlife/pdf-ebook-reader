@@ -31,6 +31,16 @@ namespace PdfBookReader.UI
 
         }
 
+        private void pLibrary_Load(object sender, EventArgs e)
+        {
+            // Open last book at start
+            if (_library.CurrentBook != null)
+            {
+                pLibrary_OpenBook(this, new OpenBookEventArgs(_library.CurrentBook));
+            }
+
+        }
+
         private void pLibrary_OpenBook(object sender, OpenBookEventArgs e)
         {
             this.Text = "eBook - " + e.Book.Title;
@@ -57,5 +67,6 @@ namespace PdfBookReader.UI
         {
             _library.Save();
         }
+
     }
 }

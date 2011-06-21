@@ -181,9 +181,9 @@ namespace PdfBookReader.Utils
             g.DrawLine(pen, x, 0, x, 1000);
         }
 
-        public static void DrawLineHorizontal(this Graphics g, Pen pen, int y)
+        public static void DrawLineHorizontal(this Graphics g, Pen pen, int y, int width = 1000)
         {
-            g.DrawLine(pen, 0, y, 1000, y);
+            g.DrawLine(pen, 0, y, width, y);
         }
 
         /// <summary>
