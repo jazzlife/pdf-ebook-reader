@@ -37,7 +37,7 @@
             this.pReading.BackColor = System.Drawing.SystemColors.ControlDarkDark;
             this.pReading.Location = new System.Drawing.Point(467, 0);
             this.pReading.Name = "pReading";
-            this.pReading.Size = new System.Drawing.Size(318, 597);
+            this.pReading.Size = new System.Drawing.Size(418, 597);
             this.pReading.TabIndex = 1;
             this.pReading.GoToLibrary += new System.EventHandler(this.pReading_GoToLibrary);
             // 
@@ -56,7 +56,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(783, 635);
+            this.ClientSize = new System.Drawing.Size(938, 635);
             this.Controls.Add(this.pReading);
             this.Controls.Add(this.pLibrary);
             this.Name = "MainForm";

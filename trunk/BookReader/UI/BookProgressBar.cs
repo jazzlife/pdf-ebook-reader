@@ -10,6 +10,7 @@ using PdfBookReader.Render.Cache;
 
 namespace PdfBookReader.UI
 {
+    [DefaultEvent("ValueChanged")]
     public class BookProgressBar : Control
     {
         float _value = 0;
@@ -17,7 +18,6 @@ namespace PdfBookReader.UI
 
         Brush _bBlank = new SolidBrush(SystemColors.ControlDarkDark);
         Brush _bFull = new SolidBrush(SystemColors.ControlDark);
-
 
         public float Value
         {
@@ -31,8 +31,20 @@ namespace PdfBookReader.UI
                 _value = value;
 
                 Invalidate();
+
+                if (ValueChanged != null) { ValueChanged(this, EventArgs.Empty); }
             }
         }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            // Set position
+            Value = (float)e.X / Width;
+        }
+
+
+        [CategoryAttribute("Property Changed")]
+        public event EventHandler ValueChanged;
 
         protected override void OnPaint(PaintEventArgs e)
         {

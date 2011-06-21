@@ -128,6 +128,14 @@ namespace PdfBookReader.Model
             return topOnScreen;
         }
 
+        public override bool Equals(object obj)
+        {
+            PositionInBook that = obj as PositionInBook;
+            if (obj == null) { return false; }
+
+            return this.Position == that.Position && this.PageCount == that.PageCount;
+        }
+
         public override string ToString()
         {
             return "Position: {0:0.0}/{1} pageNum={2}".F(Position, PageCount, PageNum);

@@ -39,6 +39,8 @@ namespace PdfBookReader.Model
             get { return _currentPosition; }
             set
             {
+                if (value.Equals(_currentPosition)) { return; }
+
                 _currentPosition = value;
                 if (CurrentPositionChanged != null) { CurrentPositionChanged(this, EventArgs.Empty); }
             }

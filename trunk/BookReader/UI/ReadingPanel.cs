@@ -10,6 +10,7 @@ using PdfBookReader.Model;
 using PdfBookReader.Render;
 using PdfBookReader.Utils;
 using PdfBookReader.Render.Cache;
+using PdfBookReader.Render.Filter;
 
 namespace PdfBookReader.UI
 {
@@ -34,6 +35,20 @@ namespace PdfBookReader.UI
             _library = library;
 
             _renderManager = DW.Wrap(new ScreenRenderManager(_library, pbContent.Size));
+            _renderManager.o.PaperColorChanged += new EventHandler(o_PaperColorChanged);
+        }
+
+        void o_PaperColorChanged(object sender, EventArgs e)
+        {
+            // Set margins background
+            pMargins.BackColor = _renderManager.o.PaperColor.BackColor;
+
+
+            // Re-render the item
+            if (_book != null) 
+            {
+                CurrentScreenImage = _renderManager.o.Render(); 
+            }
         }
 
 
@@ -69,7 +84,7 @@ namespace PdfBookReader.UI
 
                     // Set the (no the first "current" page).
                     _renderManager.o.ScreenSize = pbContent.Size;
-                    CurrentScreenImage = _renderManager.o.Render(_book.CurrentPosition);
+                    CurrentScreenImage = _renderManager.o.Render();
 
                     bookProgressBar.PageIncrementSize = _book.CurrentPosition.UnitSize;
                 }
@@ -84,21 +99,9 @@ namespace PdfBookReader.UI
         #region Progress bar handling
 
         // Navigate to the given page
-        private void bookProgressBar_MouseUp(object sender, MouseEventArgs e)
+        private void bookProgressBar_ValueChanged(object sender, EventArgs e)
         {
-            // Set position
-            float pos = (float)e.X / bookProgressBar.Width;
-            if (pos > 1) { pos = 1; }
-            if (pos < 0) { pos = 0; }
-
-            PositionInBook pi = PositionInBook.FromPositionUnit(pos, Book.CurrentPosition.PageCount);
-
-            // Snap to first page if close to start
-            if (pi.Position < 1) 
-            { 
-                pi = PositionInBook.FromPhysicalPage(1, Book.CurrentPosition.PageCount); 
-            }
-
+            PositionInBook pi = PositionInBook.FromPositionUnit(bookProgressBar.Value, Book.CurrentPosition.PageCount);
 
             CurrentScreenImage = _renderManager.o.Render(pi);
         }
@@ -138,13 +141,13 @@ namespace PdfBookReader.UI
             // know a resize was intentional (e.g. setting it programmatically)
         }
 
-        private void timerResize_Tick(object sender, EventArgs e)
+        private void timerDelayedRender_Tick(object sender, EventArgs e)
         {
             timerResize.Stop();
             if (Book == null) { return; }
 
             _renderManager.o.ScreenSize = pbContent.Size;
-            CurrentScreenImage = _renderManager.o.Render(_book.CurrentPosition);
+            CurrentScreenImage = _renderManager.o.Render();
         }
 
         #region UI update
@@ -185,6 +188,13 @@ namespace PdfBookReader.UI
             CurrentScreenImage = _renderManager.o.RenderPrevious();            
         }
 
+        private void bStartPage_Click(object sender, EventArgs e)
+        {
+            _renderManager.o.Render(PositionInBook.FromPhysicalPage(1, Book.CurrentPosition.PageCount));
+
+        }
+
+
         const int WidthIncrement = 100;
         private void bWidthPlus_Click(object sender, EventArgs e)
         {
@@ -217,6 +227,31 @@ namespace PdfBookReader.UI
             }
         }
 
+        private void bPaperWhite_Click(object sender, EventArgs e)
+        {
+            PaperColorFilter f = PaperColorFilter.White(pbBrigthness.Value);
+            _renderManager.o.PaperColor = f;
+        }
+
+        private void bPaperBlack_Click(object sender, EventArgs e)
+        {
+            PaperColorFilter f = PaperColorFilter.Black(pbBrigthness.Value);
+            _renderManager.o.PaperColor = f;
+        }
+
+        private void bPaperSepia_Click(object sender, EventArgs e)
+        {
+            PaperColorFilter f = PaperColorFilter.Sepia(pbBrigthness.Value);
+            _renderManager.o.PaperColor = f;
+        }
+
+        private void pbBrigthness_ValueChanged(object sender, EventArgs e)
+        {
+            PaperColorFilter f = _renderManager.o.PaperColor;
+            if (f == null) { f = PaperColorFilter.White(); }
+            f.Brightness = pbBrigthness.Value;
+            _renderManager.o.PaperColor = f;
+        }
 
     }
 }
