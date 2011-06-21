@@ -49,7 +49,7 @@ namespace PdfBookReader.Render
             }
 
             // Render and add to cache
-            lock (PrefetchManager)
+            lock (PhysicalSource)
             {
                 page = PhysicalSource.GetPage(pageNum, screenSize, screenBook);
             }

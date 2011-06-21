@@ -199,16 +199,13 @@ namespace PdfBookReader.UI
             PageCache cache = _renderManager.o.Cache.o;
             if (cache != null)
             {
-                var memPages = cache.GetMemoryKeys();
-                var diskPages = cache.GetDiskKeys();
+                var diskPages = cache.GetAllKeys();
 
                 this.FindForm().Text = 
-                    "Cache(Disk:{0} Mem:{1}) Bitmaps(A:{2} D:{3}".F(
-                    diskPages.Count(), memPages.Count(), DW<Bitmap>.Active, " D:" + DW<Bitmap>.Disposed);
+                    "Cache:{0} Mem:{1} Bitmaps(A:{2} D:{3})".F(
+                    diskPages.Count(), cache.MemoryItemCount, DW<Bitmap>.Active, " D:" + DW<Bitmap>.Disposed);
 
-                bookProgressBar.SetLoadedPages(
-                    memPages.Where( x => x.BookId == Book.Id).Select(x=>x.PageNum),
-                    diskPages.Where(x => x.BookId == Book.Id).Select(x => x.PageNum));
+                bookProgressBar.SetLoadedPages(diskPages.Where(x => x.BookId == Book.Id).Select(x => x.PageNum));
             }
         }
 

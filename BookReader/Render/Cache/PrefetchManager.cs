@@ -51,6 +51,11 @@ namespace PdfBookReader.Render
                     logger.Debug("Done with all, waiting for context change.");
                     _waitForContextChange.WaitOne();
                 }
+                else
+                {
+                    // Short break from prefetching, there's user activity
+                    Thread.Sleep(1000);
+                }
             }
         }
 
@@ -75,7 +80,8 @@ namespace PdfBookReader.Render
                 {
                     Size size = new Size(key.ScreenWidth, int.MaxValue);
                     Page page;
-                    lock (this)
+
+                    lock (PhysicalSource)
                     {
                         page = PhysicalSource.GetPage(key.PageNum, size, sb);
                     }

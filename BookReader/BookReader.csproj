@@ -91,10 +91,9 @@
     <Compile Include="Render\Cache\SimplePageSource.cs" />
     <Compile Include="Render\RenderFactory.cs" />
     <Compile Include="Utils\Immutable.cs" />
-    <Compile Include="Render\Cache\PageCache.cs" />
     <Compile Include="Render\Cache\PageCacheContext.cs" />
     <Compile Include="Render\Cache\PagePrefetchPolicy.cs" />
-    <Compile Include="Render\Cache\PageDiskCache.cs" />
+    <Compile Include="Render\Cache\PageCache.cs" />
     <Compile Include="Render\Cache\PageKey.cs" />
     <Compile Include="Render\Cache\SimpleCache.cs" />
     <Compile Include="Render\Cache\CachedPageSource.cs" />

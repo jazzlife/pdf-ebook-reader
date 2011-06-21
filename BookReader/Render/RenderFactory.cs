@@ -16,10 +16,9 @@ namespace PdfBookReader.Render
         public abstract DW<IBookProvider> GetBookProvider(String file);
         public abstract DW<IPageSource> GetPageSource(IPageCacheContextManager contextManager);
 
-        public abstract IPageRetainPolicy GetPageCachePolicyMemory();
         protected abstract PagePrefetchAndRetainPolicy GetGeneralPrefetchPolicy();
 
-        public IPageRetainPolicy GetPageCachePolicyDisk()
+        public IPageRetainPolicy GetPageCachePolicy()
         {
             return GetGeneralPrefetchPolicy();
         }
@@ -47,28 +46,15 @@ namespace PdfBookReader.Render
             return DW.Wrap<IPageSource>(new CachedPageSource(contextManager));
         }
 
-        public override IPageRetainPolicy GetPageCachePolicyMemory()
-        {
-            return new PagePrefetchAndRetainPolicy()
-            {
-                Retain_InCurrentBookAfter = 6,
-                Retain_InCurrentBookBefore = 2,
-                Retain_InOtherBookAfter = 0,
-                Retain_InOtherBookBefore = 0,
-                Retain_Initial = 0,
-                OtherItemsToKeepCount = 0
-            };
-        }
-
         protected override PagePrefetchAndRetainPolicy GetGeneralPrefetchPolicy()
         {
             return new PagePrefetchAndRetainPolicy()
                 {
-                    Retain_InCurrentBookAfter = 20,
+                    Retain_InCurrentBookAfter = 10,
                     Retain_InCurrentBookBefore = 4,
                     Retain_InOtherBookAfter = 6,
                     Retain_InOtherBookBefore = 2,
-                    Retain_Initial = 5,
+                    Retain_Initial = 6,
                     OtherItemsToKeepCount = 100
                 };
         }
@@ -87,11 +73,6 @@ namespace PdfBookReader.Render
         }
 
         public override DW<IPageSource> GetPageSource(IPageCacheContextManager contextManager)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IPageRetainPolicy GetPageCachePolicyMemory()
         {
             throw new NotImplementedException();
         }
