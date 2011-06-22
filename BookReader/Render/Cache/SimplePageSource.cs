@@ -16,22 +16,39 @@ namespace PdfBookReader.Render.Cache
         // Simple optimization -- try to render in last size
         int lastPageWidth = 1000; // for first page
 
+        public SimplePageSource()
+        {
+            LayoutStrategy = RenderFactory.ConcreteFactory.GetLayoutStrategy();
+        }
+
         public Page GetPage(int pageNum, Size screenSize, ScreenBook screenBook)
         {
             logger.Debug("Rendering: #{0} w={1}", pageNum, screenSize.Width);
+            
+            // Try detecting from book first
+            PageLayoutInfo layout = LayoutStrategy.DetectLayoutFromBook(screenBook, pageNum);
+                        
+            // If above is not supported, detect from page
+            DW<Bitmap> layoutPage = null;
+            if (layout == null)
+            {
+                // NOTE: rendering the page twice -- we need the layout in order to figure out
+                // the best dimensions for the final render.
 
-            // NOTE: rendering the page twice -- we need the layout in order to figure out
-            // the best dimensions for the final render.
-                
-            PageLayoutInfo layout;
-            Size layoutRenderSize = new Size(lastPageWidth, int.MaxValue); 
-            DW<Bitmap> layoutPage = screenBook.BookProvider.o.RenderPageImage(pageNum, layoutRenderSize, RenderQuality.Optimal);
-            layout = LayoutStrategy.DetectLayout(layoutPage);
+                Size layoutRenderSize = new Size(lastPageWidth, int.MaxValue);
+                layoutPage = screenBook.BookProvider.o.RenderPageImage(pageNum, layoutRenderSize, RenderQuality.Optimal);
+                layout = LayoutStrategy.DetectLayoutFromImage(layoutPage);
+
+                if (layout == null)
+                {
+                    throw new ApplicationException("Layout strategy: " + LayoutStrategy + " returns null both FromBook and FromPage. It must support at least one.");
+                }
+            }
 
             // Special case - empty page
             if (layout.Bounds.IsEmpty)
             {
-                layoutPage.DisposeItem();
+                if (layoutPage != null) { layoutPage.DisposeItem(); }
 
                 // Dummy layout -- screenWidth x 100
                 layout.Bounds = new Rectangle(0, 0, screenSize.Width, 100);
@@ -43,19 +60,18 @@ namespace PdfBookReader.Render.Cache
             int pageWidth = (int)((float)screenSize.Width / layout.BoundsUnit.Width);
 
             DW<Bitmap> displayPage;
-            if (lastPageWidth - 10 < pageWidth && pageWidth < lastPageWidth + 2)
+            if (layoutPage != null &&
+                lastPageWidth - 10 < pageWidth && pageWidth < lastPageWidth + 2)
             {
+                // Optimization -- use layout page image as the final one
                 // keep the image
                 displayPage = layoutPage;
             }
             else
             {
-                layoutPage.DisposeItem();
+                if (layoutPage != null) { layoutPage.DisposeItem(); }
 
-                // render a new image
-                logger.Debug("Slow: rendering second page for display. old:{0} - new:{1} = {2}", 
-                    lastPageWidth, pageWidth, lastPageWidth - pageWidth);
-
+                // Render a new image
                 Size displayPageMaxSize = new Size(pageWidth, int.MaxValue);
                 displayPage = screenBook.BookProvider.o.RenderPageImage(pageNum, displayPageMaxSize, RenderQuality.Optimal);
                 layout.ScaleBounds(displayPage.o.Size);
@@ -71,7 +87,6 @@ namespace PdfBookReader.Render.Cache
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
     }
 }

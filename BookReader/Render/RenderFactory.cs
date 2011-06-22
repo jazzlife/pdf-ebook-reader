@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using PdfBookReader.Render.Cache;
 using PdfBookReader.Utils;
+using PdfBookReader.Render.Layout;
 
 namespace PdfBookReader.Render
 {
@@ -31,9 +32,15 @@ namespace PdfBookReader.Render
 
     class DefaultRenderFactory : RenderFactory
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+        public static bool NoCache = false;
+
         public override IPageLayoutStrategy GetLayoutStrategy()
         {
-            return new ConnectedBlobLayoutStrategy();
+            return new PdfWordsLayoutStrategy();
+
+            // return new ConnectedBlobLayoutStrategy();
         }
 
         public override DW<IBookProvider> GetBookProvider(String file)
@@ -43,6 +50,12 @@ namespace PdfBookReader.Render
 
         public override DW<IPageSource> GetPageSource(IPageCacheContextManager contextManager)
         {
+            if (NoCache)
+            {
+                logger.Warn("GetPageSource: NO CACHE, returning simple logger");
+                return DW.Wrap<IPageSource>(new SimplePageSource());
+            }
+
             return DW.Wrap<IPageSource>(new CachedPageSource(contextManager));
         }
 

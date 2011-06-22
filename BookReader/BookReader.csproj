@@ -90,6 +90,7 @@
     <Compile Include="Render\Cache\CachePrefetchPolicy.cs" />
     <Compile Include="Render\Cache\SimplePageSource.cs" />
     <Compile Include="Render\Filter\PaperColorFilter.cs" />
+    <Compile Include="Render\Layout\PdfWordsLayoutStrategy.cs" />
     <Compile Include="Render\RenderFactory.cs" />
     <Compile Include="Utils\Immutable.cs" />
     <Compile Include="Render\Cache\PageCacheContext.cs" />

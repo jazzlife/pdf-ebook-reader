@@ -12,7 +12,20 @@ namespace PdfBookReader.Render
     /// </summary>
     interface IPageLayoutStrategy
     {
-        PageLayoutInfo DetectLayout(DW<Bitmap> physicalPage);
+        /// <summary>
+        /// Detect layout from physical page image if possible. If not supported, return null.
+        /// </summary>
+        /// <param name="physicalPage"></param>
+        /// <returns></returns>
+        PageLayoutInfo DetectLayoutFromImage(DW<Bitmap> physicalPage);
+
+        /// <summary>
+        /// Detect layout from book if possible. If not supported, return null.
+        /// </summary>
+        /// <param name="physicalPage"></param>
+        /// <returns></returns>
+        PageLayoutInfo DetectLayoutFromBook(ScreenBook book, int pageNum);
+
     }
 
 

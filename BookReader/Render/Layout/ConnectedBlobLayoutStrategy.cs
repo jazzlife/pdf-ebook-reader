@@ -16,7 +16,7 @@ namespace PdfBookReader.Render
     class ConnectedBlobLayoutStrategy : IPageLayoutStrategy
     {
 
-        public PageLayoutInfo DetectLayout(DW<Bitmap> bmp)
+        public PageLayoutInfo DetectLayoutFromImage(DW<Bitmap> bmp)
         {
             ArgCheck.NotNull(bmp, "bmp");
 
@@ -220,6 +220,9 @@ namespace PdfBookReader.Render
             }
         }
 
-
+        public PageLayoutInfo DetectLayoutFromBook(ScreenBook book, int pageNum)
+        {
+            return null;
+        }
     }
 }

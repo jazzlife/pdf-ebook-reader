@@ -46,6 +46,8 @@ namespace PdfBookReader.Render
 
         #region PdfDoc properties
 
+        internal DW<PDFWrapper> InternalPdfWrapper { get { return _pdfDoc; } }
+
         public int PageCount { get { return _pdfDoc.o.PageCount; } }
 
         #endregion
