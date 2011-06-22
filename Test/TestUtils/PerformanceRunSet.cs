@@ -5,7 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 
-namespace PdfBookReaderTest.TestUtils
+namespace BookReaderTest.TestUtils
 {
     /// <summary>
     /// Non-leaf node in performance run tree.

@@ -4,15 +4,15 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using System.Drawing;
-using PdfBookReader.Utils;
-using PdfBookReader;
+using BookReader.Utils;
+using BookReader;
 using System.Drawing.Imaging;
-using PdfBookReaderTest.TestUtils;
+using BookReaderTest.TestUtils;
 using System.IO;
-using PdfBookReader.Render;
-using PdfBookReader.Model;
+using BookReader.Render;
+using BookReader.Model;
 
-namespace PdfBookReaderTest
+namespace BookReaderTest
 {
     [TestFixture]
     public class ScreenRenderTest

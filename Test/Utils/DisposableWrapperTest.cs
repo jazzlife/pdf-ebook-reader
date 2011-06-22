@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using PdfBookReader.Utils;
+using BookReader.Utils;
 
-namespace PdfBookReaderTest.Utils
+namespace BookReaderTest.Utils
 {
     [TestFixture]
     public class DisposableWrapperTest

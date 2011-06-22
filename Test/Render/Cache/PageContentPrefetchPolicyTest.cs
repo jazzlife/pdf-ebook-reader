@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using PdfBookReader.Render.Cache;
-using PdfBookReader.Model;
+using BookReader.Render.Cache;
+using BookReader.Model;
 using System.IO;
-using PdfBookReader.Utils;
+using BookReader.Utils;
 
-namespace PdfBookReaderTest.Render.Cache
+namespace BookReaderTest.Render.Cache
 {
     [TestFixture]
     public class PageContentPrefetchPolicyTest

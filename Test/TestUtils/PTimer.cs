@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
-using PdfBookReader.Utils;
+using BookReader.Utils;
 using NLog;
 
-namespace PdfBookReaderTest.TestUtils
+namespace BookReaderTest.TestUtils
 {
     public class PTimer : IDisposable
     {

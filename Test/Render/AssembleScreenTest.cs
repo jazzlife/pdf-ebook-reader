@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using PdfBookReader.Render;
-using PdfBookReader.Utils;
+using BookReader.Render;
+using BookReader.Utils;
 using System.Drawing;
-using PdfBookReader.Model;
+using BookReader.Model;
+using BookReaderTest.TestUtils;
 
-namespace PdfBookReaderTest.Render
+namespace BookReaderTest.Render
 {
     [TestFixture]
     public class AssembleScreenTest
@@ -35,6 +36,7 @@ namespace PdfBookReaderTest.Render
         [SetUp]
         public void SetUp()
         {
+            AssembleScreenAlgorithm.RowSpacing = 0;
             RenderFactory.ConcreteFactory = new TestRenderFactory();
 
             var src = RenderFactory.ConcreteFactory.GetPageSource(null);
@@ -50,6 +52,7 @@ namespace PdfBookReaderTest.Render
         {
             // Test with null position
             PageHeight = 60;
+            AssembleScreenAlgorithm.RowSpacing = 0;
             PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
             Assert.IsTrue(algCur.CanApply(pos, ScreenSize));
@@ -59,8 +62,15 @@ namespace PdfBookReaderTest.Render
             Assert.AreEqual(1, pos.PageNum);
             CollectionAssert.AreEqual(
                 A(1, 2, 3, 4), pages.Select(x => x.PageNum), "numbers");
-            CollectionAssert.AreEqual(
-                A(0, 60, 120, 180), pages.Select(x => x.TopOnScreen), "tops");
+
+            ExtensionMethodsForTest.AssertEqualsTo(pages.Select(x => x.TopOnScreen), 0, 60, 120, 180);
+
+
+
+            /*
+            pages.Select(x => x.TopOnScreen)
+                .AssertEqual(0, 60, 120, 180);
+             */
         }
 
         [Test]

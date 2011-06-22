@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using PdfBookReader.Render;
-using PdfBookReaderTest.TestUtils;
+using BookReader.Render;
+using BookReaderTest.TestUtils;
 using System.Drawing;
 using System.Drawing.Imaging;
-using PdfBookReader.Render.Cache;
+using BookReader.Render.Cache;
 using System.IO;
-using PdfBookReader.Utils;
+using BookReader.Utils;
 using System.Windows.Forms;
 using Utils;
 
-namespace PdfBookReaderTest.Render
+namespace BookReaderTest.Render
 {
     [TestFixture]
     class PhysicalPageRenderPerf
