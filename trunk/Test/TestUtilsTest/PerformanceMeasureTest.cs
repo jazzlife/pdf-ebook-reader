@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using PdfBookReaderTest.TestUtils;
+using BookReaderTest.TestUtils;
 using System.Threading;
 
-namespace PdfBookReaderTest.TestUtilsTest
+namespace BookReaderTest.TestUtilsTest
 {
     [TestFixture]
     public class PerformanceMeasureTest

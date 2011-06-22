@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace PdfBookReaderTest.TestUtils
+namespace BookReaderTest.TestUtils
 {
     internal static class TestConst
     {

@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using PdfBookReader.Render;
-using PdfBookReaderTest.TestUtils;
+using BookReader.Render;
+using BookReaderTest.TestUtils;
 using System.IO;
 using System.Drawing;
-using PdfBookReader.Model;
-using PdfBookReader.Utils;
+using BookReader.Model;
+using BookReader.Utils;
 
-namespace PdfBookReaderTest.Render
+namespace BookReaderTest.Render
 {
     [TestFixture]
     class ScreenRenderPerf

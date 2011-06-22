@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using PdfBookReader.Render;
 using System.Drawing;
-using PdfBookReader.Utils;
-using PdfBookReader.Render.Cache;
+using BookReader.Render;
+using BookReader.Render.Layout;
+using BookReader.Render.Cache;
+using BookReader.Utils;
 
-namespace PdfBookReaderTest.Render
+namespace BookReaderTest.Render
 {
     class TestRenderFactory : BlankRenderFactory
     {
