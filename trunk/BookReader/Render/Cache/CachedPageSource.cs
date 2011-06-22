@@ -24,7 +24,6 @@ namespace PdfBookReader.Render
         public CachedPageSource(IPageCacheContextManager contextManager)
         {
             PhysicalSource = new SimplePageSource();
-            LayoutStrategy = RenderFactory.ConcreteFactory.GetLayoutStrategy();
 
             Cache = DW.Wrap(new PageCache(contextManager));
             PrefetchManager = new PrefetchManager(Cache, PhysicalSource, contextManager);

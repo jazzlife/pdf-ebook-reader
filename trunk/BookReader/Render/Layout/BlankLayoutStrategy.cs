@@ -12,11 +12,17 @@ namespace PdfBookReader.Render
     /// </summary>
     class BlankLayoutStrategy : IPageLayoutStrategy
     {
-        public PageLayoutInfo DetectLayout(DW<Bitmap> physicalPage)
+        public PageLayoutInfo DetectLayoutFromImage(DW<Bitmap> physicalPage)
         {
             PageLayoutInfo pli = new PageLayoutInfo(physicalPage.o.Size);
             pli.Bounds = new Rectangle(0, 0, physicalPage.o.Width, physicalPage.o.Height);
             return pli;
+        }
+
+
+        public PageLayoutInfo DetectLayoutFromBook(ScreenBook book, int pageNum)
+        {
+            return null;
         }
     }
 }

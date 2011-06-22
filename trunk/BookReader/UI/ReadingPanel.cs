@@ -214,17 +214,17 @@ namespace PdfBookReader.UI
 
             // NOTE: remarkably inefficient, and breaking compatibility -- for debugging only
 
-            PageCache cache = _renderManager.o.Cache.o;
+            StringBuilder sb = new StringBuilder();
+            DW<PageCache> cache = _renderManager.o.Cache;
             if (cache != null)
             {
-                var diskPages = cache.GetAllKeys();
-
-                this.FindForm().Text = 
-                    "Cache:{0} Mem:{1} Bitmaps(A:{2} D:{3})".F(
-                    diskPages.Count(), cache.MemoryItemCount, DW<Bitmap>.Active, " D:" + DW<Bitmap>.Disposed);
-
+                var diskPages = cache.o.GetAllKeys();
+                sb.Append("Cache:{0} Mem:{1} ".F(diskPages.Count(), cache.o.MemoryItemCount));
                 bookProgressBar.SetLoadedPages(diskPages.Where(x => x.BookId == Book.Id).Select(x => x.PageNum));
             }
+
+            sb.Append("Bitmaps(A:{2} D:{3})".F(DW<Bitmap>.Active,  DW<Bitmap>.Disposed));
+            this.FindForm().Text = sb.ToString();
         }
 
         private void bPaperWhite_Click(object sender, EventArgs e)
