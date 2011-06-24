@@ -5,13 +5,14 @@ using System.Text;
 using BookReader.Render.Cache;
 using BookReader.Utils;
 using BookReader.Render.Layout;
+using BookReader.Properties;
 
 namespace BookReader.Render
 {
 
     abstract class RenderFactory
     {
-        public static RenderFactory ConcreteFactory = new DefaultRenderFactory();
+        public static RenderFactory Default = new DefaultRenderFactory();
 
         public abstract IPageLayoutStrategy GetLayoutStrategy();
         public abstract DW<IBookProvider> GetBookProvider(String file);
@@ -48,7 +49,7 @@ namespace BookReader.Render
 
         public override DW<IPageSource> GetPageSource(IPageCacheContextManager contextManager)
         {
-            if (Options.Current.NoCache)
+            if (Settings.Default.NoCache)
             {
                 logger.Warn("GetPageSource: NO CACHE, returning simple logger");
                 return DW.Wrap<IPageSource>(new SimplePageSource());

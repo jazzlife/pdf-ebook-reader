@@ -50,14 +50,26 @@ namespace BookReader.Render.Layout
             PageLayoutInfo layout = new PageLayoutInfo(pageSize);
 
             // Detect bounds
-            var words = page.WordList;
-            if (words.Any())
-            {
-                int left = words.Min(x => x.Bounds.Left);
-                int width = words.Max(x => x.Bounds.Right) - left;
+            layout.Words.AddRange(page.WordList);
 
-                int top = words.Min(x => x.Bounds.Top);
-                int height = words.Max(x => x.Bounds.Bottom) - top;
+            // BUG in PDF library -- first word not given
+            // This is bad, will affect search
+
+            // WORKAROUND: bug in PDF library -- last word is 0,0
+            if (layout.Words.Count > 1)
+            {
+                // last word is 0,0
+                var last = layout.Words.Last();
+                if (last.Bounds.IsEmpty) { layout.Words.RemoveLast(); }
+            }
+
+            if (layout.Words.Count > 1)
+            {
+                int left = layout.Words.Min(x => x.Bounds.Left);
+                int width = layout.Words.Max(x => x.Bounds.Right) - left;
+
+                int top = layout.Words.Min(x => x.Bounds.Top);
+                int height = layout.Words.Max(x => x.Bounds.Bottom) - top;
 
                 layout.Bounds = new Rectangle(left, top, width, height);
             }

@@ -37,9 +37,9 @@ namespace BookReaderTest.Render
         public void SetUp()
         {
             AssembleScreenAlgorithm.RowSpacing = 0;
-            RenderFactory.ConcreteFactory = new TestRenderFactory();
+            RenderFactory.Default = new TestRenderFactory();
 
-            var src = RenderFactory.ConcreteFactory.GetPageSource(null);
+            var src = RenderFactory.Default.GetPageSource(null);
             screenBook = new ScreenBook(new Book("dummy"), ScreenSize);
 
             algCur = new AssembleCurrentScreenAlgorithm(src, screenBook);

@@ -81,6 +81,7 @@ namespace BookReader.Render
 
         // Blobs. For internal use, never scaled.
         internal List<Blob> Blobs = new List<Blob>();
+        internal List<PDFLibNet.PDFTextWord> Words = new List<PDFLibNet.PDFTextWord>();
     }
 
 }

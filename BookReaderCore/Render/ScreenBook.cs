@@ -58,7 +58,7 @@ namespace BookReader.Render
             {
                 if (_bookProvider == null)
                 {
-                    _bookProvider = RenderFactory.ConcreteFactory.GetBookProvider(Book.Filename);
+                    _bookProvider = RenderFactory.Default.GetBookProvider(Book.Filename);
                 }
                 return _bookProvider;
             }

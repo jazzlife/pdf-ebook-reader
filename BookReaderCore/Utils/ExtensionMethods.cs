@@ -160,7 +160,7 @@ namespace BookReader.Utils
 
         // Graphics
         public static void DrawStringBoxed(this Graphics g, String text, int x, int y,
-            Font font = null, Brush bgBrush = null, Brush fgBrush = null)
+            Font font = null, Brush bgBrush = null, Brush fgBrush = null, int offset = 4)
         {
             if (text == null) { text = "[null]"; } 
 
@@ -168,12 +168,10 @@ namespace BookReader.Utils
             if (bgBrush == null) { bgBrush = Brushes.DarkRed; }
             if (fgBrush == null) { fgBrush = Brushes.White; }
 
-            const int Off = 4;
-
             // Debug -- draw page number
             SizeF textSize = g.MeasureString(text, font);
-            g.FillRectangle(bgBrush, x, y, textSize.Width + Off * 2, textSize.Height + Off * 2);
-            g.DrawString(text, font, fgBrush, x + Off, y + Off);
+            g.FillRectangle(bgBrush, x, y, textSize.Width + offset * 2, textSize.Height + offset * 2);
+            g.DrawString(text, font, fgBrush, x + offset, y + offset);
         }
 
         public static void DrawLineVertical(this Graphics g, Pen pen, int x)
@@ -208,6 +206,18 @@ namespace BookReader.Utils
             }
 
             return new Size(width, height);
+        }
+        #endregion
+
+
+        #region List
+        public static void RemoveLast<T>(this IList<T> list)
+        {
+            list.RemoveAt(list.Count - 1);
+        }
+        public static void RemoveFirst<T>(this IList<T> list)
+        {
+            list.RemoveAt(0);
         }
         #endregion
     }
