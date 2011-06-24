@@ -22,7 +22,7 @@ namespace BookReader.Render.Cache
 
         public PageCache(IPageCacheContextManager contextManager)
             : base("PageCache", contextManager,
-                   RenderFactory.ConcreteFactory.GetPageCachePolicy())
+                   RenderFactory.Default.GetPageCachePolicy())
         { }
 
         public override bool Contains(PageKey key)

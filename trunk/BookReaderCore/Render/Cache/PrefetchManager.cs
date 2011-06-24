@@ -37,7 +37,7 @@ namespace BookReader.Render
 
             ContextManager.CacheContextChanged += OnCacheContextChanged;
 
-            Policy = RenderFactory.ConcreteFactory.GetPrefetchPolicy();
+            Policy = RenderFactory.Default.GetPrefetchPolicy();
         }
 
         #region prefetch thread

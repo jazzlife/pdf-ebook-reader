@@ -10,6 +10,7 @@ using BookReader.Render.Cache;
 using AForge.Imaging.Filters;
 using AForge;
 using BookReader.Render.Filter;
+using BookReader.Properties;
 
 namespace BookReader.Render
 {
@@ -45,7 +46,7 @@ namespace BookReader.Render
             // BUG: need to monotor current page in *all* books, not just one, but this is academic...
             _library.BookPositionChanged += new EventHandler(_library_CurrentBookPositionChanged);
 
-            _pageSource = RenderFactory.ConcreteFactory.GetPageSource(this);
+            _pageSource = RenderFactory.Default.GetPageSource(this);
 
             OnCurrentBookChanged(this, EventArgs.Empty);
         }
@@ -220,8 +221,6 @@ namespace BookReader.Render
         {
             if (pages == null) { return null; }
 
-
-
             DW<Bitmap> screenBmp = DW.Wrap(new Bitmap(ScreenSize.Width, ScreenSize.Height, PixelFormat.Format24bppRgb));
             using (Graphics g = Graphics.FromImage(screenBmp.o))
             {
@@ -270,24 +269,26 @@ namespace BookReader.Render
 
             g.DrawImage(curPage.Image.o, destRect, srcRect, GraphicsUnit.Pixel);
 
-#if DEBUG
-            /*
-            // Debug drawing of page numbers / boundaries
-            if (curPage.TopOnScreen >= 0)
+            if (Settings.Default.Debug_DrawPageNumbers)
             {
-                g.DrawStringBoxed("Page #" + curPage.PageNum, 0, curPage.TopOnScreen);
+                // Debug drawing of page numbers / boundaries
+                if (curPage.TopOnScreen >= 0)
+                {
+                    g.DrawStringBoxed("Page #" + curPage.PageNum, 0, curPage.TopOnScreen);
+                }
+                else
+                {
+                    g.DrawStringBoxed("Page #" + curPage.PageNum, ScreenSize.Width / 3, 0, bgBrush: Brushes.Gray);
+                }
+                g.DrawLineHorizontal(Pens.LightGray, curPage.TopOnScreen);
+                g.DrawLineHorizontal(Pens.LightBlue, curPage.BottomOnScreen - 1);
             }
-            else
+            if (Settings.Default.Debug_DrawPageEnd)
             {
-                g.DrawStringBoxed("Page #" + curPage.PageNum, ScreenSize.Width / 3, 0, bgBrush: Brushes.Gray);
+                g.DrawLineHorizontal(Pens.LightBlue, curPage.TopOnScreen, 60);
+                g.DrawLineHorizontal(Pens.Orange, curPage.BottomOnScreen - 1, 60);
             }
-            g.DrawLineHorizontal(Pens.LightGray, curPage.TopOnScreen);
-            g.DrawLineHorizontal(Pens.LightBlue, curPage.BottomOnScreen - 1);
-             */
-            g.DrawLineHorizontal(Pens.LightBlue, curPage.TopOnScreen, 60);
-            g.DrawLineHorizontal(Pens.Orange, curPage.BottomOnScreen - 1, 60);
 
-#endif
         }
 
         #endregion

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using BookReader.Utils;
 using System.Drawing;
+using BookReader.Properties;
 
 namespace BookReader.Render.Cache
 {
@@ -18,7 +19,7 @@ namespace BookReader.Render.Cache
 
         public SimplePageSource()
         {
-            LayoutStrategy = RenderFactory.ConcreteFactory.GetLayoutStrategy();
+            LayoutStrategy = RenderFactory.Default.GetLayoutStrategy();
         }
 
         public Page GetPage(int pageNum, Size screenSize, ScreenBook screenBook)
@@ -80,9 +81,15 @@ namespace BookReader.Render.Cache
             // Update width
             lastPageWidth = pageWidth;
 
-            // QQ: would cropping the display bitmap to content area yield any benefits?
-            // Not doing it for now, as it has a cost as well.
-            return new Page(pageNum, displayPage, layout);
+            if (Settings.Default.Debug_DrawPageLayout)
+            {
+                DW<Bitmap> tmp = layout.Debug_DrawLayout(displayPage);
+                displayPage.DisposeItem();
+                displayPage = tmp;
+            }
+
+            Page page = new Page(pageNum, displayPage, layout);
+            return page;
         }
 
         public void Dispose()

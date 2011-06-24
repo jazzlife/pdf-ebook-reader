@@ -90,7 +90,6 @@
     <Compile Include="Render\Cache\SimplePageSource.cs" />
     <Compile Include="Render\Filter\PaperColorFilter.cs" />
     <Compile Include="Render\Layout\PdfWordsLayoutStrategy.cs" />
-    <Compile Include="Render\Options.cs" />
     <Compile Include="Render\RenderFactory.cs" />
     <Compile Include="Utils\Immutable.cs" />
     <Compile Include="Render\Cache\PageCacheContext.cs" />
@@ -135,9 +134,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="app.config" />
     <None Include="NLog.config" />
     <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <Compile Include="Properties\Settings.Designer.cs">
