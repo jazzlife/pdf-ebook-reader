@@ -87,9 +87,10 @@
     <Compile Include="Model\BookLibrary.cs" />
     <Compile Include="Model\PositionInBook.cs" />
     <Compile Include="Render\Cache\CachePrefetchPolicy.cs" />
-    <Compile Include="Render\Cache\SimplePageSource.cs" />
+    <Compile Include="Render\Cache\PhysicalPageSource.cs" />
     <Compile Include="Render\Filter\PaperColorFilter.cs" />
     <Compile Include="Render\Layout\PdfWordsLayoutStrategy.cs" />
+    <Compile Include="Render\Layout\WordInfo.cs" />
     <Compile Include="Render\RenderFactory.cs" />
     <Compile Include="Utils\Immutable.cs" />
     <Compile Include="Render\Cache\PageCacheContext.cs" />
@@ -109,8 +110,8 @@
     <Compile Include="Utils\DebugOnlyAttribute.cs" />
     <Compile Include="Render\Layout\IPageLayoutStrategy.cs" />
     <Compile Include="Render\BookFormats\IBookProvider.cs" />
-    <Compile Include="Render\LayoutInfo.cs" />
-    <Compile Include="Render\PageLayoutInfo.cs" />
+    <Compile Include="Render\Layout\LayoutElement.cs" />
+    <Compile Include="Render\Layout\PageLayout.cs" />
     <Compile Include="Render\BookFormats\PdfBookProvider.cs" />
     <Compile Include="Render\Page.cs" />
     <Compile Include="Render\ScreenBook.cs" />

@@ -7,6 +7,7 @@ using BookReader.Utils;
 using AForge.Imaging;
 using AForge.Imaging.Filters;
 using System.Diagnostics;
+using BookReader.Render.Layout;
 
 namespace BookReader.Render
 {
@@ -16,20 +17,20 @@ namespace BookReader.Render
     class ConnectedBlobLayoutStrategy : IPageLayoutStrategy
     {
 
-        public PageLayoutInfo DetectLayoutFromImage(DW<Bitmap> bmp)
+        public PageLayout DetectLayoutFromImage(DW<Bitmap> bmp)
         {
             ArgCheck.NotNull(bmp, "bmp");
 
-            PageLayoutInfo layout = new PageLayoutInfo(bmp.o.Size);
+            PageLayout layout = new PageLayout(bmp.o.Size);
 
-            DetectBlobs(ref layout, bmp);
-            layout.Bounds = BoundsAroundBlobs(layout.Blobs);
-            DetectRowBounds(ref layout);
+            Blob[] blobs = DetectBlobs(bmp);
+
+            DetectRowBounds(layout, blobs);
 
             return layout;
         }
 
-        void DetectBlobs(ref PageLayoutInfo cbi, DW<Bitmap> bmp)
+        Blob[] DetectBlobs(DW<Bitmap> bmp)
         {
             Invert filter = new Invert();
             filter.ApplyInPlace(bmp.o);
@@ -45,28 +46,28 @@ namespace BookReader.Render
             // Revert back
             filter.ApplyInPlace(bmp.o);
 
-            cbi.Blobs.AddRange(bc.GetObjectsInformation());
+            return bc.GetObjectsInformation();
         }
 
-        void DetectRowBounds(ref PageLayoutInfo cbi)
+        void DetectRowBounds(PageLayout cbi, Blob[] blobs)
         {
-            if (cbi.Blobs.Count == 0) { return; }
+            if (blobs.Length == 0) { return; }
             if (cbi.Bounds == Rectangle.Empty) { return; }
 
-            Debug.Assert(cbi.Rows != null && cbi.Rows.Count == 0);
+            List<LayoutElement> rows = new List<LayoutElement>();
 
-            LayoutInfo currentRow = null;
+            LayoutElement currentRow = null;
             // Attempt drawing lines between the rows.
             for (int y = cbi.Bounds.Top; y < cbi.Bounds.Bottom; y++)
             {
                 Rectangle rowRect = new Rectangle(cbi.Bounds.Left, y, cbi.Bounds.Width, 1);
 
-                var blobsInRow = cbi.Blobs.Where(b => b.Rectangle.IntersectsWith(rowRect));
+                var blobsInRow = blobs.Where(b => b.Rectangle.IntersectsWith(rowRect));
 
                 if (blobsInRow.FirstOrDefault() == null)
                 {
                     // Empty row detected. Commit current row (if any)
-                    TryAddRow(cbi.Rows, ref currentRow);
+                    TryAddRow(rows, currentRow);
                     currentRow = null;
                 }
                 else
@@ -74,9 +75,10 @@ namespace BookReader.Render
                     // Start new row if needed
                     if (currentRow == null)
                     {
-                        currentRow = new LayoutInfo(cbi.PageSize);
+                        currentRow = new LayoutElement();
+                        currentRow.Type = LayoutElementType.Row;
                     }
-                    currentRow.Blobs.AddRange(blobsInRow);
+                    currentRow.Nodes.AddRange(blobsInRow.Select(x => new LayoutElement(x.Rectangle)));
 
                     // Advance to test the next empty space
                     // TODO: beware of off-by-1
@@ -85,18 +87,15 @@ namespace BookReader.Render
             }
 
             // Add row at the end
-            TryAddRow(cbi.Rows, ref currentRow);
+            TryAddRow(rows, currentRow);
 
-            FindHeaderAndFooter(ref cbi);
+            FindAndRemoveHeaderAndFooter(cbi, rows);
 
-            // Remove header and footer from rows, recompute main content bounds
-            if (cbi.Header != null) { cbi.Rows.Remove(cbi.Header); }
-            if (cbi.Footer != null) { cbi.Rows.Remove(cbi.Footer); }
-
-            cbi.Bounds = BoundsAroundBlobs(cbi.Rows.SelectMany(x => x.Blobs));
+            cbi.Nodes = rows;
+            cbi.SetBoundsFromNodes(true);
         }
 
-        void FindHeaderAndFooter(ref PageLayoutInfo cbi)
+        void FindAndRemoveHeaderAndFooter(PageLayout cbi, List<LayoutElement> rows)
         {
             // KEY HEURISTIC: do most OTHER pages have headers and footers.
             // Difficult to implement at this level, but ought to be reliable.
@@ -112,87 +111,81 @@ namespace BookReader.Render
             // analysis. Need training data -- set of page pictures labeled with HasHeader/HasFooter
 
             // Minimum number of rows on a sensible page
-            if (cbi.Rows.Count < 2) { return; }
+            if (rows.Count < 2) { return; }
 
-            int lastIdx = cbi.Rows.Count - 1;
+            int lastIdx = rows.Count - 1;
+
+            LayoutElement header = null;
+            LayoutElement footer = null;
 
             // Exception with small numbers (e.g. 2 elements, upper one much smaller => footer
-            if (cbi.Rows.Count <= 3)
+            if (rows.Count <= 3)
             {
                 // Check header
-                if (cbi.Rows[0].Bounds.Height < cbi.Rows[1].Bounds.Height / 2)
+                if (rows[0].Bounds.Height < rows[1].Bounds.Height / 2)
                 {
-                    cbi.Header = cbi.Rows[0];
+                    header = rows[0];
                 }
 
                 // Check footer
-                if (cbi.Rows[lastIdx].Bounds.Height < cbi.Rows[lastIdx - 1].Bounds.Height / 2)
+                if (rows[lastIdx].Bounds.Height < rows[lastIdx - 1].Bounds.Height / 2)
                 {
-                    cbi.Footer = cbi.Rows[lastIdx];
+                    footer = rows[lastIdx];
                 }
 
                 return;
             }
 
             int distanceSum = 0;
-            for (int i = 1; i < cbi.Rows.Count; i++)
+            for (int i = 1; i < rows.Count; i++)
             {
-                distanceSum += DistanceAboveRow(i, cbi);
+                distanceSum += DistanceAboveRow(i, rows);
             }
-            float distanceAvg = (float)distanceSum / (cbi.Rows.Count - 1);
+            float distanceAvg = (float)distanceSum / (rows.Count - 1);
             float minDistance = distanceAvg * 1.2f;
 
-            float heightAvg = cbi.Rows.Average(r => (float)r.Bounds.Height);
+            float heightAvg = rows.Average(r => (float)r.Bounds.Height);
             float maxHeight = heightAvg * 1.5f;
 
             // Header
-            int headerHeight = cbi.Rows[0].Bounds.Height;
-            int headerDistance = DistanceAboveRow(1, cbi);
+            int headerHeight = rows[0].Bounds.Height;
+            int headerDistance = DistanceAboveRow(1, rows);
 
             if (headerDistance > minDistance &&
                 headerHeight < maxHeight)
             {
-                cbi.Header = cbi.Rows[0];
+                header = rows[0];
             }
 
             // Footer
-            int footerHeight = cbi.Rows[lastIdx].Bounds.Height;
-            int footerDistance = DistanceAboveRow(lastIdx, cbi);
+            int footerHeight = rows[lastIdx].Bounds.Height;
+            int footerDistance = DistanceAboveRow(lastIdx, rows);
             if (footerDistance > minDistance &&
                 footerHeight < maxHeight)
             {
-                cbi.Footer = cbi.Rows[lastIdx];
+                footer = rows[lastIdx];
             }
 
             // Note: width heuristic is wrong -- header can be wide
+
+            // Remove header and footer from rows, recompute main content bounds
+            if (header != null) { rows.Remove(header); }
+            if (footer != null) { rows.Remove(footer); }
         }
 
-        int DistanceAboveRow(int index, PageLayoutInfo cbi)
+        int DistanceAboveRow(int index, List<LayoutElement> rows)
         {
             // Lower.Top - Upper.Bottom
-            return cbi.Rows[index].Bounds.Top - cbi.Rows[index - 1].Bounds.Bottom;
+            return rows[index].Bounds.Top - rows[index - 1].Bounds.Bottom;
         }
 
-        void TryAddRow(List<LayoutInfo> rows, ref LayoutInfo currentRow)
+        void TryAddRow(List<LayoutElement> rows, LayoutElement currentRow)
         {
             if (currentRow == null) { return; }
 
-            currentRow.Blobs = currentRow.Blobs.Distinct().ToList();
-            currentRow.Bounds = BoundsAroundBlobs(currentRow.Blobs);
+            currentRow.Nodes = currentRow.Nodes.Distinct().ToList();
+            currentRow.SetBoundsFromNodes(false);
             rows.Add(currentRow);
-        }
-
-        static Rectangle BoundsAroundBlobs(IEnumerable<Blob> blobs)
-        {
-            if (blobs == null) { throw new ArgumentNullException("blobs"); }
-            if (blobs.FirstOrDefault() == null) { return Rectangle.Empty; }
-
-            int left = blobs.Select(b => b.Rectangle.Left).Min();
-            int right = blobs.Select(b => b.Rectangle.Right).Max();
-            int top = blobs.Select(b => b.Rectangle.Top).Min();
-            int bottom = blobs.Select(b => b.Rectangle.Bottom).Max();
-
-            return new Rectangle(left, top, right - left, bottom - top);
         }
 
         class BlobsFilter : IBlobsFilter
@@ -220,7 +213,7 @@ namespace BookReader.Render
             }
         }
 
-        public PageLayoutInfo DetectLayoutFromBook(ScreenBook book, int pageNum)
+        public PageLayout DetectLayoutFromBook(ScreenBook book, int pageNum)
         {
             return null;
         }

@@ -7,6 +7,7 @@ using BookReader.Utils;
 using System.Runtime.Serialization;
 using System.IO;
 using BookReader.Render.Cache;
+using BookReader.Render.Layout;
 
 namespace BookReader.Render
 {
@@ -22,11 +23,10 @@ namespace BookReader.Render
         public readonly int PageNum; // page number in document, 1-n
         
         [DataMember (Name = "Layout")]
-        PageLayoutInfo _layout; // content layout
+        PageLayout _layout; // content layout
 
         // Serialized separately
         DW<Bitmap> _image; // physical page image
-
 
         int _topOnScreen;
         // Not serialized
@@ -49,7 +49,7 @@ namespace BookReader.Render
 
         }
 
-        public Page(int pageNum, DW<Bitmap> image, PageLayoutInfo layout)
+        public Page(int pageNum, DW<Bitmap> image, PageLayout layout)
         {
             ArgCheck.GreaterThanOrEqual(pageNum, 1, "pageNum");
 
@@ -59,7 +59,7 @@ namespace BookReader.Render
         }
 
         public DW<Bitmap> Image { get { return _image; } }
-        public PageLayoutInfo Layout { get { return _layout; } }
+        public PageLayout Layout { get { return _layout; } }
 
         // For convenience
         public int BottomOnScreen

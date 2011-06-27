@@ -10,6 +10,7 @@ using BookReader.Model;
 using BookReaderTest.TestUtils;
 using BookReader.Utils;
 using System.Drawing.Imaging;
+using PDFLibNet;
 
 namespace BookReaderTest.Render.Layout
 {
@@ -22,6 +23,11 @@ namespace BookReaderTest.Render.Layout
             TestConst.GetAllPdfFiles().ForEach( x => CreateLayout(x) );
 
 
+        }
+
+        PDFWrapper GetPdfWrapper(ScreenBook sb)
+        {
+            return ((PdfBookProvider)sb.BookProvider.o).InternalPdfWrapper.o;
         }
 
         void CreateLayout(String bookName)
@@ -38,13 +44,13 @@ namespace BookReaderTest.Render.Layout
         void CreateLayout(ScreenBook sBook, int pageNum)
         {
             Console.WriteLine(pageNum);
-
-
             IPageLayoutStrategy alg = new PdfWordsLayoutStrategy();
-            PageLayoutInfo layout = alg.DetectLayoutFromBook(sBook, pageNum);
+            PageLayout layout = alg.DetectLayoutFromBook(sBook, pageNum);
 
             DW<Bitmap> page = sBook.BookProvider.o.RenderPageImage(pageNum, layout.PageSize);
             DW<Bitmap> newPage = layout.Debug_DrawLayout(page);
+
+            GetPdfWrapper(sBook).ExportText(TestConst.GetOutFile(sBook.Book.Filename, "_p" + pageNum + ".txt"), pageNum, pageNum, false, false);
 
             newPage.o.Save(TestConst.GetOutFile(sBook.Book.Filename, "_p" + pageNum + ".png"), ImageFormat.Png);
         }

@@ -10,14 +10,16 @@ namespace BookReader.Render.Layout
 {
     class PdfWordsLayoutStrategy : IPageLayoutStrategy
     {
-        public PageLayoutInfo DetectLayoutFromImage(DW<Bitmap> physicalPage)
+        public PageLayout DetectLayoutFromImage(DW<Bitmap> physicalPage)
         {
             return null;
         }
 
-        public PageLayoutInfo DetectLayoutFromBook(ScreenBook book, int pageNum)
+        public PageLayout DetectLayoutFromBook(ScreenBook book, int pageNum)
         {
-            PdfBookPageProvider pdfPageProvider = book.BookProvider.o as PdfBookPageProvider;
+            Console.WriteLine("book: " + book.Book.Title + " page: " + pageNum);
+
+            PdfBookProvider pdfPageProvider = book.BookProvider.o as PdfBookProvider;
             if (pdfPageProvider == null)
             {
                 throw new InvalidOperationException("SreenBook.BookProvider must be a PdfBookPageProvider for this LayoutAnalyzer");
@@ -34,7 +36,7 @@ namespace BookReader.Render.Layout
             {
                 pdfDoc.o.CurrentPage = pageNum;
 
-                PageLayoutInfo layout = DetectLayout(pdfDoc, pdfPage);
+                PageLayout layout = DetectLayout(pdfDoc, pdfPage);
                 return layout;
             }
             finally
@@ -44,37 +46,36 @@ namespace BookReader.Render.Layout
             }
         }
 
-        PageLayoutInfo DetectLayout(DW<PDFWrapper> doc, PDFPage page)
+
+
+        PageLayout DetectLayout(DW<PDFWrapper> doc, PDFPage page)
         {
             Size pageSize = new Size(doc.o.PageWidth, doc.o.PageHeight);
-            PageLayoutInfo layout = new PageLayoutInfo(pageSize);
+            PageLayout layout = new PageLayout(pageSize);
 
-            // Detect bounds
-            layout.Words.AddRange(page.WordList);
+            // Get text
+            // TODO: check how text is split in multicolumn case -- is this the method with correct options (flow, not physical)
+            layout.Text = page.Text;     
+            layout.Nodes.AddRange(page.WordList.Select(x => new LayoutElement(x.Bounds, x.Word)));
 
-            // BUG in PDF library -- first word not given
-            // This is bad, will affect search
+            // Strange bug -- if doing the following, first word is missing and last word is blank.
+            // However, with LINQ query above it's fine
 
-            // WORKAROUND: bug in PDF library -- last word is 0,0
-            if (layout.Words.Count > 1)
+            //List<PDFTextWord> ws = new List<PDFTextWord>();
+            //ws.AddRange(page.WordList);
+
+
+            if (layout.Nodes.Count > 0)
             {
-                // last word is 0,0
-                var last = layout.Words.Last();
-                if (last.Bounds.IsEmpty) { layout.Words.RemoveLast(); }
-            }
+                layout.SetBoundsFromNodes(true);
 
-            if (layout.Words.Count > 1)
-            {
-                int left = layout.Words.Min(x => x.Bounds.Left);
-                int width = layout.Words.Max(x => x.Bounds.Right) - left;
-
-                int top = layout.Words.Min(x => x.Bounds.Top);
-                int height = layout.Words.Max(x => x.Bounds.Bottom) - top;
-
-                layout.Bounds = new Rectangle(left, top, width, height);
+                // TODO: expand by width a bit (to prevent cutting off words which
+                // may not be recognized properly.
             }
             else
             {
+                // TODO: check, maybe a Rectangle.Empty is better
+                // or otherwise return null and use page-based detection
                 layout.Bounds = new Rectangle(Point.Empty, pageSize);
             }
 
@@ -83,6 +84,27 @@ namespace BookReader.Render.Layout
             // TODO: detect header/footer (if any)
 
             return layout;
+        }
+
+        void FirstWordMissingWorkaround(List<WordInfo> words, String textInPhysicalLayout)
+        {
+            if (textInPhysicalLayout.IsEmpty()) { return; }
+            int firstLineEnd = textInPhysicalLayout.IndexOf("\r\n");
+            if (firstLineEnd <= 0) { return; }
+            String firstLine = textInPhysicalLayout.Substring(0, firstLineEnd);
+
+            StringBuilder sbLine = new StringBuilder();
+            int lastX = 0;
+            foreach(var w in words)
+            {
+                if (w.Bounds.Left < lastX) { break; }
+                lastX = w.Bounds.Right;
+
+                sbLine.Append(w.Word + " ");
+            }
+
+            Console.WriteLine(">" + firstLine + "<");
+            Console.WriteLine("*" + sbLine + "*");
         }
 
     }

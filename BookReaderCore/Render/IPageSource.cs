@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using BookReader.Utils;
+using BookReader.Render.Layout;
 
 namespace BookReader.Render
 {
