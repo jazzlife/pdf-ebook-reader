@@ -20,7 +20,7 @@ namespace BookReader.Render.Layout
         }
 
 
-        public PageLayout DetectLayoutFromBook(ScreenBook book, int pageNum)
+        public PageLayout DetectLayoutFromBook(IBookContent book, int pageNum)
         {
             return null;
         }

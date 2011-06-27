@@ -24,7 +24,7 @@ namespace BookReader.Render.Layout
         /// </summary>
         /// <param name="physicalPage"></param>
         /// <returns></returns>
-        PageLayout DetectLayoutFromBook(ScreenBook book, int pageNum);
+        PageLayout DetectLayoutFromBook(IBookContent book, int pageNum);
 
     }
 

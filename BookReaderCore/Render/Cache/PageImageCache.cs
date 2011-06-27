@@ -8,8 +8,7 @@ using System.IO;
 
 namespace BookReader.Render.Cache
 {
-    // Not thread-safe, lock externally
-    class PageCache : SimpleCache<PageKey, Page, PageCacheContext>        
+    class PageImageCache : SimpleCache<PageKey, PageImage, PageCacheContext>        
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -18,12 +17,35 @@ namespace BookReader.Render.Cache
         public readonly string Prefix = "page";
         public readonly string Extension = "png";
 
-        Dictionary<PageKey, Page> _memoryBuffer = new Dictionary<PageKey,Page>();
+        Dictionary<PageKey, PageImage> _memoryBuffer = new Dictionary<PageKey, PageImage>();
 
-        public PageCache(IPageCacheContextManager contextManager)
+        public PageImageCache(IPageCacheContextManager contextManager)
             : base("PageCache", contextManager,
                    RenderFactory.Default.GetPageCachePolicy())
         { }
+
+        protected override Dictionary<PageKey, PageImage> LoadItems()
+        {
+            var dict = new Dictionary<PageKey, PageImage>();
+
+            var files = Directory.GetFiles(AppPaths.CacheFolderPath, Prefix + "*." + Extension);
+
+            foreach (String filename in files)
+            {
+                PageKey key = KeyFromFilename(Path.GetFileName(filename));
+                
+                // Only store keys, actaual items are null
+                if (key != null) { dict.Add(key, null); }
+            }
+
+            return dict;
+        }
+
+        protected override void SaveItems()
+        {
+            // Do nothing, files are already saved
+        }
+
 
         public override bool Contains(PageKey key)
         {
@@ -33,7 +55,7 @@ namespace BookReader.Render.Cache
             }
         }
 
-        public override void Add(PageKey key, Page value)
+        public override void Add(PageKey key, PageImage value)
         {
             lock (MyLock)
             {
@@ -43,17 +65,13 @@ namespace BookReader.Render.Cache
 
                 if (Contains(key)) 
                 {
-                    logger.Debug("Add: already contains key: " + key);
-                    return; 
+                    throw new InvalidOperationException("Add: already contains key: " + key);
                 }
 
-                // Make a copy, we do not store the bitmap pointer.
-                Page actualPc = new Page(value.PageNum, null, value.Layout);
-                base.Add(key, actualPc);
-
                 String filename = GetFullPath(key);
-                value.Image.o.Save(filename);
+                value.Image.Save(filename);
 
+                base.Add(key, null);
                 // Save cache xml, since we're saving the bitmap 
                 //SaveCache();
 
@@ -68,12 +86,12 @@ namespace BookReader.Render.Cache
 
         void DisposeUnused(PageKey key)
         {
-            Page memPage;
-            if (!_memoryBuffer.TryGetValue(key, out memPage)) { return; }
+            PageImage item;
+            if (!_memoryBuffer.TryGetValue(key, out item)) { return; }
 
-            if (!memPage.InUse)
+            if (!item.InUse)
             {
-                memPage.Image.DisposeItem();
+                item.DisposeItem();
                 _memoryBuffer.Remove(key);
             }
         }
@@ -90,53 +108,68 @@ namespace BookReader.Render.Cache
             }
         }
         
-        public override Page Get(PageKey key)
+        public override PageImage Get(PageKey key)
         {
             lock (MyLock)
             {
                 // Try getting from memory
                 if (_memoryBuffer.ContainsKey(key))
                 {
-                    Page memPage = _memoryBuffer[key];
-                    memPage.Reuse();
-                    return memPage;
+                    PageImage memImage = _memoryBuffer[key];
+                    memImage.Reuse();
+                    return memImage;
                 }
                 else
                 {
                     // Try getting from disk
-
-                    // Get info from base cache
-                    Page tempPage = base.Get(key); // temporary value, no image
-                    if (tempPage == null) { return null; }
-
-                    // Load bitmap from disk
                     String filename = GetFullPath(key);
                     if (!File.Exists(filename)) { return null; }
 
                     // TODO: try/catch around file access
                     // Note: new Bitmap(filename) locks the file
-                    DW<Bitmap> bmp;
+                    PageImage diskImage;
                     using (var fs = new FileStream(filename, FileMode.Open))
                     {
-                        bmp = DW.Wrap(new Bitmap(fs));
+                        diskImage = new PageImage(key, new Bitmap(fs));
                     }
 
-                    Page diskPage = new Page(tempPage.PageNum, bmp, tempPage.Layout);
-
                     // Add to memory, to be disposed later
-                    if (!diskPage.InUse) { throw new ApplicationException("BUG: page not in use"); }
-                    _memoryBuffer.Add(key, diskPage);
+                    if (!diskImage.InUse) { throw new ApplicationException("BUG: page not in use"); }
+                    _memoryBuffer.Add(key, diskImage);
 
-                    return diskPage;
+                    return diskImage;
                 }
             }
         }
 
         string GetFullPath(PageKey key)
         {
-            String filename = "{0}_{1}_p{2}_w{3}.{4}".F(Prefix, key.BookId, key.PageNum, key.ScreenWidth, Extension);
-            return Path.Combine(AppPaths.CacheFolderPath, filename);
+            return Path.Combine(AppPaths.CacheFolderPath, FilenameFromKey(key));
         }
+
+        string FilenameFromKey(PageKey key)
+        {
+            return "{0}_{1}_p{2}_w{3}.{4}".F(Prefix, key.BookId, key.PageNum, key.ScreenWidth, Extension);
+        }
+        PageKey KeyFromFilename(string filename)
+        {
+            String[] parts = filename.Split('_','.');
+
+            try 
+            {
+                Guid id = new Guid(parts[1]);
+                int pageNum = int.Parse(parts[2].Substring(1));
+                int screenWidth = int.Parse(parts[3].Substring(1));
+
+                return new PageKey(id, pageNum, screenWidth);
+            }
+            catch(Exception e)
+            {
+                logger.Debug("Cannot get key from filename: " + filename + " " + e.Message);
+                return null;
+            }
+        }
+
 
         public int MemoryItemCount 
         { 

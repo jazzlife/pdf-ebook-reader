@@ -20,7 +20,7 @@ namespace BookReader.Render
 
         Size _screenSize;
 
-        DW<IBookProvider> _bookProvider;
+        DW<IBookContent> _bookContent;
 
         public ScreenBook(Book book, Size screenPageSize)
         {
@@ -28,13 +28,6 @@ namespace BookReader.Render
 
             Book = book;
             ScreenSize = screenPageSize;
-
-            // Slightly hacky but best way to do it
-            // -- set the book position info if it's null
-            if (Book.CurrentPosition == null)
-            {
-                Book.CurrentPosition = PositionInBook.FromPhysicalPage(1, BookProvider.o.PageCount);
-            }
         }
 
         #region Public properties
@@ -52,28 +45,17 @@ namespace BookReader.Render
 
         #endregion
 
-        public DW<IBookProvider> BookProvider
+        public DW<IBookContent> BookContent
         {
             get
             {
-                if (_bookProvider == null)
+                if (_bookContent == null)
                 {
-                    _bookProvider = RenderFactory.Default.GetBookProvider(Book.Filename);
+                    _bookContent = RenderFactory.Default.GetBookContent(Book);
                 }
-                return _bookProvider;
+                return _bookContent;
             }
             // TODO: dispose when approrpiate
-        }
-
-        PositionInBook GetBookPosition()
-        {
-            PositionInBook pos = Book.CurrentPosition;
-            if (pos == null)
-            {
-                pos = PositionInBook.FromPhysicalPage(1, BookProvider.o.PageCount);
-                Book.CurrentPosition = pos;
-            }
-            return pos;
         }
 
         void SetBookPosition(PositionInBook newPosition)
@@ -82,25 +64,24 @@ namespace BookReader.Render
         }
 
         // Assemble screen
-        public List<Page> AssembleCurrentScreen(PositionInBook newPosition, DW<IPageSource> pageContentSource)
+        public List<PageOnScreen> AssembleCurrentScreen(PositionInBook newPosition)
         {
             return AssembleScreenHelper(newPosition,
-                    new AssembleCurrentScreenAlgorithm(pageContentSource, this));
+                    new AssembleCurrentScreenAlgorithm(this));
         }
 
-
-        public List<Page> AssembleNextScreen(DW<IPageSource> pageContentSource)
+        public List<PageOnScreen> AssembleNextScreen()
         {
-            PositionInBook position = GetBookPosition();
+            PositionInBook position = BookContent.o.Position;
             return AssembleScreenHelper(position,
-                new AssembleNextScreenAlgorithm(pageContentSource, this));
+                new AssembleNextScreenAlgorithm(this));
         }
 
-        public List<Page> AssemblePreviousScreen(DW<IPageSource> pageContentSource)
+        public List<PageOnScreen> AssemblePreviousScreen()
         {
-            PositionInBook position = GetBookPosition();
+            PositionInBook position = BookContent.o.Position;
             return AssembleScreenHelper(position,
-                new AssemblePreviousScreenAlgorithm(pageContentSource, this));
+                new AssemblePreviousScreenAlgorithm(this));
         }
 
         /// <summary>
@@ -109,7 +90,7 @@ namespace BookReader.Render
         /// <param name="position"></param>
         /// <param name="algorithm"></param>
         /// <returns></returns>
-        List<Page> AssembleScreenHelper(PositionInBook position, AssembleScreenAlgorithm algorithm)
+        List<PageOnScreen> AssembleScreenHelper(PositionInBook position, AssembleScreenAlgorithm algorithm)
         {
             if (!algorithm.CanApply(position, ScreenSize)) { return null; }
 
@@ -118,17 +99,17 @@ namespace BookReader.Render
             return rv;
         }
 
-        public bool HasNextScreen(DW<IPageSource> pageContentSource)
+        public bool HasNextScreen()
         {
-            PositionInBook position = GetBookPosition();
-            AssembleScreenAlgorithm alg = new AssembleNextScreenAlgorithm(pageContentSource, this);
+            PositionInBook position = BookContent.o.Position;
+            AssembleScreenAlgorithm alg = new AssembleNextScreenAlgorithm(this);
             return alg.CanApply(position, ScreenSize);
         }
 
-        public bool HasPreviousScreen(DW<IPageSource> pageContentSource)
+        public bool HasPreviousScreen()
         {
-            PositionInBook position = GetBookPosition();
-            AssembleScreenAlgorithm alg = new AssemblePreviousScreenAlgorithm(pageContentSource, this);
+            PositionInBook position = BookContent.o.Position;
+            AssembleScreenAlgorithm alg = new AssemblePreviousScreenAlgorithm(this);
             return alg.CanApply(position, ScreenSize);
         }
 
@@ -136,9 +117,9 @@ namespace BookReader.Render
         public void Close()
         {
             // Dispose items we specifically created
-            if (_bookProvider != null)
+            if (_bookContent != null)
             {
-                _bookProvider.DisposeItem();
+                _bookContent.DisposeItem();
             }
         }
     }

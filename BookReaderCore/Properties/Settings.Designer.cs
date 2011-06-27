@@ -26,18 +26,6 @@ namespace BookReader.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool NoCache {
-            get {
-                return ((bool)(this["NoCache"]));
-            }
-            set {
-                this["NoCache"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool Debug_DrawPageNumbers {
             get {
                 return ((bool)(this["Debug_DrawPageNumbers"]));
@@ -68,6 +56,30 @@ namespace BookReader.Properties {
             }
             set {
                 this["Debug_DrawPageLayout"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Cache_SaveLayouts {
+            get {
+                return ((bool)(this["Cache_SaveLayouts"]));
+            }
+            set {
+                this["Cache_SaveLayouts"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Cache_SaveImages {
+            get {
+                return ((bool)(this["Cache_SaveImages"]));
+            }
+            set {
+                this["Cache_SaveImages"] = value;
             }
         }
     }

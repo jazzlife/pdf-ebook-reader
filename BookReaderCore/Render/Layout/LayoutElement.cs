@@ -73,15 +73,15 @@ namespace BookReader.Render.Layout
         /// Get bounds based on the new page size
         /// </summary>
         /// <param name="pageSize"></param>
-        public Rectangle GetScaledBounds(Size pageSize)
+        public Rectangle GetScaledBounds(Size pageSize, Size newPageSize)
         {
             RectangleF relBounds = GetUnitBounds(pageSize);
 
             return new Rectangle(
-                (relBounds.X * pageSize.Width).Round(),
-                (relBounds.Y * pageSize.Height).Round(),
-                (relBounds.Width * pageSize.Width).Round(),
-                (relBounds.Height * pageSize.Height).Round());
+                (relBounds.X * newPageSize.Width).Round(),
+                (relBounds.Y * newPageSize.Height).Round(),
+                (relBounds.Width * newPageSize.Width).Round(),
+                (relBounds.Height * newPageSize.Height).Round());
         }
 
         public bool IsEmpty { get { return Bounds.IsEmpty; } }

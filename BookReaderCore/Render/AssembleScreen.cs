@@ -6,6 +6,7 @@ using System.Drawing;
 using BookReader.Utils;
 using BookReader.Model;
 using System.Drawing.Imaging;
+using BookReader.Render.Layout;
 
 namespace BookReader.Render
 {
@@ -19,13 +20,10 @@ namespace BookReader.Render
     {
         // TODO: determine based on page analysis
         public static int RowSpacing = 4;
-
-        protected readonly DW<IPageSource> PageSource;
         protected readonly ScreenBook ScreenBook;
 
-        public AssembleScreenAlgorithm(DW<IPageSource> source, ScreenBook screenBook)
+        public AssembleScreenAlgorithm(ScreenBook screenBook)
         {
-            PageSource = source;
             ScreenBook = screenBook;
         }
 
@@ -44,17 +42,17 @@ namespace BookReader.Render
         /// <param name="position"></param>
         /// <param name="screenSize"></param>
         /// <returns></returns>
-        public List<Page> AssembleScreen(ref PositionInBook position, Size screenSize) 
+        public List<PageOnScreen> AssembleScreen(ref PositionInBook position, Size screenSize) 
         {
             ArgCheck.NotNull(position, "newPosition");
             if (!CanApply(position, screenSize)) { throw new InvalidOperationException("Cannot apply at: " + position); }
 
             // Get the initial page. 
             // Does not necessarily return page at position -- in case of next, will advance it by one page.
-            Page curPage = GetInitialPage(ref position, screenSize);
+            PageOnScreen curPage = GetInitialPage(ref position, screenSize);
 
             // Stack the pages
-            List<Page> pageContents = new List<Page>();
+            List<PageOnScreen> pageContents = new List<PageOnScreen>();
             while (true)
             {
                 pageContents.Add(curPage);
@@ -66,29 +64,36 @@ namespace BookReader.Render
 
             // Update position based on the topmost page (with lowest page num)
             int minPageNum = pageContents.Min(x => x.PageNum);
-            Page topPage = pageContents.Find(x => x.PageNum == minPageNum);
+            PageOnScreen topPage = pageContents.Find(x => x.PageNum == minPageNum);
             position = PositionInBook.FromPhysicalPage(topPage.PageNum, PageCount,
                 topPage.TopOnScreen, topPage.Layout.Bounds.Height);
 
             return pageContents;
         }
 
-        protected virtual Page GetInitialPage(ref PositionInBook position, Size screenSize)
+        protected virtual PageOnScreen GetInitialPage(ref PositionInBook position, Size screenSize)
         {
             // Find physical page at position
-            Page curPage = PageSource.o.GetPage(position.PageNum, screenSize, ScreenBook);
+            PageOnScreen curPage = NewPage(position.PageNum, screenSize);
             curPage.TopOnScreen = position.GetTopOnScreen(curPage.Layout.Bounds.Height);
             return curPage;
         }
 
         // True if screen is full, should terminate the loop.
-        internal abstract bool ScreenFull(Page curPage, Size screenSize);
+        internal abstract bool ScreenFull(PageOnScreen curPage, Size screenSize);
 
         // Advance page by one
-        internal abstract void AdvancePage(ref Page curPage, Size sceenSize);
+        internal abstract void AdvancePage(ref PageOnScreen curPage, Size sceenSize);
 
         // Helper
         protected int PageCount { get { return ScreenBook.Book.CurrentPosition.PageCount; } }
+
+        protected PageOnScreen NewPage(int pageNum, Size screenSize)
+        {
+            PageLayout layout = ScreenBook.BookContent.o.GetPageLayout(pageNum);
+            layout = layout.ScaleToScreen(screenSize);
+            return new PageOnScreen(pageNum, layout);
+        }
     }
 
     /// <summary>
@@ -96,8 +101,8 @@ namespace BookReader.Render
     /// </summary>
     sealed class AssembleCurrentScreenAlgorithm : AssembleScreenAlgorithm
     {
-        public AssembleCurrentScreenAlgorithm(DW<IPageSource> s, ScreenBook p) 
-            : base(s, p) { }
+        public AssembleCurrentScreenAlgorithm(ScreenBook p) 
+            : base(p) { }
 
         public override bool CanApply(PositionInBook position, Size screenSize)
         {
@@ -106,14 +111,14 @@ namespace BookReader.Render
             return true;
         }
 
-        internal override void AdvancePage(ref Page curPage, Size sceenSize)
+        internal override void AdvancePage(ref PageOnScreen curPage, Size screenSize)
         {
             int bottom = curPage.BottomOnScreen;
-            curPage = PageSource.o.GetPage(curPage.PageNum + 1, sceenSize, ScreenBook);
+            curPage = NewPage(curPage.PageNum + 1, screenSize);
             curPage.TopOnScreen = bottom + RowSpacing;
         }
 
-        internal override bool ScreenFull(Page curPage, Size screenSize)
+        internal override bool ScreenFull(PageOnScreen curPage, Size screenSize)
         {
             // Spilling over to next page
             if (curPage.BottomOnScreen >= screenSize.Height) { return true; }
@@ -132,10 +137,10 @@ namespace BookReader.Render
     {
         AssembleCurrentScreenAlgorithm _assembleCurrent;
 
-        public AssembleNextScreenAlgorithm(DW<IPageSource> s, ScreenBook p)
-            : base(s, p) 
+        public AssembleNextScreenAlgorithm(ScreenBook p)
+            : base(p) 
         {
-            _assembleCurrent = new AssembleCurrentScreenAlgorithm(s, p);
+            _assembleCurrent = new AssembleCurrentScreenAlgorithm(p);
         }
 
         public override bool CanApply(PositionInBook position, Size screenSize)
@@ -144,25 +149,16 @@ namespace BookReader.Render
             // Current screen render won't mess up position
             var pages = _assembleCurrent.AssembleScreen(ref position, screenSize);
 
-            // No longer in use
-            pages.ForEach(x => x.Return());
-
-            Page lastPage = pages.Last();
+            PageOnScreen lastPage = pages.Last();
             return lastPage.PageNum < PageCount ||
                 // If last page in book, it must overflow the screen
                 lastPage.BottomOnScreen > screenSize.Height;
         }
 
-        protected override Page GetInitialPage(ref PositionInBook position, Size screenSize)
+        protected override PageOnScreen GetInitialPage(ref PositionInBook position, Size screenSize)
         {
             // Assemble current screen
-            var pages = _assembleCurrent.AssembleScreen(ref position, screenSize);
-
-            Page curPage = pages.Last();            
-            pages.Remove(curPage);
-
-            // No longer in use
-            pages.ForEach(x => x.Return());
+            PageOnScreen curPage = _assembleCurrent.AssembleScreen(ref position, screenSize).Last();
 
             // Move the last page of current screen up by one screen
             curPage.TopOnScreen -= screenSize.Height;
@@ -170,19 +166,18 @@ namespace BookReader.Render
             // Edge case: if page is exactly above the screen, take the next one
             if (curPage.TopOnScreen == -curPage.Layout.Bounds.Height)
             {
-                curPage.Return(); // No longer in use
                 AdvancePage(ref curPage, screenSize);
             }
 
             return curPage;
         }
 
-        internal override bool ScreenFull(Page curPage, Size screenSize)
+        internal override bool ScreenFull(PageOnScreen curPage, Size screenSize)
         {
             return _assembleCurrent.ScreenFull(curPage, screenSize);
         }
 
-        internal override void AdvancePage(ref Page curPage, Size sceenSize)
+        internal override void AdvancePage(ref PageOnScreen curPage, Size sceenSize)
         {
             _assembleCurrent.AdvancePage(ref curPage, sceenSize);
         }
@@ -193,32 +188,26 @@ namespace BookReader.Render
     /// </summary>
     sealed class AssemblePreviousScreenAlgorithm : AssembleScreenAlgorithm
     {
-        public AssemblePreviousScreenAlgorithm(DW<IPageSource> s, ScreenBook p) 
-            : base(s, p) { }
+        public AssemblePreviousScreenAlgorithm(ScreenBook p) 
+            : base(p) { }
 
         public override bool CanApply(PositionInBook position, Size screenSize)
         {
-            Page firstPage = base.GetInitialPage(ref position, screenSize);
-
-            // No longer in use
-            firstPage.Return();
+            PageOnScreen firstPage = base.GetInitialPage(ref position, screenSize);
             
             return firstPage.PageNum > 1 ||
                 // If first page in book, it must overflow above current screen
                 firstPage.TopOnScreen < 0;
         }
 
-        protected override Page GetInitialPage(ref PositionInBook position, Size screenSize)
+        protected override PageOnScreen GetInitialPage(ref PositionInBook position, Size screenSize)
         {
-            Page curPage = base.GetInitialPage(ref position, screenSize);
+            PageOnScreen curPage = base.GetInitialPage(ref position, screenSize);
             curPage.TopOnScreen += screenSize.Height;
 
             // Edge case: if page is exactly below the screen, take the next one
             if (curPage.TopOnScreen == screenSize.Height)
             {
-                // No longer in use
-                curPage.Return();
-
                 AdvancePage(ref curPage, screenSize);
             }
 
@@ -229,7 +218,7 @@ namespace BookReader.Render
             return curPage;
         }
 
-        internal override bool ScreenFull(Page curPage, Size screenSize)
+        internal override bool ScreenFull(PageOnScreen curPage, Size screenSize)
         {
             // Spilling over to next page
             if (curPage.TopOnScreen <= 0) { return true; }
@@ -240,10 +229,10 @@ namespace BookReader.Render
             return false;
         }
 
-        internal override void AdvancePage(ref Page curPage, Size sceenSize)
+        internal override void AdvancePage(ref PageOnScreen curPage, Size screenSize)
         {
             int top = curPage.TopOnScreen;
-            curPage = PageSource.o.GetPage(curPage.PageNum - 1, sceenSize, ScreenBook);
+            curPage = NewPage(curPage.PageNum - 1, screenSize);
             curPage.BottomOnScreen = top - RowSpacing;
         }
     }

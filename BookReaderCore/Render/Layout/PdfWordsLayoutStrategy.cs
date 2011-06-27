@@ -15,7 +15,7 @@ namespace BookReader.Render.Layout
             return null;
         }
 
-        public PageLayout DetectLayoutFromBook(ScreenBook book, int pageNum)
+        public PageLayout DetectLayoutFromBook(IBookContent book, int pageNum)
         {
             Console.WriteLine("book: " + book.Book.Title + " page: " + pageNum);
 

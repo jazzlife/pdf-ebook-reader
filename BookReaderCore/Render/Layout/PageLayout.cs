@@ -25,19 +25,18 @@ namespace BookReader.Render.Layout
             PageSize = pageSize;
         }
 
-        public void ChangePageSize(Size newPageSize)
+        public PageLayout ScaleToScreen(Size screenSize)
         {
-            if (newPageSize == PageSize) { return; }
+            float mult = (float)screenSize.Width / Bounds.Width;
 
-            Bounds = GetScaledBounds(newPageSize);
+            Size newPageSize = new Size((PageSize.Width * mult).Round(), (PageSize.Height * mult).Round());
 
-            if (Nodes != null)
-            {
-                foreach (var x in Nodes)
-                {
-                    x.Bounds = x.GetScaledBounds(newPageSize);
-                }
-            }
+            PageLayout newLayout = new PageLayout(newPageSize);
+            newLayout.Bounds = GetScaledBounds(PageSize, newPageSize);
+
+            // TODO: scale all elements down recursively, if needed
+
+            return newLayout;
         }
 
         public RectangleF UnitBounds
