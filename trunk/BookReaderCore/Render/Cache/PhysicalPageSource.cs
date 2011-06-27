@@ -5,10 +5,11 @@ using System.Text;
 using BookReader.Utils;
 using System.Drawing;
 using BookReader.Properties;
+using BookReader.Render.Layout;
 
 namespace BookReader.Render.Cache
 {
-    class SimplePageSource : IPageSource
+    class PhysicalPageSource : IPageSource
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -17,7 +18,7 @@ namespace BookReader.Render.Cache
         // Simple optimization -- try to render in last size
         int lastPageWidth = 1000; // for first page
 
-        public SimplePageSource()
+        public PhysicalPageSource()
         {
             LayoutStrategy = RenderFactory.Default.GetLayoutStrategy();
         }
@@ -27,7 +28,7 @@ namespace BookReader.Render.Cache
             logger.Debug("Rendering: #{0} w={1}", pageNum, screenSize.Width);
             
             // Try detecting from book first
-            PageLayoutInfo layout = LayoutStrategy.DetectLayoutFromBook(screenBook, pageNum);
+            PageLayout layout = LayoutStrategy.DetectLayoutFromBook(screenBook, pageNum);
                         
             // If above is not supported, detect from page
             DW<Bitmap> layoutPage = null;
@@ -58,7 +59,7 @@ namespace BookReader.Render.Cache
             }
 
             // Render actual page. Bounded by width, but not height.
-            int pageWidth = (int)((float)screenSize.Width / layout.BoundsUnit.Width);
+            int pageWidth = ((float)screenSize.Width / layout.UnitBounds.Width).Round();
 
             DW<Bitmap> displayPage;
             if (layoutPage != null &&
@@ -75,7 +76,7 @@ namespace BookReader.Render.Cache
                 // Render a new image
                 Size displayPageMaxSize = new Size(pageWidth, int.MaxValue);
                 displayPage = screenBook.BookProvider.o.RenderPageImage(pageNum, displayPageMaxSize, RenderQuality.Optimal);
-                layout.ScaleBounds(displayPage.o.Size);
+                layout.GetScaledBounds(displayPage.o.Size);
             }
 
             // Update width

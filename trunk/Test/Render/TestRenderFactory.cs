@@ -65,7 +65,7 @@ namespace BookReaderTest.Render
         public Page GetPage(int pageNum, Size screenSize, ScreenBook screenBook)
         {
             DW<Bitmap> image = screenBook.BookProvider.o.RenderPageImage(pageNum, new Size(screenSize.Width, int.MaxValue));
-            PageLayoutInfo layout = LayoutStrategy.DetectLayoutFromImage(image);
+            PageLayout layout = LayoutStrategy.DetectLayoutFromImage(image);
             return new Page(pageNum, image, layout);
         }
 

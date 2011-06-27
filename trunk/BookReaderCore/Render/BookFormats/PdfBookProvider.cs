@@ -12,7 +12,7 @@ using BookReader.Render;
 
 namespace BookReader.Render
 {
-    public class PdfBookPageProvider : IBookProvider
+    public class PdfBookProvider : IBookProvider
     {
         DW<PDFWrapper> _pdfDoc;
         String _fullPath;
@@ -20,7 +20,7 @@ namespace BookReader.Render
         // Performance tuning
         PdfRenderPerformanceInfo PerfInfo;
 
-        public PdfBookPageProvider(String file)
+        public PdfBookProvider(String file)
         {
             ArgCheck.NotNull(file, "file");
             ArgCheck.FileExists(file);

@@ -31,6 +31,20 @@ namespace BookReader.Utils
 
         #endregion
 
+        #region Numbers
+
+        public static int Round(this float num)
+        {
+            return (int)Math.Round(num);
+        }
+
+        public static int Round(this double num)
+        {
+            return (int)Math.Round(num);
+        }
+
+        #endregion
+
         #region Threading
         /// <summary>
         /// Invokes the value on the UI thread if necessary.
@@ -208,7 +222,6 @@ namespace BookReader.Utils
             return new Size(width, height);
         }
         #endregion
-
 
         #region List
         public static void RemoveLast<T>(this IList<T> list)

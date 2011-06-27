@@ -7,6 +7,7 @@ using System.Diagnostics;
 using BookReader.Render.Cache;
 using BookReader.Utils;
 using NLog;
+using BookReader.Render.Layout;
 
 namespace BookReader.Render
 {
@@ -23,7 +24,7 @@ namespace BookReader.Render
 
         public CachedPageSource(IPageCacheContextManager contextManager)
         {
-            PhysicalSource = new SimplePageSource();
+            PhysicalSource = new PhysicalPageSource();
 
             Cache = DW.Wrap(new PageCache(contextManager));
             PrefetchManager = new PrefetchManager(Cache, PhysicalSource, contextManager);

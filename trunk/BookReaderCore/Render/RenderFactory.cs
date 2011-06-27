@@ -44,7 +44,7 @@ namespace BookReader.Render
 
         public override DW<IBookProvider> GetBookProvider(String file)
         {
-            return DW.Wrap<IBookProvider>(new PdfBookPageProvider(file));
+            return DW.Wrap<IBookProvider>(new PdfBookProvider(file));
         }
 
         public override DW<IPageSource> GetPageSource(IPageCacheContextManager contextManager)
@@ -52,7 +52,7 @@ namespace BookReader.Render
             if (Settings.Default.NoCache)
             {
                 logger.Warn("GetPageSource: NO CACHE, returning simple logger");
-                return DW.Wrap<IPageSource>(new SimplePageSource());
+                return DW.Wrap<IPageSource>(new PhysicalPageSource());
             }
 
             return DW.Wrap<IPageSource>(new CachedPageSource(contextManager));
