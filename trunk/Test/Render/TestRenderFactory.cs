@@ -7,6 +7,7 @@ using BookReader.Render;
 using BookReader.Render.Layout;
 using BookReader.Render.Cache;
 using BookReader.Utils;
+using BookReader.Model;
 
 namespace BookReaderTest.Render
 {
@@ -24,11 +25,12 @@ namespace BookReaderTest.Render
             return BookProvider;
         }
 
-        public static DW<IPageSource> PageSource = DW.Wrap<IPageSource>(new BlankPageSource());
-        public override DW<IPageSource> GetPageSource(IPageCacheContextManager contextManager)
+        public static DW<IBookContent> BookContent = DW.Wrap<IBookContent>(new BlankBookContent());
+        public override DW<IBookContent> GetBookContent(BookReader.Model.Book book, DW<PageImageCache> cache)
         {
-            return PageSource;
+            return BookContent;
         }
+
     }
 
     class BlankBookProvider : IBookProvider
@@ -53,22 +55,23 @@ namespace BookReaderTest.Render
         public void Dispose() { }
     }
 
-    class BlankPageSource : IPageSource
+    class BlankBookContent : IBookContent
     {
         public IPageLayoutStrategy LayoutStrategy { get; set; }
 
-        public BlankPageSource()
+        public BlankBookContent()
         {
             LayoutStrategy = new BlankLayoutStrategy();
         }
 
+        /*
         public Page GetPage(int pageNum, Size screenSize, ScreenBook screenBook)
         {
             DW<Bitmap> image = screenBook.BookProvider.o.RenderPageImage(pageNum, new Size(screenSize.Width, int.MaxValue));
             PageLayout layout = LayoutStrategy.DetectLayoutFromImage(image);
             return new Page(pageNum, image, layout);
         }
+        */
 
-        public void Dispose() { }
     }
 }

@@ -32,7 +32,7 @@ namespace BookReader.Render
         /// <param name="maxSize">Maximum size to fit the page within (preserving aspect ratio)</param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        DW<Bitmap> RenderPageImage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality);
+        Bitmap RenderPageImage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality);
     }
 
     public enum RenderQuality
@@ -51,7 +51,7 @@ namespace BookReader.Render
         /// Determine optimal rendering quality.
         /// (high if possible, but fast if high is too slow)
         /// </summary>
-        Optimal,
+        Optimal, 
     }
 
 }

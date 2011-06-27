@@ -25,7 +25,7 @@ namespace BookReaderWinForms
 
             var o = new OptionSet()
             {
-                { "nocache", "Do not use page prefetch/cache", x => { if (x != null) Settings.Default.NoCache = true; } }
+                { "nocache", "Do not use page prefetch/cache", x => { if (x != null) Settings.Default.Cache_SaveImages = false; } }
             };
 
             // Debug

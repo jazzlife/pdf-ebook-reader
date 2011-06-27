@@ -14,22 +14,16 @@ namespace BookReader.Render
     /// <summary>
     /// Physical page from the book along with the detected layout info. 
     /// </summary>
-    [DataContract(Name = "PageContent")]
-    class Page : ICachedDisposable
+    class PageOnScreen 
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        [DataMember (Name = "PageNum")]
         public readonly int PageNum; // page number in document, 1-n
         
-        [DataMember (Name = "Layout")]
-        PageLayout _layout; // content layout
-
-        // Serialized separately
-        DW<Bitmap> _image; // physical page image
+        public PageLayout Layout { get; private set; } // content layout
 
         int _topOnScreen;
-        // Not serialized
+
         /// <summary>
         /// Distance between content bounds top and screen page top 
         /// screen.Top - countentBounds.Top
@@ -49,17 +43,13 @@ namespace BookReader.Render
 
         }
 
-        public Page(int pageNum, DW<Bitmap> image, PageLayout layout)
+        public PageOnScreen(int pageNum, PageLayout layout)
         {
             ArgCheck.GreaterThanOrEqual(pageNum, 1, "pageNum");
 
             PageNum = pageNum;
-            _image = image;
-            _layout = layout;
+            Layout = layout;
         }
-
-        public DW<Bitmap> Image { get { return _image; } }
-        public PageLayout Layout { get { return _layout; } }
 
         // For convenience
         public int BottomOnScreen
@@ -70,36 +60,9 @@ namespace BookReader.Render
 
         public override string ToString()
         {
-            return "PhysicalPage #" + PageNum + " TopOnScreen = " + TopOnScreen;
+            return "Page #" + PageNum + " TopOnScreen = " + TopOnScreen;
         }
 
-
-        #region ICachedDisposable
-
-        /// <summary>
-        /// Dispose object when Return() is called. 
-        /// Set to false to manage object disposal manually (e.g. prefetch/cache it)
-        /// </summary>
-        internal bool DisposeOnReturn = true;
-
-        bool _inUse = true;
-        public void Return()
-        {
-            _inUse = false;
-            if (DisposeOnReturn && Image != null) { Image.DisposeItem(); }
-        }
-
-        public bool InUse
-        {
-            get { return _inUse; }
-        }
-
-        internal void Reuse()
-        {
-            _inUse = true;
-        }
-
-        #endregion
     }
 
 }

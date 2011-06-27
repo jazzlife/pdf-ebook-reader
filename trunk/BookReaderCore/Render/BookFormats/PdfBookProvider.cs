@@ -42,8 +42,6 @@ namespace BookReader.Render
             get { return _fullPath; }
         }
 
-
-
         #region PdfDoc properties
 
         internal DW<PDFWrapper> InternalPdfWrapper { get { return _pdfDoc; } }
@@ -167,7 +165,7 @@ namespace BookReader.Render
         const double ZoomConst = 72.0;
 
 
-        public DW<Bitmap> RenderPageImage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.Optimal)
+        public Bitmap RenderPageImage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.Optimal)
         {
             if (pageNum < 1) { throw new ArgumentException("pageNum < 1. Should start at 1"); }
             AssertPdfDocLoaded();
@@ -179,7 +177,7 @@ namespace BookReader.Render
             }
 
             DateTime startTime = DateTime.Now;
-            DW<Bitmap> image = RenderPageCore(pageNum, maxSize, quality);
+            Bitmap image = RenderPageCore(pageNum, maxSize, quality);
 
             double time = (DateTime.Now - startTime).TotalMilliseconds;
             PerfInfo.SaveTime(time, quality);
@@ -187,7 +185,7 @@ namespace BookReader.Render
             return image;
         }
 
-        DW<Bitmap> RenderPageCore(int pageNum, Size maxSize, RenderQuality quality)
+        Bitmap RenderPageCore(int pageNum, Size maxSize, RenderQuality quality)
         {
             ArgCheck.InRange(pageNum, 0, PageCount, "pageNum");
 
@@ -204,11 +202,11 @@ namespace BookReader.Render
             Size size = pageSize.ScaleToFitBounds(maxSize);
 
             // 24bpp format for compatibility with AForge
-            DW<Bitmap> bitmap = DW.Wrap(new Bitmap(size.Width, size.Height, PixelFormat.Format24bppRgb));
+            Bitmap bitmap = new Bitmap(size.Width, size.Height, PixelFormat.Format24bppRgb);
 
-            using (Graphics g = Graphics.FromImage(bitmap.o))
+            using (Graphics g = Graphics.FromImage(bitmap))
             {
-                _pdfDoc.o.Zoom = ZoomConst * (double)bitmap.o.Width / _pdfDoc.o.PageWidth;
+                _pdfDoc.o.Zoom = ZoomConst * (double)bitmap.Width / _pdfDoc.o.PageWidth;
                 try
                 {
                     // Note: not certain what the params mean.
@@ -221,7 +219,7 @@ namespace BookReader.Render
                     _pdfDoc.o.Zoom = ZoomConst;
                 }
 
-                Rectangle bounds = new Rectangle(0, 0, bitmap.o.Width, bitmap.o.Height);
+                Rectangle bounds = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
                 g.FillRectangle(Brushes.White, bounds);
 
                 _pdfDoc.o.ClientBounds = bounds;

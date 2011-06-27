@@ -29,9 +29,6 @@ namespace BookReader.Render
         Dictionary<Guid, ScreenBook> _screenBooks = new Dictionary<Guid, ScreenBook>();
         ScreenBook _curScreenBook = null;
 
-        // Not dependent on book
-        readonly DW<IPageSource> _pageSource;
-
         PaperColorFilter _paperColor;
 
         public ScreenRenderManager(BookLibrary library, Size screenSize)
@@ -45,8 +42,6 @@ namespace BookReader.Render
             _library.CurrentBookChanged += new EventHandler(OnCurrentBookChanged);
             // BUG: need to monotor current page in *all* books, not just one, but this is academic...
             _library.BookPositionChanged += new EventHandler(_library_CurrentBookPositionChanged);
-
-            _pageSource = RenderFactory.Default.GetPageSource(this);
 
             OnCurrentBookChanged(this, EventArgs.Empty);
         }
@@ -77,12 +72,13 @@ namespace BookReader.Render
         /// <summary>
         /// For debugging cache (showing it in the UI)
         /// </summary>
-        internal DW<PageCache> Cache
+        internal DW<PageImageCache> Cache
         {
             get 
             {
-                CachedPageSource ps = _pageSource.o as CachedPageSource;
-                if (ps != null) { return ps.Cache; }
+                // TODO
+                //CachedPageSource ps = _pageSource.o as CachedPageSource;
+                //if (ps != null) { return ps.Cache; }
                 return null;
             }
         }
@@ -175,7 +171,7 @@ namespace BookReader.Render
         {
             if (_curScreenBook == null) { throw new InvalidOperationException("No book"); }
 
-            var pages = _curScreenBook.AssembleCurrentScreen(newPosition, _pageSource);
+            var pages = _curScreenBook.AssembleCurrentScreen(newPosition);
             return GetScreenBitmap(pages);
         }
 
@@ -183,7 +179,7 @@ namespace BookReader.Render
         {
             if (_curScreenBook == null) { throw new InvalidOperationException("No book"); }
 
-            var pages = _curScreenBook.AssembleNextScreen(_pageSource);
+            var pages = _curScreenBook.AssembleNextScreen();
             return GetScreenBitmap(pages);
         }
 
@@ -191,7 +187,7 @@ namespace BookReader.Render
         {
             if (_curScreenBook == null) { throw new InvalidOperationException("No book"); }
 
-            var pages = _curScreenBook.AssemblePreviousScreen(_pageSource);
+            var pages = _curScreenBook.AssemblePreviousScreen();
             return GetScreenBitmap(pages);
         }
 
@@ -200,7 +196,7 @@ namespace BookReader.Render
             get
             {
                 if (_curScreenBook == null) { return false; }
-                return _curScreenBook.HasNextScreen(_pageSource);
+                return _curScreenBook.HasNextScreen();
             }
         }
 
@@ -209,7 +205,7 @@ namespace BookReader.Render
             get
             {
                 if (_curScreenBook == null) { return false; }
-                return _curScreenBook.HasPreviousScreen(_pageSource);
+                return _curScreenBook.HasPreviousScreen();
             }
         }
 
@@ -217,35 +213,36 @@ namespace BookReader.Render
 
         #region Drawing
 
-        DW<Bitmap> GetScreenBitmap(List<Page> pages)
+        DW<Bitmap> GetScreenBitmap(List<PageOnScreen> pages)
         {
             if (pages == null) { return null; }
+
+            ScreenBook sb = GetScreenBook(CurrentBook);
 
             DW<Bitmap> screenBmp = DW.Wrap(new Bitmap(ScreenSize.Width, ScreenSize.Height, PixelFormat.Format24bppRgb));
             using (Graphics g = Graphics.FromImage(screenBmp.o))
             {
                 DrawScreenBefore(g);
 
-                foreach (Page page in pages)
+
+                foreach (PageOnScreen page in pages)
                 {
-                    DrawPhysicalPage(g, page);
+                    PageImage image = sb.BookContent.o.GetPageImage(page.PageNum, ScreenSize.Width);
+                    
+                    DrawPhysicalPage(g, page, image);
+
+                    // Return to cache
+                    image.Return();
                 }
 
                 DrawScreenAfter(g);
             }
-
-            foreach (var p in pages)
-            {
-                p.Return();
-            }
-            pages.Clear();
 
             // Apply the paper color filter
             if (_paperColor != null)
             {
                 _paperColor.ApplyInPlace(screenBmp.o);
             }
-
             
             return screenBmp;
         }
@@ -260,14 +257,14 @@ namespace BookReader.Render
 
         }
 
-        void DrawPhysicalPage(Graphics g, Page curPage)
+        void DrawPhysicalPage(Graphics g, PageOnScreen curPage, PageImage image)
         {
             // Render current page
             Rectangle destRect = new Rectangle(0, curPage.TopOnScreen,
                     curPage.Layout.Bounds.Width, curPage.Layout.Bounds.Height);
             Rectangle srcRect = curPage.Layout.Bounds;
 
-            g.DrawImage(curPage.Image.o, destRect, srcRect, GraphicsUnit.Pixel);
+            g.DrawImage(image.Image, destRect, srcRect, GraphicsUnit.Pixel);
 
             if (Settings.Default.Debug_DrawPageNumbers)
             {
@@ -331,10 +328,7 @@ namespace BookReader.Render
 
         public void Dispose()
         {
-            if (_pageSource != null)
-            {
-                _pageSource.DisposeItem();
-            }
+            // TODO
         }
 
     }

@@ -13,8 +13,7 @@ namespace BookReader.Render
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        internal readonly DW<PageCache> Cache;
-        readonly IPageSource PhysicalSource;
+        internal readonly DW<PageImageCache> Cache;
         readonly IPrefetchPolicy<PageKey, PageCacheContext> Policy;
         readonly IPageCacheContextManager ContextManager;
 
@@ -23,16 +22,13 @@ namespace BookReader.Render
         AutoResetEvent _waitForContextChange = new AutoResetEvent(false);
         PageCacheContext _currentContext;
 
-        public PrefetchManager(DW<PageCache> cache, 
-            IPageSource pageSource,
+        public PrefetchManager(DW<PageImageCache> cache, 
             IPageCacheContextManager contextManager)
         {
             ArgCheck.NotNull(cache, "cache");
-            ArgCheck.NotNull(pageSource, "pageSource");
             ArgCheck.NotNull(contextManager, "contextManager");
 
             Cache = cache;
-            PhysicalSource = pageSource;
             ContextManager = contextManager;
 
             ContextManager.CacheContextChanged += OnCacheContextChanged;
@@ -76,14 +72,14 @@ namespace BookReader.Render
                 // Render and add to cache
                 ScreenBook sb = ContextManager.GetScreenBook(key.BookId);
 
-                if (1 <= key.PageNum && key.PageNum <= sb.BookProvider.o.PageCount)
+                if (1 <= key.PageNum && key.PageNum <= sb.BookContent.o.PageCount)
                 {
                     Size size = new Size(key.ScreenWidth, int.MaxValue);
-                    Page page;
+                    PageImage page;
 
-                    lock (PhysicalSource)
+                    lock (sb.BookContent)
                     {
-                        page = PhysicalSource.GetPage(key.PageNum, size, sb);
+                        page = sb.BookContent.o.GetPageImage(key.PageNum, size.Width);
                         page.DisposeOnReturn = false;
                     }
 

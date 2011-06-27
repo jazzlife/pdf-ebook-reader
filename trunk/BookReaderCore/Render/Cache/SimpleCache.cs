@@ -76,7 +76,7 @@ namespace BookReader.Render.Cache
                 }
 
                 // Add to the real info collection
-                infosHavingItems .Add(key, infos[key]);
+                infosHavingItems.Add(key, infos[key]);
             }
 
             return infosHavingItems;
@@ -87,9 +87,14 @@ namespace BookReader.Render.Cache
             return XmlHelper.DeserializeOrDefault(ItemsFileName, new Dictionary<TKey, TValue>());
         }
 
-        public virtual void SaveCache()
+        public void SaveCache()
         {
             XmlHelper.Serialize(_cacheInfos, CacheInfosFileName);
+            SaveItems();
+        }
+
+        protected virtual void SaveItems()
+        {
             XmlHelper.Serialize(_cache, ItemsFileName);
         }
 

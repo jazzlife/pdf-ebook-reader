@@ -6,6 +6,8 @@ using BookReader.Render.Cache;
 using BookReader.Utils;
 using BookReader.Render.Layout;
 using BookReader.Properties;
+using BookReader.Render.BookFormats;
+using BookReader.Model;
 
 namespace BookReader.Render
 {
@@ -16,7 +18,7 @@ namespace BookReader.Render
 
         public abstract IPageLayoutStrategy GetLayoutStrategy();
         public abstract DW<IBookProvider> GetBookProvider(String file);
-        public abstract DW<IPageSource> GetPageSource(IPageCacheContextManager contextManager);
+        public abstract DW<IBookContent> GetBookContent(Book book, DW<PageImageCache> cache = null);
 
         protected abstract PagePrefetchAndRetainPolicy GetGeneralPrefetchPolicy();
 
@@ -37,6 +39,7 @@ namespace BookReader.Render
 
         public override IPageLayoutStrategy GetLayoutStrategy()
         {
+            //return new BlankLayoutStrategy();
             return new PdfWordsLayoutStrategy();
 
             // return new ConnectedBlobLayoutStrategy();
@@ -45,17 +48,6 @@ namespace BookReader.Render
         public override DW<IBookProvider> GetBookProvider(String file)
         {
             return DW.Wrap<IBookProvider>(new PdfBookProvider(file));
-        }
-
-        public override DW<IPageSource> GetPageSource(IPageCacheContextManager contextManager)
-        {
-            if (Settings.Default.NoCache)
-            {
-                logger.Warn("GetPageSource: NO CACHE, returning simple logger");
-                return DW.Wrap<IPageSource>(new PhysicalPageSource());
-            }
-
-            return DW.Wrap<IPageSource>(new CachedPageSource(contextManager));
         }
 
         protected override PagePrefetchAndRetainPolicy GetGeneralPrefetchPolicy()
@@ -70,6 +62,13 @@ namespace BookReader.Render
                     OtherItemsToKeepCount = 100
                 };
         }
+
+
+        public override DW<IBookContent> GetBookContent(Book book, DW<PageImageCache> cache)
+        {
+            return DW.Wrap<IBookContent>(new PdfBookContent(book, cache));
+        }
+
     }
 
     class BlankRenderFactory : RenderFactory
@@ -84,12 +83,12 @@ namespace BookReader.Render
             throw new NotImplementedException();
         }
 
-        public override DW<IPageSource> GetPageSource(IPageCacheContextManager contextManager)
+        protected override PagePrefetchAndRetainPolicy GetGeneralPrefetchPolicy()
         {
             throw new NotImplementedException();
         }
 
-        protected override PagePrefetchAndRetainPolicy GetGeneralPrefetchPolicy()
+        public override DW<IBookContent> GetBookContent(Book book, DW<PageImageCache> cache)
         {
             throw new NotImplementedException();
         }
