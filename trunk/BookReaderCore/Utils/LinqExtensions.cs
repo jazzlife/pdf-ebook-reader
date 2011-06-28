@@ -128,13 +128,14 @@ namespace BookReader.Utils
             return true;
         }
 
-        public static String ElementsToStringS<T>(this IEnumerable<T> list)
+        public static String ElementsToStringS<T>(this IEnumerable<T> list, 
+            String listFormat = "{0}", String elemFormat = "{0}", String delim = ",")
         {
-            return ElementsToString(list, "{2}:[{0}]", "{0}", ",");
+            return ElementsToStringL(list, listFormat, elemFormat, delim);
         }
 
 
-        public static String ElementsToString<T>(this IEnumerable<T> list, 
+        public static String ElementsToStringL<T>(this IEnumerable<T> list, 
             String listFormat = "Count: {2} in {1}\r\n{0}", String elemFormat = "  [{1}] {0}", String delim = "\r\n")
         {
             StringBuilder sb = new StringBuilder();

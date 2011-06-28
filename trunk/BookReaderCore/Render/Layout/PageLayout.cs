@@ -67,6 +67,8 @@ namespace BookReader.Render.Layout
                     g.DrawImageUnscaled(originalBitmap.o, 0, 0);
                 }
 
+                Debug_DrawLayout(g);
+
                 // Content bounds (most important)
                 g.FillRectangle(_backShadeBrush, 0, 0, Bounds.Left, PageSize.Height);
                 g.FillRectangle(_backShadeBrush, Bounds.Right, 0, PageSize.Width - Bounds.Right, PageSize.Height);
