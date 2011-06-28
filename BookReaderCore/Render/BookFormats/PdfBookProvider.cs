@@ -71,6 +71,7 @@ namespace BookReader.Render
             try 
             {
                 _pdfDoc = DW.Wrap(new PDFWrapper());
+
                 //_pdfDoc.PDFLoadCompeted += new PDFLoadCompletedHandler(_pdfDoc_PDFLoadCompeted);
                 //_pdfDoc.PDFLoadBegin += new PDFLoadBeginHandler(_pdfDoc_PDFLoadBegin);
                 //_pdfDoc.UseMuPDF = true;
@@ -163,7 +164,6 @@ namespace BookReader.Render
         #endregion
 
         const double ZoomConst = 72.0;
-
 
         public Bitmap RenderPageImage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.Optimal)
         {

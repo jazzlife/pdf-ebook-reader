@@ -28,6 +28,8 @@ namespace BookReader.Render.Layout
             }
 
             DW<PDFWrapper> pdfDoc = pdfPageProvider.InternalPdfWrapper;
+
+
             PDFPage pdfPage = pdfDoc.o.Pages[pageNum];
             if (pdfPage == null) { throw new InvalidOperationException("No PDFPage pageNum=" + pageNum); }
 
@@ -57,8 +59,17 @@ namespace BookReader.Render.Layout
 
             // Get text
             // TODO: check how text is split in multicolumn case -- is this the method with correct options (flow, not physical)
-            layout.Text = page.Text;     
-            layout.Nodes.AddRange(page.WordList.Select(x => new LayoutElement(x.Bounds, x.Word)));
+            layout.Text = page.Text;
+
+            var words = new List<LayoutElement>();
+            words.AddRange(page.WordList.Select(x => new LayoutElement(x.Bounds, x.Word)));
+
+            // Detect rows and columns
+            var rows = words.Split(StartsNewRow).Select(x => new LayoutElement(LayoutElementType.Row, x));
+            //var cols = rows.Split(StartsNewColumn).Select(x => new LayoutElement(LayoutElementType.Column, x));
+
+            // TODO: detect header/footer
+            layout.Nodes.AddRange(rows);
 
             // Strange bug -- if doing the following, first word is missing and last word is blank.
             // However, with LINQ query above it's fine
@@ -100,33 +111,24 @@ namespace BookReader.Render.Layout
             return layout;
         }
 
-        /*
-        IEnumerable<LayoutElement> DetectColumns(IEnumerable<LayoutElement> words)
+        bool StartsNewRow(LayoutElement prev, LayoutElement cur)
         {
-            List<LayoutElement> columns = new List<LayoutElement>();
+            // Normal case: next row
+            // QQ: do rows ever overlap?
+            if (prev.Bounds.Bottom <= cur.Bounds.Top) { return true; }
+            
+            // Special case: next column
+            if (prev.Bounds.Top >= cur.Bounds.Bottom) { return true; }
 
-            LayoutElement curCol = null;
-
-            int prevBottom = 0;
-            foreach (var word in words)
-            {
-                if (curCol == null)
-                {
-                }
-
-                if (curCol == null || word.Bounds.Top < prevBottom)
-                {
-                    // start new column
-                    curCol = new LayoutElement(LayoutElementType.Column);
-                    columns.Add(curCol);
-                }
-
-            }
-
-
-
+            return false;
         }
-        */
+
+        bool StartsNewColumn(LayoutElement a, LayoutElement b)
+        {
+            return b.Bounds.Bottom <= a.Bounds.Top &&
+                b.Bounds.Left > a.Bounds.Right;
+        }
+
 
 
     }

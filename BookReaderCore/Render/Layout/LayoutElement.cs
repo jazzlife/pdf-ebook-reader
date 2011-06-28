@@ -56,9 +56,16 @@ namespace BookReader.Render.Layout
         [DataMember(EmitDefaultValue = false)]
         public List<LayoutElement> Nodes { get; set; }
 
-        public LayoutElement(LayoutElementType type = LayoutElementType.Word) 
+        public LayoutElement(LayoutElementType type = LayoutElementType.Word, IEnumerable<LayoutElement> nodes = null) 
         {
+            Type = type;
             Nodes = new List<LayoutElement>();
+            if (nodes != null) 
+            { 
+                Nodes.AddRange(nodes);
+                SetBoundsFromNodes(false);
+                Text = nodes.Select(x => x.Text).Where(x => !String.IsNullOrEmpty(x)).ElementsToStringS(delim: " ");
+            }
         }
 
         public LayoutElement(Rectangle bounds, String text = null, LayoutElementType type = LayoutElementType.Word) 
@@ -144,7 +151,7 @@ namespace BookReader.Render.Layout
             if (Text != null) { sb.Append(Text + " "); }
             sb.Append(Bounds.X + "," + Bounds.Y + " " + Bounds.Width + "x" + Bounds.Height);
 
-            return base.ToString();
+            return sb.ToString();
         }
 
         #region debug
@@ -155,8 +162,14 @@ namespace BookReader.Render.Layout
             // Draw children
             if (Nodes != null)
             {
-                g.DrawRectangle(GetPen(Type), Bounds);
+                foreach (var n in Nodes)
+                {
+                    n.Debug_DrawLayout(g);
+                }
             }
+
+            // Draw self
+            g.DrawRectangle(GetPen(Type), Bounds);
         }
 
         Pen GetPen(LayoutElementType Type)
@@ -164,7 +177,7 @@ namespace BookReader.Render.Layout
             switch (Type)
             {
                 case LayoutElementType.Word:
-                    return Pens.LightCoral;
+                    return Pens.LightBlue;
                 case LayoutElementType.Image:
                     return Pens.Violet;
                 case LayoutElementType.TitleRow:
@@ -179,6 +192,8 @@ namespace BookReader.Render.Layout
                     return Pens.Green;
                 case LayoutElementType.Page:
                     return Pens.LightBlue;
+                case LayoutElementType.Column:
+                    return Pens.BurlyWood;
                 default:
                     return Pens.Yellow;
             }
