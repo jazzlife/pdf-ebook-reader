@@ -20,11 +20,11 @@ namespace BookReader.Render
     {
         // TODO: determine based on page analysis
         public static int RowSpacing = 4;
-        protected readonly ScreenBook ScreenBook;
+        protected readonly DW<IBookContent> BookContent;
 
-        public AssembleScreenAlgorithm(ScreenBook screenBook)
+        public AssembleScreenAlgorithm(DW<IBookContent> bookContent)
         {
-            ScreenBook = screenBook;
+            BookContent = bookContent;
         }
 
         /// <summary>
@@ -86,11 +86,11 @@ namespace BookReader.Render
         internal abstract void AdvancePage(ref PageOnScreen curPage, Size sceenSize);
 
         // Helper
-        protected int PageCount { get { return ScreenBook.Book.CurrentPosition.PageCount; } }
+        protected int PageCount { get { return BookContent.o.PageCount; } }
 
         protected PageOnScreen NewPage(int pageNum, Size screenSize)
         {
-            PageLayout layout = ScreenBook.BookContent.o.GetPageLayout(pageNum);
+            PageLayout layout = BookContent.o.GetPageLayout(pageNum);
             layout = layout.ScaleToScreen(screenSize);
             return new PageOnScreen(pageNum, layout);
         }
@@ -101,7 +101,7 @@ namespace BookReader.Render
     /// </summary>
     sealed class AssembleCurrentScreenAlgorithm : AssembleScreenAlgorithm
     {
-        public AssembleCurrentScreenAlgorithm(ScreenBook p) 
+        public AssembleCurrentScreenAlgorithm(DW<IBookContent> p) 
             : base(p) { }
 
         public override bool CanApply(PositionInBook position, Size screenSize)
@@ -137,7 +137,7 @@ namespace BookReader.Render
     {
         AssembleCurrentScreenAlgorithm _assembleCurrent;
 
-        public AssembleNextScreenAlgorithm(ScreenBook p)
+        public AssembleNextScreenAlgorithm(DW<IBookContent> p)
             : base(p) 
         {
             _assembleCurrent = new AssembleCurrentScreenAlgorithm(p);
@@ -188,7 +188,7 @@ namespace BookReader.Render
     /// </summary>
     sealed class AssemblePreviousScreenAlgorithm : AssembleScreenAlgorithm
     {
-        public AssemblePreviousScreenAlgorithm(ScreenBook p) 
+        public AssemblePreviousScreenAlgorithm(DW<IBookContent> p) 
             : base(p) { }
 
         public override bool CanApply(PositionInBook position, Size screenSize)
