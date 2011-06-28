@@ -43,6 +43,8 @@ namespace BookReader.Model
             ArgCheck.GreaterThan(pageCount, 0, "pageCount");
             ArgCheck.InRange(position, 0, pageCount, "position");
 
+            if (position == float.NaN) { throw new Exception(); }
+
             Position = position;
             PageCount = pageCount;
         }
@@ -73,6 +75,7 @@ namespace BookReader.Model
         public static PositionInBook FromPhysicalPage(int pageNum, int pageCount, 
             int topOnScreen = 0, int pageHeight = 1)
         {
+            ArgCheck.GreaterThan(pageHeight, 0, "pageHeight");
             ArgCheck.GreaterThan(pageCount, 0, "pageCount");
             ArgCheck.InRange(pageNum, 1, pageCount, "pageNum");
 

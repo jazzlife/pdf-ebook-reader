@@ -10,6 +10,8 @@ namespace BookReader.Render.Layout
 {
     class PdfWordsLayoutStrategy : IPageLayoutStrategy
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         public PageLayout DetectLayoutFromImage(DW<Bitmap> physicalPage)
         {
             return null;
@@ -64,7 +66,6 @@ namespace BookReader.Render.Layout
             //List<PDFTextWord> ws = new List<PDFTextWord>();
             //ws.AddRange(page.WordList);
 
-
             if (layout.Nodes.Count > 0)
             {
                 layout.SetBoundsFromNodes(true);
@@ -80,11 +81,16 @@ namespace BookReader.Render.Layout
                 // TODO: expand by width a bit (to prevent cutting off words which
                 // may not be recognized properly.
             }
-            else
+
+            // error checking
+            if (layout.Bounds.X < 0 || layout.Bounds.Y < 0 ||
+                layout.Bounds.Width <= 0 || layout.Bounds.Height <= 0)
             {
-                // TODO: check, maybe a Rectangle.Empty is better
-                // or otherwise return null and use page-based detection
-                layout.Bounds = new Rectangle(Point.Empty, pageSize);
+                logger.Error("Wrong bounds: " + layout.Bounds + " images: " + page.ImagesCount);
+
+                int height = page.ImagesCount > 0 ? pageSize.Height : 100;
+
+                layout.Bounds = new Rectangle(Point.Empty, new Size(pageSize.Width, height));
             }
 
             // TODO: detect rows
@@ -94,26 +100,34 @@ namespace BookReader.Render.Layout
             return layout;
         }
 
-        void FirstWordMissingWorkaround(List<WordInfo> words, String textInPhysicalLayout)
+        /*
+        IEnumerable<LayoutElement> DetectColumns(IEnumerable<LayoutElement> words)
         {
-            if (textInPhysicalLayout.IsEmpty()) { return; }
-            int firstLineEnd = textInPhysicalLayout.IndexOf("\r\n");
-            if (firstLineEnd <= 0) { return; }
-            String firstLine = textInPhysicalLayout.Substring(0, firstLineEnd);
+            List<LayoutElement> columns = new List<LayoutElement>();
 
-            StringBuilder sbLine = new StringBuilder();
-            int lastX = 0;
-            foreach(var w in words)
+            LayoutElement curCol = null;
+
+            int prevBottom = 0;
+            foreach (var word in words)
             {
-                if (w.Bounds.Left < lastX) { break; }
-                lastX = w.Bounds.Right;
+                if (curCol == null)
+                {
+                }
 
-                sbLine.Append(w.Word + " ");
+                if (curCol == null || word.Bounds.Top < prevBottom)
+                {
+                    // start new column
+                    curCol = new LayoutElement(LayoutElementType.Column);
+                    columns.Add(curCol);
+                }
+
             }
 
-            Console.WriteLine(">" + firstLine + "<");
-            Console.WriteLine("*" + sbLine + "*");
+
+
         }
+        */
+
 
     }
 }

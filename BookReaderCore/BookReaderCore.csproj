@@ -105,7 +105,6 @@
     <Compile Include="Render\AssembleScreen.cs" />
     <Compile Include="Render\ScreenRenderManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Render\Layout\BlankLayoutStrategy.cs" />
     <Compile Include="Render\Layout\ConnectedBlobLayoutStrategy.cs" />
     <Compile Include="Utils\DebugOnlyAttribute.cs" />
     <Compile Include="Render\Layout\IPageLayoutStrategy.cs" />
@@ -114,7 +113,6 @@
     <Compile Include="Render\Layout\PageLayout.cs" />
     <Compile Include="Render\BookFormats\PdfBookProvider.cs" />
     <Compile Include="Render\PageOnScreen.cs" />
-    <Compile Include="Render\ScreenBook.cs" />
     <Compile Include="Utils\ArgCheck.cs" />
     <Compile Include="Utils\DisposableWrapper.cs" />
     <Compile Include="Utils\EvArgs.cs" />

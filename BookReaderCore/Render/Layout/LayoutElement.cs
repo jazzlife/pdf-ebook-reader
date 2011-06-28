@@ -56,7 +56,7 @@ namespace BookReader.Render.Layout
         [DataMember(EmitDefaultValue = false)]
         public List<LayoutElement> Nodes { get; set; }
 
-        public LayoutElement() 
+        public LayoutElement(LayoutElementType type = LayoutElementType.Word) 
         {
             Nodes = new List<LayoutElement>();
         }

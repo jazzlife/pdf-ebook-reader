@@ -15,10 +15,10 @@ namespace BookReaderTest.Render
     public class AssembleScreenTest
     {
         Size ScreenSize = new Size(100, 200);
-        int PageHeight 
+        Size PageSize 
         {
-            get { return ((BlankBookProvider)TestRenderFactory.BookProvider.o).PageHeight; }
-            set { ((BlankBookProvider)TestRenderFactory.BookProvider.o).PageHeight = value; }
+            get { return ((BlankBookProvider)TestRenderFactory.BookProvider.o).PageSize; }
+            set { ((BlankBookProvider)TestRenderFactory.BookProvider.o).PageSize = value; }
         }
         int PageCount
         {
@@ -26,7 +26,7 @@ namespace BookReaderTest.Render
             set { ((BlankBookProvider)TestRenderFactory.BookProvider.o).PageCount = value; }
         }
 
-        ScreenBook screenBook;
+        DW<IBookContent> bookContent;
         AssembleScreenAlgorithm algCur; 
         AssembleScreenAlgorithm algNext; 
         AssembleScreenAlgorithm algPrevious;
@@ -39,19 +39,18 @@ namespace BookReaderTest.Render
             AssembleScreenAlgorithm.RowSpacing = 0;
             RenderFactory.Default = new TestRenderFactory();
 
-            var src = RenderFactory.Default.GetPageSource(null);
-            screenBook = new ScreenBook(new Book("dummy"), ScreenSize);
+            bookContent = RenderFactory.Default.NewBookContent(null);
 
-            algCur = new AssembleCurrentScreenAlgorithm(src, screenBook);
-            algNext = new AssembleNextScreenAlgorithm(src, screenBook);
-            algPrevious = new AssemblePreviousScreenAlgorithm(src, screenBook);
+            algCur = new AssembleCurrentScreenAlgorithm(bookContent);
+            algNext = new AssembleNextScreenAlgorithm(bookContent);
+            algPrevious = new AssemblePreviousScreenAlgorithm(bookContent);
         }
 
         [Test]
         public void AssembleCurrent_FirstPage()
         {
             // Test with null position
-            PageHeight = 60;
+            PageSize = new Size(ScreenSize.Width, 60);
             AssembleScreenAlgorithm.RowSpacing = 0;
             PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
@@ -60,8 +59,8 @@ namespace BookReaderTest.Render
 
             // Check
             Assert.AreEqual(1, pos.PageNum);
-            CollectionAssert.AreEqual(
-                A(1, 2, 3, 4), pages.Select(x => x.PageNum), "numbers");
+            pages.Select(x => x.PageNum)
+                .AssertEqualsTo(1,2,3,4);
 
             ExtensionMethodsForTest.AssertEqualsTo(pages.Select(x => x.TopOnScreen), 0, 60, 120, 180);
 
@@ -77,7 +76,7 @@ namespace BookReaderTest.Render
         public void AssembleNext_FromFirstPage_ShortPage()
         {
             // Test with null position
-            PageHeight = 60;
+            PageSize = new Size(ScreenSize.Width, 60);
             PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
             // Current
@@ -116,7 +115,7 @@ namespace BookReaderTest.Render
         public void AssembleNext_FromFirstPage_TallPage()
         {
             // Test with null position
-            PageHeight = 300;
+            PageSize = new Size(ScreenSize.Width, 300);
             PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
             // Current
@@ -145,7 +144,7 @@ namespace BookReaderTest.Render
         public void AssembleNext_FromMiddle_PageSameAsScreen()
         {
             // Test with null position
-            PageHeight = ScreenSize.Height;
+            PageSize = ScreenSize;
             PositionInBook pos = PositionInBook.FromPhysicalPage(10, PageCount);
 
             // Do a few
@@ -182,7 +181,7 @@ namespace BookReaderTest.Render
         public void AssemblePrevious_ShortPage()
         {
             // Test with null position
-            PageHeight = 60;
+            PageSize = new Size(ScreenSize.Width, 60);
             PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
             // Current
@@ -233,7 +232,7 @@ namespace BookReaderTest.Render
         public void AssemblePrevious_TallPage()
         {
             // Test with null position
-            PageHeight = 300;
+            PageSize = new Size(ScreenSize.Width, 300);
             PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);
 
             // Current
@@ -244,7 +243,7 @@ namespace BookReaderTest.Render
             algNext.AssembleScreen(ref pos, ScreenSize);
             algNext.AssembleScreen(ref pos, ScreenSize);
             Assert.AreEqual(3, pos.PageNum);
-            Assert.AreEqual(0, pos.GetTopOnScreen(PageHeight));
+            Assert.AreEqual(0, pos.GetTopOnScreen(PageSize.Height));
 
             // Back one
             Assert.IsTrue(algPrevious.CanApply(pos, ScreenSize));
@@ -285,8 +284,8 @@ namespace BookReaderTest.Render
         public void AssemblePrevious_FirstPageEdgeCase()
         {
             // Test with null position
-            PageHeight = ScreenSize.Height;
-            PositionInBook pos = PositionInBook.FromPhysicalPage(2, PageCount, -100, PageHeight);
+            PageSize = ScreenSize;
+            PositionInBook pos = PositionInBook.FromPhysicalPage(2, PageCount, -100, PageSize.Height);
             Assert.AreEqual(1.5f, pos.Position);
 
             // One page back
@@ -319,7 +318,7 @@ namespace BookReaderTest.Render
         public void CanApply_Next()
         {
             // Test with null position
-            PageHeight = ScreenSize.Height;
+            PageSize = ScreenSize;
 
             // top of last page (exact)
             PositionInBook pos = PositionInBook.FromPhysicalPage(PageCount, PageCount);
@@ -338,7 +337,7 @@ namespace BookReaderTest.Render
         public void CanApply_Previous()
         {
             // Test with null position
-            PageHeight = ScreenSize.Height;
+            PageSize = ScreenSize;
 
             // exactly at the start
             PositionInBook pos = PositionInBook.FromPhysicalPage(1, PageCount);

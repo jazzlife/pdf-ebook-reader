@@ -86,6 +86,7 @@
     <Compile Include="Render\Layout\PdfWordsLayoutStrategyRunner.cs" />
     <Compile Include="Render\TestRenderFactory.cs" />
     <Compile Include="TestUtilsTest\PerformanceMeasureTest.cs" />
+    <Compile Include="TestUtils\BlankLayoutStrategy.cs" />
     <Compile Include="TestUtils\DataContract.cs" />
     <Compile Include="TestUtils\ExtensionMethodsForTest.cs" />
     <Compile Include="TestUtils\IPerformanceNode.cs" />
