@@ -69,6 +69,14 @@ namespace BookReader.Render.Layout
             {
                 layout.SetBoundsFromNodes(true);
 
+                int expandWidth = (0.05 * layout.Bounds.Width).Round();
+
+                Rectangle bounds = layout.Bounds;
+                bounds.X -= expandWidth / 2;
+                bounds.Width += expandWidth;
+
+                layout.Bounds = bounds;
+
                 // TODO: expand by width a bit (to prevent cutting off words which
                 // may not be recognized properly.
             }

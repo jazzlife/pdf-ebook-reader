@@ -67,21 +67,21 @@ namespace BookReader.Render
         public List<PageOnScreen> AssembleCurrentScreen(PositionInBook newPosition)
         {
             return AssembleScreenHelper(newPosition,
-                    new AssembleCurrentScreenAlgorithm(this));
+                    new AssembleCurrentScreenAlgorithm(BookContent));
         }
 
         public List<PageOnScreen> AssembleNextScreen()
         {
             PositionInBook position = BookContent.o.Position;
             return AssembleScreenHelper(position,
-                new AssembleNextScreenAlgorithm(this));
+                new AssembleNextScreenAlgorithm(BookContent));
         }
 
         public List<PageOnScreen> AssemblePreviousScreen()
         {
             PositionInBook position = BookContent.o.Position;
             return AssembleScreenHelper(position,
-                new AssemblePreviousScreenAlgorithm(this));
+                new AssemblePreviousScreenAlgorithm(BookContent));
         }
 
         /// <summary>
@@ -94,6 +94,9 @@ namespace BookReader.Render
         {
             if (!algorithm.CanApply(position, ScreenSize)) { return null; }
 
+            // Slight hack
+            if (position == null) { position = BookContent.o.Position; }
+
             var rv = algorithm.AssembleScreen(ref position, ScreenSize);
             SetBookPosition(position);
             return rv;
@@ -102,14 +105,14 @@ namespace BookReader.Render
         public bool HasNextScreen()
         {
             PositionInBook position = BookContent.o.Position;
-            AssembleScreenAlgorithm alg = new AssembleNextScreenAlgorithm(this);
+            AssembleScreenAlgorithm alg = new AssembleNextScreenAlgorithm(BookContent);
             return alg.CanApply(position, ScreenSize);
         }
 
         public bool HasPreviousScreen()
         {
             PositionInBook position = BookContent.o.Position;
-            AssembleScreenAlgorithm alg = new AssemblePreviousScreenAlgorithm(this);
+            AssembleScreenAlgorithm alg = new AssemblePreviousScreenAlgorithm(BookContent);
             return alg.CanApply(position, ScreenSize);
         }
 
