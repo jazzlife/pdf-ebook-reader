@@ -19,10 +19,13 @@ namespace BookReader.Render.Layout
             return pli;
         }
 
-
         public PageLayout DetectLayoutFromBook(IBookContent book, int pageNum)
         {
-            return null;
+            // This is hacky, but OK for now
+            Bitmap b = book.BookProvider.o.RenderPageImage(pageNum, Size.Empty);
+            var layout = DetectLayoutFromImage(DW.Wrap(b));
+            b.Dispose();
+            return layout;
         }
     }
 }

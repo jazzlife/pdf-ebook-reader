@@ -9,6 +9,41 @@ namespace BookReader.Utils
     static class LinqExtensions
     {
         /// <summary>
+        /// Split the group by comparing all pairs, e.g.
+        /// 
+        /// {1,1,2,1}.Split((a,b) => a != b) // returns {{1,1},{2},{1}}
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <param name="shouldSplit"></param>
+        /// <returns></returns>
+
+        public static IEnumerable<IEnumerable<T>> Split<T>(this IEnumerable<T> list, Func<T, T, bool> shouldSplit)
+        {
+            List<T> sublist = new List<T>();
+
+            T prevItem = default(T);
+            bool isFirst = true;
+            foreach (T item in list)
+            {
+                if (!isFirst)
+                {
+                    if (shouldSplit(prevItem, item))
+                    {
+                        yield return sublist;
+                        // start new sublist
+                        sublist = new List<T>();
+                    }
+                }
+                sublist.Add(item);
+                prevItem = item;
+                isFirst = false;
+            }
+            yield return sublist;
+        }
+
+        /// <summary>
         /// Create an enumerable with the range of ints.
         /// </summary>
         /// <param name="start"></param>

@@ -70,16 +70,16 @@ namespace BookReader.Render
                 if (Cache.o.Contains(key)) { continue; }
 
                 // Render and add to cache
-                ScreenBook sb = ContextManager.GetScreenBook(key.BookId);
+                DW<IBookContent> bc = ContextManager.GetBookContent(key.BookId);
 
-                if (1 <= key.PageNum && key.PageNum <= sb.BookContent.o.PageCount)
+                if (1 <= key.PageNum && key.PageNum <= bc.o.PageCount)
                 {
                     Size size = new Size(key.ScreenWidth, int.MaxValue);
                     PageImage page;
 
-                    lock (sb.BookContent)
+                    lock (bc)
                     {
-                        page = sb.BookContent.o.GetPageImage(key.PageNum, size.Width);
+                        page = bc.o.GetPageImage(key.PageNum, size.Width);
                         page.DisposeOnReturn = false;
                     }
 

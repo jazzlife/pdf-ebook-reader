@@ -26,8 +26,8 @@ namespace BookReader.Render
         Size _screenSize;
 
         // ScreenBook object for each book in the library
-        Dictionary<Guid, ScreenBook> _screenBooks = new Dictionary<Guid, ScreenBook>();
-        ScreenBook _curScreenBook = null;
+        Dictionary<Guid, DW<IBookContent>> _bookContents = new Dictionary<Guid, DW<IBookContent>>();
+        DW<IBookContent> _curBookContent = null;
 
         PaperColorFilter _paperColor;
 
@@ -58,13 +58,6 @@ namespace BookReader.Render
             set
             {
                 _screenSize = value;
-
-                // Set size for all existing screen books
-                foreach (ScreenBook sb in _screenBooks.Values)
-                {
-                    sb.ScreenSize = value;
-                }
-
                 OnScreenSizeChanged();
             }
         }
@@ -102,11 +95,11 @@ namespace BookReader.Render
             logger.Debug("CurrentBookChanged");
 
             // No change
-            if (_curScreenBook != null &&
-                _curScreenBook.Book == _library.CurrentBook) { return; }
+            if (_curBookContent != null &&
+                _curBookContent.o.Book == _library.CurrentBook) { return; }
 
             // Set the current screen book field
-            _curScreenBook = GetScreenBook(_library.CurrentBook);
+            _curBookContent = GetBookContent(_library.CurrentBook);
 
             OnCacheContextChanged();
         }
@@ -119,20 +112,20 @@ namespace BookReader.Render
         /// </summary>
         /// <param name="book"></param>
         /// <returns></returns>
-        internal ScreenBook GetScreenBook(Book book)
+        internal DW<IBookContent> GetBookContent(Book book)
         {
             lock (this)
             {
                 if (book == null) { return null; }
 
-                ScreenBook sb;
-                if (!_screenBooks.TryGetValue(book.Id, out sb))
+                DW<IBookContent> bc;
+                if (!_bookContents.TryGetValue(book.Id, out bc))
                 {
-                    sb = new ScreenBook(book, _screenSize);
-                    _screenBooks.Add(sb.Book.Id, sb);
+                    bc = RenderFactory.Default.NewBookContent(book);
+                    _bookContents.Add(bc.o.Book.Id, bc);
                 }
 
-                return sb;
+                return bc;
             }
         }
 
@@ -163,40 +156,45 @@ namespace BookReader.Render
 
         public DW<Bitmap> Render()
         {
-            if (_curScreenBook == null) { throw new InvalidOperationException("No book"); }
-            return Render(_curScreenBook.Book.CurrentPosition);
+            if (_curBookContent == null) { throw new InvalidOperationException("No book"); }
+            return Render(_curBookContent.o.Book.CurrentPosition);
         }
 
         public DW<Bitmap> Render(PositionInBook newPosition)
         {
-            if (_curScreenBook == null) { throw new InvalidOperationException("No book"); }
+            if (_curBookContent == null) { throw new InvalidOperationException("No book"); }
 
-            var pages = _curScreenBook.AssembleCurrentScreen(newPosition);
-            return GetScreenBitmap(pages);
+            return RenderScreenHelper(newPosition,
+                new AssembleCurrentScreenAlgorithm(_curBookContent));
         }
 
         public DW<Bitmap> RenderNext()
         {
-            if (_curScreenBook == null) { throw new InvalidOperationException("No book"); }
+            if (_curBookContent == null) { throw new InvalidOperationException("No book"); }
 
-            var pages = _curScreenBook.AssembleNextScreen();
-            return GetScreenBitmap(pages);
+            PositionInBook position = _curBookContent.o.Position;
+            return RenderScreenHelper(position,
+                new AssembleNextScreenAlgorithm(_curBookContent));
         }
 
         public DW<Bitmap> RenderPrevious()
         {
-            if (_curScreenBook == null) { throw new InvalidOperationException("No book"); }
+            if (_curBookContent == null) { throw new InvalidOperationException("No book"); }
 
-            var pages = _curScreenBook.AssemblePreviousScreen();
-            return GetScreenBitmap(pages);
+            PositionInBook position = _curBookContent.o.Position;
+            return RenderScreenHelper(position,
+                new AssemblePreviousScreenAlgorithm(_curBookContent));
         }
 
         public bool HasNextScreen
         {
             get
             {
-                if (_curScreenBook == null) { return false; }
-                return _curScreenBook.HasNextScreen();
+                if (_curBookContent == null) { return false; }
+
+                PositionInBook position = _curBookContent.o.Position;
+                AssembleScreenAlgorithm alg = new AssembleNextScreenAlgorithm(_curBookContent);
+                return alg.CanApply(position, ScreenSize);
             }
         }
 
@@ -204,9 +202,32 @@ namespace BookReader.Render
         {
             get
             {
-                if (_curScreenBook == null) { return false; }
-                return _curScreenBook.HasPreviousScreen();
+                if (_curBookContent == null) { return false; }
+
+                PositionInBook position = _curBookContent.o.Position;
+                AssembleScreenAlgorithm alg = new AssemblePreviousScreenAlgorithm(_curBookContent);
+                return alg.CanApply(position, ScreenSize);
             }
+        }
+
+        /// <summary>
+        /// Assemble the screen and update the position within the book
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="algorithm"></param>
+        /// <returns></returns>
+        DW<Bitmap> RenderScreenHelper(PositionInBook position, AssembleScreenAlgorithm algorithm)
+        {
+            if (_curBookContent == null) { throw new InvalidOperationException("No book"); }
+
+            if (!algorithm.CanApply(position, ScreenSize)) { return null; }
+
+            var pages = algorithm.AssembleScreen(ref position, ScreenSize);
+
+            // Set the changed position
+            _curBookContent.o.Book.CurrentPosition = position;
+
+            return GetScreenBitmap(pages);
         }
 
         #endregion
@@ -217,21 +238,20 @@ namespace BookReader.Render
         {
             if (pages == null) { return null; }
 
-            ScreenBook sb = GetScreenBook(CurrentBook);
+            DW<IBookContent> bc = GetBookContent(CurrentBook);
 
             DW<Bitmap> screenBmp = DW.Wrap(new Bitmap(ScreenSize.Width, ScreenSize.Height, PixelFormat.Format24bppRgb));
             using (Graphics g = Graphics.FromImage(screenBmp.o))
             {
                 DrawScreenBefore(g);
 
-
                 foreach (PageOnScreen page in pages)
                 {
-                    PageImage image = sb.BookContent.o.GetPageImage(page.PageNum, ScreenSize.Width);
+                    PageImage image = bc.o.GetPageImage(page.PageNum, ScreenSize.Width);
                     
                     DrawPhysicalPage(g, page, image);
 
-                    // Return to cache
+                    // Return to cache / for disposal
                     image.Return();
                 }
 
@@ -301,7 +321,7 @@ namespace BookReader.Render
             if (_cacheContextChanged != null) { _cacheContextChanged(this, EvArgs.Create(_cacheContext)); }
         }
 
-        ScreenBook IPageCacheContextManager.GetScreenBook(Guid bookId)
+        DW<IBookContent> IPageCacheContextManager.GetBookContent(Guid bookId)
         {
             // QQ: should we make this thread safe? Access to library is everywhere...
             lock (this)
@@ -309,7 +329,7 @@ namespace BookReader.Render
                 Book book = _library.Books.FirstOrDefault(x => x.Id == bookId);
                 if (book == null) { return null; }
 
-                return GetScreenBook(book);
+                return GetBookContent(book);
             }
         }
 
@@ -328,7 +348,15 @@ namespace BookReader.Render
 
         public void Dispose()
         {
-            // TODO
+            if (_bookContents != null)
+            {
+                foreach (var bc in _bookContents.Values)
+                {
+                    bc.DisposeItem();
+                }
+                _bookContents.Clear();
+                _bookContents = null;
+            }
         }
 
     }

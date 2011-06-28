@@ -19,14 +19,14 @@ namespace BookReaderTest.Render
             return LayoutStrategy;
         }
 
-        public static DW<IBookProvider> BookProvider = DW.Wrap<IBookProvider>(new BlankBookProvider());
-        public override DW<IBookProvider> GetBookProvider(string file)
+        public static DW<IBookProvider> BookProvider = DW.Wrap<IBookProvider>(new BlankBookProvider(new Size(100,60)));
+        public override DW<IBookProvider> NewBookProvider(string file)
         {
             return BookProvider;
         }
 
         public static DW<IBookContent> BookContent = DW.Wrap<IBookContent>(new BlankBookContent());
-        public override DW<IBookContent> GetBookContent(BookReader.Model.Book book, DW<PageImageCache> cache)
+        public override DW<IBookContent> NewBookContent(Book book, DW<PageImageCache> cache)
         {
             return BookContent;
         }
@@ -35,24 +35,25 @@ namespace BookReaderTest.Render
 
     class BlankBookProvider : IBookProvider
     {
-        public int PageHeight { get; set; }
+        public Size PageSize { get; set; }
         public int PageCount { get; set; }
         public string BookFilename { get; set; }
 
-        public BlankBookProvider(String filename = "foo", int pageCount = 100, int pageHeight = 60)
+        public BlankBookProvider(Size pageSize, String filename = "foo", int pageCount = 100)
         {
             BookFilename = filename;
             PageCount = pageCount;
-            PageHeight = pageHeight;
+            PageSize = pageSize;
         }
 
-        public DW<Bitmap> RenderPageImage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality)
+        public Bitmap RenderPageImage(int pageNum, Size maxSize, RenderQuality quality = RenderQuality.HighQuality)
         {
-            DW<Bitmap> image = DW.Wrap(new Bitmap(maxSize.Width, PageHeight));
-            return image;
+            if (maxSize == Size.Empty) { return new Bitmap(PageSize.Width, PageSize.Height); }
+            return new Bitmap(maxSize.Width, PageSize.Height);
         }
 
         public void Dispose() { }
+
     }
 
     class BlankBookContent : IBookContent
@@ -61,17 +62,45 @@ namespace BookReaderTest.Render
 
         public BlankBookContent()
         {
+            Book = new Book("blank");
             LayoutStrategy = new BlankLayoutStrategy();
+
+            PageCount = 100;
+
+            if (Book.CurrentPosition == null)
+            {
+                Book.CurrentPosition = PositionInBook.FromPhysicalPage(1, PageCount);
+            }
         }
 
-        /*
-        public Page GetPage(int pageNum, Size screenSize, ScreenBook screenBook)
+        public Book Book { get; private set; }
+
+        public PageLayout GetPageLayout(int pageNum)
         {
-            DW<Bitmap> image = screenBook.BookProvider.o.RenderPageImage(pageNum, new Size(screenSize.Width, int.MaxValue));
-            PageLayout layout = LayoutStrategy.DetectLayoutFromImage(image);
-            return new Page(pageNum, image, layout);
+            return LayoutStrategy.DetectLayoutFromBook(this, pageNum);
         }
-        */
 
+        public PageImage GetPageImage(int pageNum, int screenWidth)
+        {
+            var layout = GetPageLayout(pageNum);
+            var bmp = BookProvider.o.RenderPageImage(pageNum, new Size(screenWidth, int.MaxValue));
+            var key = new PageKey(Book.Id, pageNum, screenWidth);
+            return new PageImage(key, bmp);
+        }
+
+        public PositionInBook Position
+        {
+            get { return Book.CurrentPosition; }
+            set { Book.CurrentPosition = value; }
+        }
+
+        public int PageCount { get; set; }
+
+        public DW<IBookProvider> BookProvider
+        {
+            get { return RenderFactory.Default.NewBookProvider(Book.Filename); }
+        }
+
+        public void Dispose() { }
     }
 }

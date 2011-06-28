@@ -50,7 +50,7 @@ namespace BookReader.Render.Cache
 
     interface IPageCacheContextManager : ICacheContextManager<PageCacheContext>
     {
-        ScreenBook GetScreenBook(Guid bookId);
+        DW<IBookContent> GetBookContent(Guid bookId);
     }
 
     internal interface ICacheContextManager<TContext>

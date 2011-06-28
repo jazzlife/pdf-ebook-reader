@@ -4,19 +4,24 @@ using System.Linq;
 using System.Text;
 using BookReader.Utils;
 using NUnit.Framework;
+using System.Collections;
+using System.Diagnostics;
 
 namespace BookReaderTest.TestUtils
 {
     static class ExtensionMethodsForTest
     {
 
+
         // Order of expected/actual inverted on purpose.
+        [DebuggerHidden]
         public static void AssertEqualsTo<T>(this IEnumerable<T> actual, params T[] expected)
         {
             AssertEquals<T>(actual, expected);
         }
 
         // Order of expected/actual inverted on purpose.
+        [DebuggerHidden]
         public static void AssertEquals<T>(this IEnumerable<T> actual, IEnumerable<T> expected)
         {
             var expIt = expected.GetEnumerator();
@@ -48,6 +53,7 @@ namespace BookReaderTest.TestUtils
             }
         }
 
+        [DebuggerHidden]
         static void ThrowCollectionDifferent<T>(IEnumerable<T> expected, IEnumerable<T> actual, String message)
         {
             StringBuilder sb = new StringBuilder();
@@ -57,6 +63,7 @@ namespace BookReaderTest.TestUtils
             throw new AssertionException(sb.ToString());
         }
 
+        [DebuggerHidden]
         static void ThrowItemsDifferentAt<T>(IEnumerable<T> expected, IEnumerable<T> actual, int index, T expItem, T actItem)
         {
             StringBuilder sb = new StringBuilder();

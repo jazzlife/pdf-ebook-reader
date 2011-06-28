@@ -17,8 +17,8 @@ namespace BookReader.Render
         public static RenderFactory Default = new DefaultRenderFactory();
 
         public abstract IPageLayoutStrategy GetLayoutStrategy();
-        public abstract DW<IBookProvider> GetBookProvider(String file);
-        public abstract DW<IBookContent> GetBookContent(Book book, DW<PageImageCache> cache = null);
+        public abstract DW<IBookProvider> NewBookProvider(String file);
+        public abstract DW<IBookContent> NewBookContent(Book book, DW<PageImageCache> cache = null);
 
         protected abstract PagePrefetchAndRetainPolicy GetGeneralPrefetchPolicy();
 
@@ -45,7 +45,7 @@ namespace BookReader.Render
             // return new ConnectedBlobLayoutStrategy();
         }
 
-        public override DW<IBookProvider> GetBookProvider(String file)
+        public override DW<IBookProvider> NewBookProvider(String file)
         {
             return DW.Wrap<IBookProvider>(new PdfBookProvider(file));
         }
@@ -64,7 +64,7 @@ namespace BookReader.Render
         }
 
 
-        public override DW<IBookContent> GetBookContent(Book book, DW<PageImageCache> cache)
+        public override DW<IBookContent> NewBookContent(Book book, DW<PageImageCache> cache)
         {
             return DW.Wrap<IBookContent>(new PdfBookContent(book, cache));
         }
@@ -78,7 +78,7 @@ namespace BookReader.Render
             throw new NotImplementedException();
         }
 
-        public override DW<IBookProvider> GetBookProvider(string file)
+        public override DW<IBookProvider> NewBookProvider(string file)
         {
             throw new NotImplementedException();
         }
@@ -88,7 +88,7 @@ namespace BookReader.Render
             throw new NotImplementedException();
         }
 
-        public override DW<IBookContent> GetBookContent(Book book, DW<PageImageCache> cache)
+        public override DW<IBookContent> NewBookContent(Book book, DW<PageImageCache> cache)
         {
             throw new NotImplementedException();
         }
