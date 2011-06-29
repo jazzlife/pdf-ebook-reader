@@ -24,6 +24,8 @@ namespace PdfBookReader.UI
             get { return _value; }
             set
             {
+                if (value.AlmostEquals(_value)) { return; }
+
                 // Being lenient is ok, this is display-only
                 if (value < 0) { value = 0; }
                 if (value > 1) { value = 1; }

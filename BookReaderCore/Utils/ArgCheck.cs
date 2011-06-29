@@ -104,6 +104,18 @@ namespace BookReader.Utils
         }
 
         [DebuggerHidden]
+        public static void NotEmpty(Rectangle r, String argName = null)
+        {
+            if (r.IsEmpty) { throw new ArgumentException(argName + " is empty."); }
+        }
+
+        [DebuggerHidden]
+        public static void NotEmpty(RectangleF r, String argName = null)
+        {
+            if (r.IsEmpty) { throw new ArgumentException(argName + " is empty."); }
+        }
+
+        [DebuggerHidden]
         public static void NotEmpty(string name, string argName = null)
         {
             if (name == null || String.IsNullOrEmpty(name.Trim()))

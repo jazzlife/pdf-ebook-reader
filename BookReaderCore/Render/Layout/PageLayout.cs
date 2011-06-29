@@ -20,28 +20,33 @@ namespace BookReader.Render.Layout
         public Size PageSize { get; private set; }
 
         public PageLayout(Size pageSize) 
+            : base(LayoutElementType.Page, null)
         {
             ArgCheck.NotEmpty(pageSize, "pageSize");
+
             PageSize = pageSize;
+            UnitBounds = new RectangleF(0, 0, 1, 1);
         }
 
-        public PageLayout ScaleToScreen(Size screenSize)
+        /// <summary>
+        /// Scale the page size to screen
+        /// </summary>
+        /// <param name="screenWidth"></param>
+        public void SetPageSizeToScreen(int screenWidth)
         {
-            float mult = (float)screenSize.Width / Bounds.Width;
+            if (UnitBounds.Width == 0) { throw new InvalidOperationException("UnitBounds.Width == 0"); }
 
-            Size newPageSize = new Size((PageSize.Width * mult).Round(), (PageSize.Height * mult).Round());
+            float oldScreenWidth = (float)PageSize.Width * UnitBounds.Width;
+            if (oldScreenWidth.Round() == screenWidth) { return; }
 
-            PageLayout newLayout = new PageLayout(newPageSize);
-            newLayout.Bounds = GetScaledBounds(PageSize, newPageSize);
-
-            // TODO: scale all elements down recursively, if needed
-
-            return newLayout;
+            float scale = screenWidth / oldScreenWidth;
+            Size newPageSize = new Size((PageSize.Width * scale).Round(), (PageSize.Height * scale).Round());
+            PageSize = newPageSize;
         }
 
-        public RectangleF UnitBounds
+        public Rectangle Bounds
         {
-            get { return GetUnitBounds(PageSize); } 
+            get { return GetBounds(PageSize); } 
         }
 
         #region Debug
@@ -67,7 +72,7 @@ namespace BookReader.Render.Layout
                     g.DrawImageUnscaled(originalBitmap.o, 0, 0);
                 }
 
-                Debug_DrawLayout(g);
+                Debug_DrawLayout(g, PageSize);
 
                 // Content bounds (most important)
                 g.FillRectangle(_backShadeBrush, 0, 0, Bounds.Left, PageSize.Height);
@@ -75,7 +80,7 @@ namespace BookReader.Render.Layout
                 g.FillRectangle(_backShadeBrush, Bounds.Left, 0, Bounds.Width, Bounds.Top);
                 g.FillRectangle(_backShadeBrush, Bounds.Left, Bounds.Bottom, Bounds.Width, PageSize.Height - Bounds.Bottom);
 
-                Debug_DrawLayout(g);
+                Debug_DrawLayout(g, PageSize);
             }
             return bmp;
         }

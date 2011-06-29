@@ -15,7 +15,6 @@ namespace BookReader.Render.Layout
         public PageLayout DetectLayoutFromImage(DW<Bitmap> physicalPage)
         {
             PageLayout pli = new PageLayout(physicalPage.o.Size);
-            pli.Bounds = new Rectangle(0, 0, physicalPage.o.Width, physicalPage.o.Height);
             return pli;
         }
 
@@ -23,9 +22,9 @@ namespace BookReader.Render.Layout
         {
             // This is hacky, but OK for now
             Bitmap b = book.BookProvider.o.RenderPageImage(pageNum, Size.Empty);
-            var layout = DetectLayoutFromImage(DW.Wrap(b));
+            PageLayout pli = new PageLayout(b.Size);
             b.Dispose();
-            return layout;
+            return pli;
         }
     }
 }

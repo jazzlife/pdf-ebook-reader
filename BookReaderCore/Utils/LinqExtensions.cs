@@ -90,7 +90,7 @@ namespace BookReader.Utils
 
         public static bool IsEmpty<T>(this IEnumerable<T> list)
         {
-            return !list.Any();
+            return list != null && !list.Any();
         }
 
         public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T> action)

@@ -62,14 +62,18 @@ namespace BookReader.Render.Layout
             layout.Text = page.Text;
 
             var words = new List<LayoutElement>();
-            words.AddRange(page.WordList.Select(x => new LayoutElement(x.Bounds, x.Word)));
+            var nonEmptyWords = page.WordList
+                .Where(x => !x.Bounds.IsEmpty && !x.Word.IsEmpty())
+                .Select(x => LayoutElement.NewWord(pageSize, x.Bounds, x.Word));
+
+            words.AddRange(nonEmptyWords);
 
             // Detect rows and columns
-            var rows = words.Split(StartsNewRow).Select(x => new LayoutElement(LayoutElementType.Row, x));
-            //var cols = rows.Split(StartsNewColumn).Select(x => new LayoutElement(LayoutElementType.Column, x));
+            var rows = words.Split(StartsNewRow).Select(ws => LayoutElement.NewRow(ws, LayoutElementType.Row));
+            var cols = rows.Split(StartsNewColumn).Select(rs => LayoutElement.NewRow(rs, LayoutElementType.Column));
 
             // TODO: detect header/footer
-            layout.Nodes.AddRange(rows);
+            layout.Children.AddRange(cols);
 
             // Strange bug -- if doing the following, first word is missing and last word is blank.
             // However, with LINQ query above it's fine
@@ -77,20 +81,24 @@ namespace BookReader.Render.Layout
             //List<PDFTextWord> ws = new List<PDFTextWord>();
             //ws.AddRange(page.WordList);
 
-            if (layout.Nodes.Count > 0)
+            if (layout.Children.Count > 0)
             {
                 layout.SetBoundsFromNodes(true);
 
+                /*
+                // expand by width a bit (to prevent cutting off words which
+                // may not be recognized properly.
                 int expandWidth = (0.05 * layout.Bounds.Width).Round();
 
-                Rectangle bounds = layout.Bounds;
-                bounds.X -= expandWidth / 2;
-                bounds.Width += expandWidth;
+                RectangleF expBounds = layout.UnitBounds;
+                expBounds.X -= expandWidth / 2;
+                expBounds.Width += expandWidth;
 
-                layout.Bounds = bounds;
-
-                // TODO: expand by width a bit (to prevent cutting off words which
-                // may not be recognized properly.
+                if (expBounds.X <= 1 && expBounds.Width <= 1)
+                {
+                    layout.UnitBounds = expBounds;
+                }
+                 */
             }
 
             // error checking
@@ -99,9 +107,9 @@ namespace BookReader.Render.Layout
             {
                 logger.Error("Wrong bounds: " + layout.Bounds + " images: " + page.ImagesCount);
 
-                int height = page.ImagesCount > 0 ? pageSize.Height : 100;
+                float height = page.ImagesCount > 0 ? 1 : 0.1f;
 
-                layout.Bounds = new Rectangle(Point.Empty, new Size(pageSize.Width, height));
+                layout.UnitBounds = new RectangleF(0,0, 1, height);
             }
 
             // TODO: detect rows
@@ -115,18 +123,18 @@ namespace BookReader.Render.Layout
         {
             // Normal case: next row
             // QQ: do rows ever overlap?
-            if (prev.Bounds.Bottom <= cur.Bounds.Top) { return true; }
+            if (prev.UnitBounds.Bottom <= cur.UnitBounds.Top) { return true; }
             
             // Special case: next column
-            if (prev.Bounds.Top >= cur.Bounds.Bottom) { return true; }
+            if (prev.UnitBounds.Top >= cur.UnitBounds.Bottom) { return true; }
 
             return false;
         }
 
         bool StartsNewColumn(LayoutElement a, LayoutElement b)
         {
-            return b.Bounds.Bottom <= a.Bounds.Top &&
-                b.Bounds.Left > a.Bounds.Right;
+            return b.UnitBounds.Bottom <= a.UnitBounds.Top &&
+                b.UnitBounds.Left > a.UnitBounds.Right;
         }
 
 
