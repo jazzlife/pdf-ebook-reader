@@ -14,21 +14,30 @@ namespace BookReader.Render.Layout
     /// Layout info for a page element
     /// </summary>
     [DataContract]
-    public class LayoutElement 
+    public class LayoutElement
     {
-        // For serialization - cut down on ridiculous amount of XML crap
-        [DataMember(Name = "S")]
-        string StringRep
+        RectangleF _unitBounds;
+
+        /// <summary>
+        /// Type of the element
+        /// </summary>
+        [DataMember]
+        public LayoutElementType Type { get; set; }
+
+        /// <summary>
+        /// Unit bounds (in [0-1] unit interval), based on PageSize
+        /// </summary>
+        public RectangleF UnitBounds 
         {
-            get
-            {
-                return Bounds.X + "," + Bounds.Y + "," + Bounds.Width + "," + Bounds.Height;
-            }
+            get { return _unitBounds; }
             set
             {
-                String[] parts = value.Split('x', ' ', ',');
-                int i=0;
-                Bounds = new Rectangle(int.Parse(parts[i++]), int.Parse(parts[i++]), int.Parse(parts[i++]), int.Parse(parts[i++]));
+                ArgCheck.IsUnit(value.X, "x");
+                ArgCheck.IsUnit(value.Y, "y");
+                ArgCheck.IsUnit(value.Width, "width");
+                ArgCheck.IsUnit(value.Height, "height");
+
+                _unitBounds = value;
             }
         }
 
@@ -38,96 +47,135 @@ namespace BookReader.Render.Layout
         [DataMember]
         public String Text { get; set; } 
 
-
         /// <summary>
-        /// Type of the element
-        /// </summary>
-        [DataMember]
-        public LayoutElementType Type { get; set; }
-
-        /// <summary>
-        /// Bounds based on PageSize
-        /// </summary>
-        public Rectangle Bounds { get; set; }
-
-        /// <summary>
-        /// Internal nodes
+        /// Internal elements
         /// </summary>
         [DataMember(EmitDefaultValue = false)]
-        public List<LayoutElement> Nodes { get; set; }
+        public List<LayoutElement> Children { get; set; }
 
-        public LayoutElement(LayoutElementType type = LayoutElementType.Word, IEnumerable<LayoutElement> nodes = null) 
+
+        public LayoutElement(LayoutElementType type = LayoutElementType.Word, IEnumerable<LayoutElement> children = null) 
         {
             Type = type;
-            Nodes = new List<LayoutElement>();
-            if (nodes != null) 
+            Children = new List<LayoutElement>();
+            if (children != null) 
             { 
-                Nodes.AddRange(nodes);
+                Children.AddRange(children);
                 SetBoundsFromNodes(false);
-                Text = nodes.Select(x => x.Text).Where(x => !String.IsNullOrEmpty(x)).ElementsToStringS(delim: " ");
+                Text = children.Select(x => x.Text).Where(x => !String.IsNullOrEmpty(x)).ElementsToStringS(delim: " ");
             }
         }
 
-        public LayoutElement(Rectangle bounds, String text = null, LayoutElementType type = LayoutElementType.Word) 
+        public static LayoutElement NewWord(Size pageSize, Rectangle bounds, String text = null)
         {
-            Bounds = bounds;
-            Text = text;
-            Type = type;
-            Nodes = new List<LayoutElement>();
+            RectangleF unitBounds = GetUnitBounds(pageSize, bounds);
+            var e = new LayoutElement(LayoutElementType.Word, unitBounds, text);
+            return e;
         }
+
+        public static LayoutElement NewRow(IEnumerable<LayoutElement> nodes, 
+            LayoutElementType type = LayoutElementType.Row)
+        {
+            RectangleF dummyBounds = new RectangleF(0,0,1,1);
+            var e = new LayoutElement(type, dummyBounds, null, nodes);
+
+            // set bounds
+            if (!nodes.IsEmpty())
+            {
+                e.Text = nodes.Select(x => x.Text).Where(x => !String.IsNullOrEmpty(x)).ElementsToStringS(delim: " ");
+                e.SetBoundsFromNodes(false);
+            }
+
+            return e;
+        }
+
+        public LayoutElement(LayoutElementType type, RectangleF unitBounds, String text = null, IEnumerable<LayoutElement> nodes = null)
+        {
+            ArgCheck.NotEmpty(unitBounds, "unitBounds empty");
+
+            Type = type;
+            UnitBounds = unitBounds;
+            Text = text;
+
+            if (nodes != null)
+            {
+                Children = new List<LayoutElement>();
+                Children.AddRange(nodes);
+            }
+        }
+
+        #region Serialization
+
+        // For serialization - cut down on ridiculous amount of XML crap
+        [DataMember(Name = "S")]
+        string StringRep
+        {
+            get
+            {
+                return UnitBounds.X + "," + UnitBounds.Y + "," + UnitBounds.Width + "," + UnitBounds.Height;
+            }
+            set
+            {
+                String[] parts = value.Split('x', ' ', ',');
+                int i = 0;
+                UnitBounds = new RectangleF(float.Parse(parts[i++]), float.Parse(parts[i++]), float.Parse(parts[i++]), float.Parse(parts[i++]));
+            }
+        }
+
+        #endregion
+
+
 
         /// <summary>
         /// Get bounds based on the new page size
         /// </summary>
         /// <param name="pageSize"></param>
-        public Rectangle GetScaledBounds(Size pageSize, Size newPageSize)
+        public Rectangle GetBounds(Size pageSize)
         {
-            RectangleF relBounds = GetUnitBounds(pageSize);
-
             return new Rectangle(
-                (relBounds.X * newPageSize.Width).Round(),
-                (relBounds.Y * newPageSize.Height).Round(),
-                (relBounds.Width * newPageSize.Width).Round(),
-                (relBounds.Height * newPageSize.Height).Round());
+                (UnitBounds.X * pageSize.Width).Round(),
+                (UnitBounds.Y * pageSize.Height).Round(),
+                (UnitBounds.Width * pageSize.Width).Round(),
+                (UnitBounds.Height * pageSize.Height).Round());
         }
 
-        public bool IsEmpty { get { return Bounds.IsEmpty; } }
+        public bool IsEmpty { get { return UnitBounds.IsEmpty; } }
 
         /// <summary>
         /// Bounds in unit interval [0, 1] coordinates 
         /// </summary>
-        public RectangleF GetUnitBounds(Size pageSize)
+        public static RectangleF GetUnitBounds(Size pageSize, Rectangle relBounds)
         {
             // Unit bounds checking [0-1] not done -- would
             // prevent out-of-page-bounds coordinates.
             return new RectangleF(
-                (float)Bounds.X / pageSize.Width,
-                (float)Bounds.Y / pageSize.Height,
-                (float)Bounds.Width / pageSize.Width,
-                (float)Bounds.Height / pageSize.Height);
+                (float)relBounds.X / pageSize.Width,
+                (float)relBounds.Y / pageSize.Height,
+                (float)relBounds.Width / pageSize.Width,
+                (float)relBounds.Height / pageSize.Height);
         }
 
         /// <summary>
-        /// Set bounds from internal nodes
+        /// Set bounds from child nodes
         /// </summary>
         /// <param name="recursive"></param>
         public void SetBoundsFromNodes(bool recursive)
         {
             // No adjustment
-            if (Nodes == null || Nodes.Count < 1) { return; } 
+            if (Children == null || Children.Count < 1) { return; } 
 
             if (recursive)
             {
-                Nodes.ForEach(x => x.SetBoundsFromNodes(true));
+                Children.ForEach(x => x.SetBoundsFromNodes(true));
             }
 
-            int left = Nodes.Min(x => x.Bounds.Left);
-            int width = Nodes.Max(x => x.Bounds.Right) - left;
+            float left = Children.Min(x => x.UnitBounds.Left);
+            float width = Children.Max(x => x.UnitBounds.Right) - left;
 
-            int top = Nodes.Min(x => x.Bounds.Top);
-            int height = Nodes.Max(x => x.Bounds.Bottom) - top;
+            float top = Children.Min(x => x.UnitBounds.Top);
+            float height = Children.Max(x => x.UnitBounds.Bottom) - top;
 
-            Bounds = new Rectangle(left, top, width, height);
+            UnitBounds = new RectangleF(left, top, width, height);
         }
 
 
@@ -137,11 +185,11 @@ namespace BookReader.Render.Layout
             if (that == null) { return false; }
 
             if (this.Type != that.Type ||
-                this.Bounds != that.Bounds) { return false; }
+                this.UnitBounds != that.UnitBounds) { return false; }
 
-            if (this.Nodes == null && that.Nodes == null) { return true; }
+            if (this.Children == null && that.Children == null) { return true; }
 
-            return this.Nodes.Equals(that.Nodes);
+            return this.Children.Equals(that.Children);
         }
 
         public override string ToString()
@@ -149,7 +197,7 @@ namespace BookReader.Render.Layout
             StringBuilder sb = new StringBuilder();
             sb.Append(Type + " ");
             if (Text != null) { sb.Append(Text + " "); }
-            sb.Append(Bounds.X + "," + Bounds.Y + " " + Bounds.Width + "x" + Bounds.Height);
+            sb.AppendFormat("{0:#.00},{1:#.00} {2:#.00}x{3:#.00}", UnitBounds.X, UnitBounds.Y, UnitBounds.Width, UnitBounds.Height);
 
             return sb.ToString();
         }
@@ -157,19 +205,19 @@ namespace BookReader.Render.Layout
         #region debug
 
         [DebugOnly]
-        public void Debug_DrawLayout(Graphics g)
+        public void Debug_DrawLayout(Graphics g, Size pageSize)
         {
             // Draw children
-            if (Nodes != null)
+            if (Children != null)
             {
-                foreach (var n in Nodes)
+                foreach (var n in Children)
                 {
-                    n.Debug_DrawLayout(g);
+                    n.Debug_DrawLayout(g, pageSize);
                 }
             }
 
             // Draw self
-            g.DrawRectangle(GetPen(Type), Bounds);
+            g.DrawRectangle(GetPen(Type), GetBounds(pageSize));
         }
 
         Pen GetPen(LayoutElementType Type)

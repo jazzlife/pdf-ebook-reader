@@ -47,6 +47,7 @@ namespace BookReaderTest.Render.Layout
             Console.WriteLine(pageNum);
             IPageLayoutStrategy alg = new PdfWordsLayoutStrategy();
             PageLayout layout = alg.DetectLayoutFromBook(bookC, pageNum);
+            layout.SetPageSizeToScreen(800);
 
             DW<Bitmap> page = DW.Wrap(bookC.BookProvider.o.RenderPageImage(pageNum, layout.PageSize));
             DW<Bitmap> newPage = layout.Debug_DrawLayout(page);

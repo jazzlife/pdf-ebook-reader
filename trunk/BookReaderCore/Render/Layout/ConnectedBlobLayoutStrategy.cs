@@ -78,7 +78,7 @@ namespace BookReader.Render
                         currentRow = new LayoutElement();
                         currentRow.Type = LayoutElementType.Row;
                     }
-                    currentRow.Nodes.AddRange(blobsInRow.Select(x => new LayoutElement(x.Rectangle)));
+                    currentRow.Children.AddRange(blobsInRow.Select(x => LayoutElement.NewWord(cbi.PageSize, x.Rectangle)));
 
                     // Advance to test the next empty space
                     // TODO: beware of off-by-1
@@ -91,7 +91,7 @@ namespace BookReader.Render
 
             FindAndRemoveHeaderAndFooter(cbi, rows);
 
-            cbi.Nodes = rows;
+            cbi.Children = rows;
             cbi.SetBoundsFromNodes(true);
         }
 
@@ -122,13 +122,13 @@ namespace BookReader.Render
             if (rows.Count <= 3)
             {
                 // Check header
-                if (rows[0].Bounds.Height < rows[1].Bounds.Height / 2)
+                if (rows[0].UnitBounds.Height < rows[1].UnitBounds.Height / 2)
                 {
                     header = rows[0];
                 }
 
                 // Check footer
-                if (rows[lastIdx].Bounds.Height < rows[lastIdx - 1].Bounds.Height / 2)
+                if (rows[lastIdx].UnitBounds.Height < rows[lastIdx - 1].UnitBounds.Height / 2)
                 {
                     footer = rows[lastIdx];
                 }
@@ -136,7 +136,7 @@ namespace BookReader.Render
                 return;
             }
 
-            int distanceSum = 0;
+            float distanceSum = 0;
             for (int i = 1; i < rows.Count; i++)
             {
                 distanceSum += DistanceAboveRow(i, rows);
@@ -144,12 +144,12 @@ namespace BookReader.Render
             float distanceAvg = (float)distanceSum / (rows.Count - 1);
             float minDistance = distanceAvg * 1.2f;
 
-            float heightAvg = rows.Average(r => (float)r.Bounds.Height);
+            float heightAvg = rows.Average(r => (float)r.UnitBounds.Height);
             float maxHeight = heightAvg * 1.5f;
 
             // Header
-            int headerHeight = rows[0].Bounds.Height;
-            int headerDistance = DistanceAboveRow(1, rows);
+            float headerHeight = rows[0].UnitBounds.Height;
+            float headerDistance = DistanceAboveRow(1, rows);
 
             if (headerDistance > minDistance &&
                 headerHeight < maxHeight)
@@ -158,8 +158,8 @@ namespace BookReader.Render
             }
 
             // Footer
-            int footerHeight = rows[lastIdx].Bounds.Height;
-            int footerDistance = DistanceAboveRow(lastIdx, rows);
+            float footerHeight = rows[lastIdx].UnitBounds.Height;
+            float footerDistance = DistanceAboveRow(lastIdx, rows);
             if (footerDistance > minDistance &&
                 footerHeight < maxHeight)
             {
@@ -173,17 +173,17 @@ namespace BookReader.Render
             if (footer != null) { rows.Remove(footer); }
         }
 
-        int DistanceAboveRow(int index, List<LayoutElement> rows)
+        float DistanceAboveRow(int index, List<LayoutElement> rows)
         {
             // Lower.Top - Upper.Bottom
-            return rows[index].Bounds.Top - rows[index - 1].Bounds.Bottom;
+            return rows[index].UnitBounds.Top - rows[index - 1].UnitBounds.Bottom;
         }
 
         void TryAddRow(List<LayoutElement> rows, LayoutElement currentRow)
         {
             if (currentRow == null) { return; }
 
-            currentRow.Nodes = currentRow.Nodes.Distinct().ToList();
+            currentRow.Children = currentRow.Children.Distinct().ToList();
             currentRow.SetBoundsFromNodes(false);
             rows.Add(currentRow);
         }

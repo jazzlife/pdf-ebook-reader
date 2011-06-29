@@ -43,6 +43,11 @@ namespace BookReader.Utils
             return (int)Math.Round(num);
         }
 
+        public static bool AlmostEquals(this float thisNum, float otherNum, float tolerance = 0.000001f)
+        {
+            return Math.Abs(thisNum - otherNum) < tolerance;
+        }
+
         #endregion
 
         #region Threading

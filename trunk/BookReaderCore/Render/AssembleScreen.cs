@@ -91,7 +91,7 @@ namespace BookReader.Render
         protected PageOnScreen NewPage(int pageNum, Size screenSize)
         {
             PageLayout layout = BookContent.o.GetPageLayout(pageNum);
-            layout = layout.ScaleToScreen(screenSize);
+            layout.SetPageSizeToScreen(screenSize.Width);
             return new PageOnScreen(pageNum, layout);
         }
     }

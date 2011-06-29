@@ -136,7 +136,7 @@ namespace BookReader.Model
             PositionInBook that = obj as PositionInBook;
             if (obj == null) { return false; }
 
-            return this.Position == that.Position && this.PageCount == that.PageCount;
+            return this.Position.AlmostEquals(that.Position) && this.PageCount == that.PageCount;
         }
 
         public override string ToString()
