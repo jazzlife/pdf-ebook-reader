@@ -78,6 +78,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Render\AssembleScreenTest.cs" />
     <None Include="Render\BlobPageLayoutAnalyzerPerf.cs.old" />
     <Compile Include="Render\Cache\PageContentPrefetchPolicyTest.cs" />
@@ -89,7 +94,7 @@
     <Compile Include="Render\Layout\LayoutForm.Designer.cs">
       <DependentUpon>LayoutForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Render\Layout\PdfWordsLayoutStrategyRunner.cs" />
+    <Compile Include="Render\Layout\PdfLayoutAccuracy.cs" />
     <Compile Include="Render\TestRenderFactory.cs" />
     <Compile Include="TestUtilsTest\PerformanceMeasureTest.cs" />
     <Compile Include="TestUtils\BlankLayoutStrategy.cs" />
@@ -145,6 +150,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Render\Layout\LayoutForm.resx">
       <DependentUpon>LayoutForm.cs</DependentUpon>
     </EmbeddedResource>
