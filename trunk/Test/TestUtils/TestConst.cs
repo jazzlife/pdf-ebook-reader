@@ -21,9 +21,10 @@ namespace BookReaderTest.TestUtils
                 Path.GetFileNameWithoutExtension(originalName) + suffix); 
         }
 
-        public static IEnumerable<String> GetAllPdfFiles()
+        public static IEnumerable<String> GetAllPdfFiles(bool recurseDirs = false)
         {
-            var files = Directory.GetFiles(PdfFilePath, "*.pdf");
+            SearchOption opt = recurseDirs ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+            var files = Directory.GetFiles(PdfFilePath, "*.pdf", opt);
 
             foreach (var f in files)
             {

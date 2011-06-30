@@ -48,6 +48,15 @@ namespace BookReader.Utils
             return Math.Abs(thisNum - otherNum) < tolerance;
         }
 
+        public static bool AlmostEquals(this RectangleF thisRect, RectangleF otherRect, float tolerance = 0.000001f)
+        {
+            return
+                thisRect.X.AlmostEquals(otherRect.X) &&
+                thisRect.Y.AlmostEquals(otherRect.Y) &&
+                thisRect.Width.AlmostEquals(otherRect.Width) &&
+                thisRect.Height.AlmostEquals(otherRect.Height);
+        }
+
         #endregion
 
         #region Threading

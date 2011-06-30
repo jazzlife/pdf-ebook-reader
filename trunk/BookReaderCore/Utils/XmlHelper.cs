@@ -25,6 +25,7 @@ namespace BookReader.Utils
             DataContractSerializer s = new DataContractSerializer(typeof(T));
             XmlWriterSettings sett = new XmlWriterSettings();
             sett.Indent = true;
+            sett.CheckCharacters = false;
 
             using (FileStream outStream = new FileStream(filename, FileMode.Create))
             {
@@ -44,9 +45,13 @@ namespace BookReader.Utils
         public static T Deserialize<T>(String filename)
         {
             DataContractSerializer s = new DataContractSerializer(typeof(T));
+
+            XmlReaderSettings sett = new XmlReaderSettings();
+            sett.CheckCharacters = false;            
+            
             using (FileStream inStream = new FileStream(filename, FileMode.Open))
             {
-                using (XmlReader reader = XmlReader.Create(inStream))
+                using (XmlReader reader = XmlReader.Create(inStream, sett))
                 {
                     return (T)s.ReadObject(reader, false);
                 }
