@@ -12,7 +12,7 @@ namespace BookReader.Render.Layout
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public PageLayout DetectLayoutFromImage(DW<Bitmap> physicalPage)
+        public PageLayout DetectLayoutFromImage(Bitmap physicalPage)
         {
             return null;
         }
@@ -136,8 +136,6 @@ namespace BookReader.Render.Layout
             return b.UnitBounds.Bottom <= a.UnitBounds.Top &&
                 b.UnitBounds.Left > a.UnitBounds.Right;
         }
-
-
 
     }
 }

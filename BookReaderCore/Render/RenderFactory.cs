@@ -6,7 +6,6 @@ using BookReader.Render.Cache;
 using BookReader.Utils;
 using BookReader.Render.Layout;
 using BookReader.Properties;
-using BookReader.Render.BookFormats;
 using BookReader.Model;
 
 namespace BookReader.Render
@@ -40,9 +39,9 @@ namespace BookReader.Render
         public override IPageLayoutStrategy GetLayoutStrategy()
         {
             //return new BlankLayoutStrategy();
-            return new PdfWordsLayoutStrategy();
+            //return new PdfWordsLayoutStrategy();
 
-            // return new ConnectedBlobLayoutStrategy();
+            return new ConnectedBlobLayoutStrategy();
         }
 
         public override DW<IBookProvider> NewBookProvider(String file)
@@ -66,7 +65,7 @@ namespace BookReader.Render
 
         public override DW<IBookContent> NewBookContent(Book book, DW<PageImageCache> cache)
         {
-            return DW.Wrap<IBookContent>(new PdfBookContent(book, cache));
+            return DW.Wrap<IBookContent>(new BookContent(book, cache));
         }
 
     }
