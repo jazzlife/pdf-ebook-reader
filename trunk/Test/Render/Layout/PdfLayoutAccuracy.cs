@@ -11,7 +11,6 @@ using BookReaderTest.TestUtils;
 using BookReader.Utils;
 using System.Drawing.Imaging;
 using PDFLibNet;
-using BookReader.Render.BookFormats;
 using System.Runtime.Serialization;
 using System.IO;
 
@@ -56,7 +55,7 @@ namespace BookReaderTest.Render.Layout
                 }
 
                 Book book = new Book(tcase.Filename);
-                _bookContent = DW.Wrap<IBookContent>(new PdfBookContent(book, null));
+                _bookContent = DW.Wrap<IBookContent>(new BookContent(book, null));
             }
 
             IPageLayoutStrategy alg = new PdfWordsLayoutStrategy();

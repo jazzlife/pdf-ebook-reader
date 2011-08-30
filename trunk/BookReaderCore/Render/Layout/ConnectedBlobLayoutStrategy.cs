@@ -17,11 +17,11 @@ namespace BookReader.Render
     class ConnectedBlobLayoutStrategy : IPageLayoutStrategy
     {
 
-        public PageLayout DetectLayoutFromImage(DW<Bitmap> bmp)
+        public PageLayout DetectLayoutFromImage(Bitmap bmp)
         {
             ArgCheck.NotNull(bmp, "bmp");
 
-            PageLayout layout = new PageLayout(bmp.o.Size);
+            PageLayout layout = new PageLayout(bmp.Size);
 
             Blob[] blobs = DetectBlobs(bmp);
 
@@ -30,21 +30,21 @@ namespace BookReader.Render
             return layout;
         }
 
-        Blob[] DetectBlobs(DW<Bitmap> bmp)
+        Blob[] DetectBlobs(Bitmap bmp)
         {
             Invert filter = new Invert();
-            filter.ApplyInPlace(bmp.o);
+            filter.ApplyInPlace(bmp);
 
             BlobCounter bc = new BlobCounter();
             bc.BackgroundThreshold = Color.FromArgb(8, 8, 8);
 
-            bc.BlobsFilter = new BlobsFilter(bmp.o.Size);
+            bc.BlobsFilter = new BlobsFilter(bmp.Size);
             bc.FilterBlobs = true;
 
-            bc.ProcessImage(bmp.o);
+            bc.ProcessImage(bmp);
 
             // Revert back
-            filter.ApplyInPlace(bmp.o);
+            filter.ApplyInPlace(bmp);
 
             return bc.GetObjectsInformation();
         }

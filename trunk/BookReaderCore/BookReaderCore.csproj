@@ -87,7 +87,6 @@
     <Compile Include="Model\BookLibrary.cs" />
     <Compile Include="Model\PositionInBook.cs" />
     <Compile Include="Render\BookContent.cs" />
-    <Compile Include="Render\BookFormats\PdfBookContent.cs" />
     <Compile Include="Render\Cache\CachePrefetchPolicy.cs" />
     <Compile Include="Render\Filter\PaperColorFilter.cs" />
     <Compile Include="Render\Layout\PdfWordsLayoutStrategy.cs" />

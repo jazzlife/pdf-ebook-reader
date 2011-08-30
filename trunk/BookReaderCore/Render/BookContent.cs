@@ -16,7 +16,7 @@ namespace BookReader.Render
     interface IBookContent : IDisposable
     {
         Book Book { get; }
-        PageLayout GetPageLayout(int pageNum);
+        PageLayout GetPageLayout(int pageNum, int screenWidth);
         PageImage GetPageImage(int pageNum, int screenWidth);
         
         PositionInBook Position { get; set; }
@@ -26,7 +26,7 @@ namespace BookReader.Render
         DW<IBookProvider> BookProvider { get; }
     }
 
-    abstract class BookContentBase : IBookContent
+    class BookContent : IBookContent
     {
         readonly Book _book;
         public Book Book { get { return _book; } }
@@ -35,7 +35,9 @@ namespace BookReader.Render
         protected Dictionary<int, PageLayout> Layouts;
         protected DW<PageImageCache> ImageCache;
 
-        public BookContentBase(Book book, DW<PageImageCache> imageCache = null)
+        IPageLayoutStrategy _layoutStrategy;
+
+        public BookContent(Book book, DW<PageImageCache> imageCache = null)
         {
             ArgCheck.NotNull(book, "book");
             _book = book;
@@ -49,6 +51,8 @@ namespace BookReader.Render
             {
                 Layouts = XmlHelper.DeserializeOrDefault(LayoutsFile, Layouts);
             }
+
+            _layoutStrategy = RenderFactory.Default.GetLayoutStrategy();
 
             // Slightly hacky but best way to do it
             // -- set the book position info if it's null
@@ -68,19 +72,31 @@ namespace BookReader.Render
 
         protected string LayoutsFile { get { return Path.Combine(AppPaths.DataFolderPath, "Layouts_" + _book.Id + ".xml"); } }
 
-        public PageLayout GetPageLayout(int pageNum)
+        public PageLayout GetPageLayout(int pageNum, int screenWidth)
         {
             if (!Layouts.ContainsKey(pageNum))
             {
-                // create the layout
-                PageLayout layout = CreatePageLayout(pageNum);
+                PageLayout layout = CreatePageLayout(pageNum, screenWidth);
                 Layouts.Add(pageNum, layout);
             }
 
             return Layouts[pageNum];
         }
 
-        protected abstract PageLayout CreatePageLayout(int pageNum);
+        PageLayout CreatePageLayout(int pageNum, int screenWidth)
+        {
+            PageLayout layout = _layoutStrategy.DetectLayoutFromBook(this, pageNum);
+            if (layout == null)
+            {
+                // create from page image
+                if (_lastPageWidth == 0) { _lastPageWidth = 800; }
+
+                PageImage pi = GetPageImage(pageNum, screenWidth, _lastPageWidth);
+                layout = _layoutStrategy.DetectLayoutFromImage(pi.Image);
+                pi.Return();
+            }
+            return layout;
+        }
 
         public DW<IBookProvider> BookProvider
         {
@@ -96,10 +112,14 @@ namespace BookReader.Render
 
         public PageImage GetPageImage(int pageNum, int screenWidth)
         {
+            return GetPageImage(pageNum, screenWidth, 0);
+        }
+
+        PageImage GetPageImage(int pageNum, int screenWidth, int pageWidth)
+        {
             // TODO: revise locking
             lock (this)
             {
-
                 PageKey key = new PageKey(Book.Id, pageNum, screenWidth);
                 PageImage image;
 
@@ -108,11 +128,10 @@ namespace BookReader.Render
                 {
                     image = ImageCache.o.Get(key);
                     if (image != null) { return image; }
-
                 }
 
                 // Create
-                image = CreatePageImage(key);
+                image = CreatePageImage(key, pageWidth);
 
                 // Save to cache
                 if (ImageCache != null)
@@ -125,12 +144,17 @@ namespace BookReader.Render
             }
         }
 
-        protected PageImage CreatePageImage(PageKey key)
+        int _lastPageWidth = 0;
+        protected PageImage CreatePageImage(PageKey key, int pageWidth)
         {
-            var layout = GetPageLayout(key.PageNum);
-            int pageWidth = ((float)key.ScreenWidth / layout.UnitBounds.Width).Round();
+            if (pageWidth == 0)
+            {
+                var layout = GetPageLayout(key.PageNum, key.ScreenWidth);
+                pageWidth = ((float)key.ScreenWidth / layout.UnitBounds.Width).Round();
+            }
+            _lastPageWidth = pageWidth;
 
-            Bitmap b = _bookProvider.o.RenderPageImage(key.PageNum, new Size(pageWidth, int.MaxValue), RenderQuality.Optimal);
+            Bitmap b = BookProvider.o.RenderPageImage(key.PageNum, new Size(pageWidth, int.MaxValue), RenderQuality.Optimal);
 
             return new PageImage(key, b);
         }

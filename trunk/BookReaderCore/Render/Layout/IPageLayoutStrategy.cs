@@ -17,7 +17,7 @@ namespace BookReader.Render.Layout
         /// </summary>
         /// <param name="physicalPage"></param>
         /// <returns></returns>
-        PageLayout DetectLayoutFromImage(DW<Bitmap> physicalPage);
+        PageLayout DetectLayoutFromImage(Bitmap physicalPage);
 
         /// <summary>
         /// Detect layout from book if possible. If not supported, return null.

@@ -75,14 +75,14 @@ namespace BookReaderTest.Render
 
         public Book Book { get; private set; }
 
-        public PageLayout GetPageLayout(int pageNum)
+        public PageLayout GetPageLayout(int pageNum, int screenWidth)
         {
             return LayoutStrategy.DetectLayoutFromBook(this, pageNum);
         }
 
         public PageImage GetPageImage(int pageNum, int screenWidth)
         {
-            var layout = GetPageLayout(pageNum);
+            var layout = GetPageLayout(pageNum, screenWidth);
             var bmp = BookProvider.o.RenderPageImage(pageNum, new Size(screenWidth, int.MaxValue));
             var key = new PageKey(Book.Id, pageNum, screenWidth);
             return new PageImage(key, bmp);

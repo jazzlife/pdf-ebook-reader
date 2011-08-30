@@ -12,9 +12,9 @@ namespace BookReader.Render.Layout
     /// </summary>
     class BlankLayoutStrategy : IPageLayoutStrategy
     {
-        public PageLayout DetectLayoutFromImage(DW<Bitmap> physicalPage)
+        public PageLayout DetectLayoutFromImage(Bitmap physicalPage)
         {
-            PageLayout pli = new PageLayout(physicalPage.o.Size);
+            PageLayout pli = new PageLayout(physicalPage.Size);
             return pli;
         }
 
