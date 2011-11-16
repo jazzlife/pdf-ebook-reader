@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using PdfBookReader.UI;
-using NDesk.Options;
 using NLog;
 using BookReader.Render;
 using BookReader;
@@ -23,18 +22,9 @@ namespace BookReaderWinForms
             logger.Debug("");
             logger.Debug("=== Session start (WinForms UI) ===");
 
-            var o = new OptionSet()
-            {
-                { "nocache", "Do not use page prefetch/cache", x => { if (x != null) Settings.Default.Cache_SaveImages = false; } }
-            };
-
             // Debug
             Settings.Default.Debug_DrawPageEnd = true;
             Settings.Default.Debug_DrawPageLayout = true;
-
-            // Case-insensitive
-            var args = Environment.GetCommandLineArgs().Select(x => x.ToLowerInvariant());
-            o.Parse(args);
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using BookReader.Model;
 using BookReader.Utils;
+using BookReaderWinForms.Properties;
 using BookReaderUI.Properties;
 
 namespace PdfBookReader.UI
