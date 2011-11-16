@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Pdf-eBook-Reader")]
+[assembly: AssemblyTitle("BookReaderWinForms")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Pdf-eBook-Reader")]
+[assembly: AssemblyProduct("BookReaderWinForms")]
 [assembly: AssemblyCopyright("Copyright © Danilo Mirkovic 2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("32fe13d0-179e-4507-99dd-46d6eb509a5f")]
+[assembly: Guid("e5eb06ed-b077-4fbb-bac3-fda443565f94")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -34,5 +34,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-
 [assembly: InternalsVisibleTo("BookReaderTest")]
