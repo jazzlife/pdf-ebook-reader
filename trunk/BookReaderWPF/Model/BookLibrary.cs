@@ -46,9 +46,9 @@ namespace BookReader.Model
             {
                 if (_roBooks == null) 
                 {
-                    _roBooks = ReadOnlyObservableCollection<Book>(pBooks); 
+                    _roBooks = new ReadOnlyObservableCollection<Book>(pBooks); 
                 }
-                return _roBooks.AsReadOnly();
+                return _roBooks;
             }
         }
 
