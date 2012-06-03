@@ -1,0 +1,131 @@
+﻿Displaying pages
+
+PageView
+	BitmapSource Binding={PageImage}
+
+FixedPageBookViewModel
+	// Change triggers a refresh
+	Book Book
+
+	ColorFilter ImageFilter;
+
+	// Can't update it directly,
+	// it's updated from the inside via the commands	
+	Position Position
+
+	// Change triggers a refresh
+	Size ViewSize
+
+	// How to request next/previous
+	ICommand NextScreenCommand
+	ICommand PreviousScreenCommand
+	ICommand MoveScreen(Position pos)
+
+	// Read-only, updated from the inside
+	BitmapSource ScreenImage
+
+ReflowableBookViewModel
+	Position Position
+
+	// Size is not sufficient, more like position in the HTML view
+
+	// Same next/previous/move commands, but with different effects
+
+	// Different commands... may be messy, due to HTML view mess
+
+ScreenManager	
+	ColorFilter ImageFilter
+
+	// all update currentPos, trigger ScreenImageFormed
+	RequestNext(book)
+	RequestPrevious(book)
+	RequestSpecific(book, pos)
+
+	event ScreenImageFormed;
+
+PhysicalPageManager
+	// Get from cache or create
+	PhysicalPage GetPage(PdfBook pBook, int width)
+
+	// Getting from cache involves setting the request object,
+	// and waiting for the result. All processing is done on the prefetch thread.
+	PagePrefetchManager 
+		// Needs to know:
+		// - library (all books)
+		// - requested book
+		// - requested physical page
+		// - prefetch starting *around* the requested stuff, then begginnings of other books 
+		
+		// How to manage PdfBook object lifetime?
+		// - just dispose when current book changes. Those changes should be infrequent.
+
+// Should we make this cached? Yes, of course.
+CachedPageImageSource
+	bool IsCached(IPhysicalBook src, pageNum, width)
+	GetPage(IPhysicalBook src, pageNum, width)
+
+// What to call PdfBook? IPhysicalBook, maybe...
+IPhysicalBook
+	Guid BookId
+	String file (or URL?)
+
+	GetPage(pageNum, width)
+	PhysicalPageCount
+
+	// Get the book object itself, populated with initial 
+	// data or have separate properties for required items?
+	FillBookInfo(Book book);
+
+// perhaps make all cached since they need to refer to the parent
+CachedLayoutSource
+	LayoutStategy src
+	bool IsCached(bookId, pageNum)
+	GetLayout(IPhysicalBook book, pageNum)
+
+LayoutStrategy
+	GetLayout(IPhysicalBook book, pageNum)
+	// perhaps it should have a reference back to CachedLayoutSource. 
+	// for header/footer detection it is relevant if previous/next page have 
+	// a similar header/footer as well
+
+RequestNext ->
+	enqueue request (or should we just have one at a time? have a limit in the queue?)
+
+	// Screen assembly loop
+	assemblePagesAlgorithm:
+		PhysicalPageManager.GetPage(book, pageNum) 
+			- return if cached, OR
+			- set request, wait for page prefetch thread to process it
+				
+				// Page prefetch loop
+				workOrder(book, pageNum) = MakeWorkOrder(library, lastRequest.Book, lastRequest.PageNum)
+				foreach(book, pageNum in workOrder)
+					- see if page image and layout are already cached or not
+					- if not, 
+						- make currentPdfBook as needed, dispose old one
+						- width = getLayout(currentPdfBook, pageNum)
+							// make layout or get it from cache
+							// if layout can only be determined based on image, get the image of standard width
+							// then get the layout based on that. No need to cache the image. 
+						- getImage(currentPdfBook, pageNum, width)
+						- if current order is waiting
+							- return image, signal done
+						- break out if current order changed
+		
+		do assembly...
+		fire event when assembled
+
+// Another type of work item in prefetch is BookInfoPrefetch
+// to get the title, thumbnail etc for populating the book object
+// this is also dependent on PdfBook, so should be done on the same thread
+// to avoid contention. The prefetch loop is key -- maybe it can be optimized later
+// (e.g. to use threadpool if multiple pdfs are threadsafe). 
+
+Cache expiration policy? 
+ - Keep all in last MakeWorkOrder (otherwise, why were we making them).
+
+BookViewModel
+	Name
+	Title
+	CurrentPosition
+
